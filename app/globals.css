@@ -1,26 +1,14 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
-/*
- * The layout primitives (Flex, Stack, Grid) build responsive/container
- * classes at runtime by concatenating a breakpoint prefix with a utility
- * (lib/ui/responsive.ts: `"md:" + "flex-row"`). Tailwind's scanner only
- * generates CSS for candidates it finds as literal text in source files -
- * it never executes any code - so a class assembled at runtime is
- * invisible to it and silently produces no CSS. This is the same trap
- * documented in app/docs/color/page.tsx for the shade-scale classes.
- *
- * @source inline() explicitly safelists the cartesian product below (7
- * breakpoint prefixes x every utility value resolveResponsive() can
- * output), so every combination gets generated regardless of how it's
- * assembled at runtime. Keep this in sync with the value maps in
- * components/ui/flex/flex.tsx, components/ui/stack/stack.tsx (reuses
- * Flex's), components/ui/grid/grid.tsx, and lib/ui/spacing.ts.
- */
-@source inline("{md:,lg:,xl:,@sm:,@md:,@lg:,@xl:}{flex-row,flex-col,flex-row-reverse,flex-col-reverse,items-start,items-center,items-end,items-stretch,items-baseline,justify-start,justify-center,justify-end,justify-between,justify-around,justify-evenly,flex-wrap,flex-nowrap,gap-0,gap-1,gap-2,gap-3,gap-4,gap-5,gap-6,gap-7,gap-8,gap-10,gap-12,gap-16,gap-20,grid-cols-1,grid-cols-2,grid-cols-3,grid-cols-4,grid-cols-5,grid-cols-6,grid-cols-12}");
+/* Class-based dark mode (tokens.css uses .dark, not the media-query strategy). */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  /* Map semantic color tokens to Tailwind (bg-*, text-*, border-* utilities) */
+  --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+
+  /* Semantic colors -> bg-, text-, border- utilities matching token names. */
   --color-label-primary: rgb(var(--label-primary));
   --color-label-secondary: rgb(var(--label-secondary));
   --color-label-tertiary: rgb(var(--label-tertiary));
@@ -41,147 +29,38 @@
   --color-separator-opaque: rgb(var(--separator-opaque));
 
   --color-tint: rgb(var(--tint));
+  --color-tint-fill: var(--tint-fill);
+  --color-tint-fill-pressed: var(--tint-fill-pressed);
   --color-destructive: rgb(var(--color-destructive));
   --color-success: rgb(var(--color-success));
   --color-warning: rgb(var(--color-warning));
   --color-info: rgb(var(--color-info));
 
-  /* Base palette, exposed for token/color documentation */
-  --color-system-blue: rgb(var(--color-blue));
-  --color-system-green: rgb(var(--color-green));
-  --color-system-indigo: rgb(var(--color-indigo));
-  --color-system-orange: rgb(var(--color-orange));
-  --color-system-pink: rgb(var(--color-pink));
-  --color-system-purple: rgb(var(--color-purple));
-  --color-system-red: rgb(var(--color-red));
-  --color-system-teal: rgb(var(--color-teal));
-  --color-system-yellow: rgb(var(--color-yellow));
-  --color-system-gray-1: rgb(var(--color-gray-1));
-  --color-system-gray-2: rgb(var(--color-gray-2));
-  --color-system-gray-3: rgb(var(--color-gray-3));
-  --color-system-gray-4: rgb(var(--color-gray-4));
-  --color-system-gray-5: rgb(var(--color-gray-5));
-  --color-system-gray-6: rgb(var(--color-gray-6));
+  /* Base palette, exposed for cases that need the raw system color. */
+  --color-blue: rgb(var(--color-blue));
+  --color-green: rgb(var(--color-green));
+  --color-indigo: rgb(var(--color-indigo));
+  --color-orange: rgb(var(--color-orange));
+  --color-pink: rgb(var(--color-pink));
+  --color-purple: rgb(var(--color-purple));
+  --color-red: rgb(var(--color-red));
+  --color-teal: rgb(var(--color-teal));
+  --color-yellow: rgb(var(--color-yellow));
 
-  /* Base palette shade scale - already full colors, no rgb() wrapper needed */
-  --color-system-blue-50: var(--color-system-blue-50);
-  --color-system-blue-100: var(--color-system-blue-100);
-  --color-system-blue-200: var(--color-system-blue-200);
-  --color-system-blue-300: var(--color-system-blue-300);
-  --color-system-blue-400: var(--color-system-blue-400);
-  --color-system-blue-600: var(--color-system-blue-600);
-  --color-system-blue-700: var(--color-system-blue-700);
-  --color-system-blue-800: var(--color-system-blue-800);
-  --color-system-blue-900: var(--color-system-blue-900);
-
-  --color-system-green-50: var(--color-system-green-50);
-  --color-system-green-100: var(--color-system-green-100);
-  --color-system-green-200: var(--color-system-green-200);
-  --color-system-green-300: var(--color-system-green-300);
-  --color-system-green-400: var(--color-system-green-400);
-  --color-system-green-600: var(--color-system-green-600);
-  --color-system-green-700: var(--color-system-green-700);
-  --color-system-green-800: var(--color-system-green-800);
-  --color-system-green-900: var(--color-system-green-900);
-
-  --color-system-indigo-50: var(--color-system-indigo-50);
-  --color-system-indigo-100: var(--color-system-indigo-100);
-  --color-system-indigo-200: var(--color-system-indigo-200);
-  --color-system-indigo-300: var(--color-system-indigo-300);
-  --color-system-indigo-400: var(--color-system-indigo-400);
-  --color-system-indigo-600: var(--color-system-indigo-600);
-  --color-system-indigo-700: var(--color-system-indigo-700);
-  --color-system-indigo-800: var(--color-system-indigo-800);
-  --color-system-indigo-900: var(--color-system-indigo-900);
-
-  --color-system-orange-50: var(--color-system-orange-50);
-  --color-system-orange-100: var(--color-system-orange-100);
-  --color-system-orange-200: var(--color-system-orange-200);
-  --color-system-orange-300: var(--color-system-orange-300);
-  --color-system-orange-400: var(--color-system-orange-400);
-  --color-system-orange-600: var(--color-system-orange-600);
-  --color-system-orange-700: var(--color-system-orange-700);
-  --color-system-orange-800: var(--color-system-orange-800);
-  --color-system-orange-900: var(--color-system-orange-900);
-
-  --color-system-pink-50: var(--color-system-pink-50);
-  --color-system-pink-100: var(--color-system-pink-100);
-  --color-system-pink-200: var(--color-system-pink-200);
-  --color-system-pink-300: var(--color-system-pink-300);
-  --color-system-pink-400: var(--color-system-pink-400);
-  --color-system-pink-600: var(--color-system-pink-600);
-  --color-system-pink-700: var(--color-system-pink-700);
-  --color-system-pink-800: var(--color-system-pink-800);
-  --color-system-pink-900: var(--color-system-pink-900);
-
-  --color-system-purple-50: var(--color-system-purple-50);
-  --color-system-purple-100: var(--color-system-purple-100);
-  --color-system-purple-200: var(--color-system-purple-200);
-  --color-system-purple-300: var(--color-system-purple-300);
-  --color-system-purple-400: var(--color-system-purple-400);
-  --color-system-purple-600: var(--color-system-purple-600);
-  --color-system-purple-700: var(--color-system-purple-700);
-  --color-system-purple-800: var(--color-system-purple-800);
-  --color-system-purple-900: var(--color-system-purple-900);
-
-  --color-system-red-50: var(--color-system-red-50);
-  --color-system-red-100: var(--color-system-red-100);
-  --color-system-red-200: var(--color-system-red-200);
-  --color-system-red-300: var(--color-system-red-300);
-  --color-system-red-400: var(--color-system-red-400);
-  --color-system-red-600: var(--color-system-red-600);
-  --color-system-red-700: var(--color-system-red-700);
-  --color-system-red-800: var(--color-system-red-800);
-  --color-system-red-900: var(--color-system-red-900);
-
-  --color-system-teal-50: var(--color-system-teal-50);
-  --color-system-teal-100: var(--color-system-teal-100);
-  --color-system-teal-200: var(--color-system-teal-200);
-  --color-system-teal-300: var(--color-system-teal-300);
-  --color-system-teal-400: var(--color-system-teal-400);
-  --color-system-teal-600: var(--color-system-teal-600);
-  --color-system-teal-700: var(--color-system-teal-700);
-  --color-system-teal-800: var(--color-system-teal-800);
-  --color-system-teal-900: var(--color-system-teal-900);
-
-  --color-system-yellow-50: var(--color-system-yellow-50);
-  --color-system-yellow-100: var(--color-system-yellow-100);
-  --color-system-yellow-200: var(--color-system-yellow-200);
-  --color-system-yellow-300: var(--color-system-yellow-300);
-  --color-system-yellow-400: var(--color-system-yellow-400);
-  --color-system-yellow-600: var(--color-system-yellow-600);
-  --color-system-yellow-700: var(--color-system-yellow-700);
-  --color-system-yellow-800: var(--color-system-yellow-800);
-  --color-system-yellow-900: var(--color-system-yellow-900);
-
-  /* Typography - font-size paired with its line-height so `text-<name>`
-     applies both in one utility (Tailwind v4 paired theme keys). */
-  --font-sans: var(--font-sans);
-
+  /* Typography scale -> text-* utilities. */
   --text-large-title: var(--text-large-title);
-  --text-large-title--line-height: var(--leading-large-title);
   --text-title-1: var(--text-title-1);
-  --text-title-1--line-height: var(--leading-title-1);
   --text-title-2: var(--text-title-2);
-  --text-title-2--line-height: var(--leading-title-2);
   --text-title-3: var(--text-title-3);
-  --text-title-3--line-height: var(--leading-title-3);
   --text-headline: var(--text-headline);
-  --text-headline--line-height: var(--leading-headline);
   --text-body: var(--text-body);
-  --text-body--line-height: var(--leading-body);
   --text-callout: var(--text-callout);
-  --text-callout--line-height: var(--leading-callout);
   --text-subheadline: var(--text-subheadline);
-  --text-subheadline--line-height: var(--leading-subheadline);
   --text-footnote: var(--text-footnote);
-  --text-footnote--line-height: var(--leading-footnote);
   --text-caption-1: var(--text-caption-1);
-  --text-caption-1--line-height: var(--leading-caption-1);
   --text-caption-2: var(--text-caption-2);
-  --text-caption-2--line-height: var(--leading-caption-2);
 
-  /* Radius */
+  /* Radius scale -> rounded-* utilities. */
   --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -189,60 +68,21 @@
   --radius-xl: var(--radius-xl);
   --radius-2xl: var(--radius-2xl);
   --radius-full: var(--radius-full);
+
+  /* Shadow scale -> shadow-* utilities. */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Easing -> ease-* utilities. */
+  --ease-standard: var(--ease-standard);
+  --ease-spring-out: var(--ease-spring-out);
+  --ease-decelerate: var(--ease-decelerate);
+  --ease-accelerate: var(--ease-accelerate);
 }
 
 body {
-  background: var(--color-bg-primary);
-  color: var(--color-label-primary);
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  line-height: var(--leading-body);
-}
-
-/*
- * Material utilities - unlike bg-fill-*, a material is not just a
- * translucent color: it is always paired with a backdrop blur. Bundling
- * both into one utility means a component only ever writes `material-thin`
- * instead of separately attaching a background style and a blur class -
- * and it keeps the two from ever being used apart, which would just be
- * bg-fill-* again with extra steps.
- */
-@utility material-thin {
-  background: var(--material-thin);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-}
-@utility material-regular {
-  background: var(--material-regular);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-}
-@utility material-thick {
-  background: var(--material-thick);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-}
-
-/*
- * Select's closing transition. Radix's Presence (which governs
- * SelectContent's mount/unmount) natively delays unmounting for a real CSS
- * animation like this one - so this is what lets the panel stay mounted
- * without needing `forceMount` (which would keep Radix's body-scroll-lock
- * and outside-click listener permanently active - see components/ui/select).
- * The actual closing shape - Content morphing back down into the trigger's
- * box - is framer-motion's job (its `layout` prop, driven by the same
- * measured-trigger state used to open); this keyframe only fades opacity so
- * Presence has an animation to wait on, without re-scaling on top of that
- * JS-driven shrink.
- */
-@keyframes select-content-exit {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-.select-content-exit[data-state="closed"] {
-  animation: select-content-exit var(--duration-normal) var(--ease-standard);
+  background: rgb(var(--bg-primary));
+  color: rgb(var(--label-primary));
 }

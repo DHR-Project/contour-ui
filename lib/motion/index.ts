@@ -1,3 +1,2 @@
-export * from "./springs";
-export * from "./easings";
-export * from "./morph-origin";
+export { springs } from "./springs";
+export { easings, durations } from "./easings";

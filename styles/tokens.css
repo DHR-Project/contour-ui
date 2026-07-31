@@ -1,12 +1,30 @@
-/**
- * Contour - Design Tokens
- * Do not import base color / text style tokens directly in components.
- * Components should only consume semantic tokens.
+/*
+ * Contour design tokens.
+ * Source of truth: local-docs/design-tokens-summary.md (SS0-SS6.9).
+ * Framework-agnostic CSS custom properties -- consumed directly by
+ * components and mapped into Tailwind's @theme in app/globals.css.
  */
 
-/* ==========================================================================
-  1. Breakpoint / Size-Class System
-   ========================================================================== */
+/* SS0.1 Icon size scale */
+:root {
+  --icon-size-xs: 12px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 20px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 32px;
+}
+
+/* SS0.2 Icon stroke width */
+:root {
+  --icon-stroke-width: 2;
+}
+@media (prefers-contrast: more) {
+  :root {
+    --icon-stroke-width: 2.5;
+  }
+}
+
+/* SS1 Breakpoint / size-class system */
 :root {
   --bp-compact: 768px;
   --bp-regular: 768px;
@@ -14,11 +32,7 @@
   --bp-regular-xl: 1280px;
 }
 
-/* ==========================================================================
-  2. Color Tokens
-   ========================================================================== */
-
-/* 2.1 Base palette (RGB space-separated to support alpha) */
+/* SS2.1 Base palette (System Colors, RGB space-separated for alpha support) */
 :root {
   --color-blue: 0 122 255;
   --color-green: 52 199 89;
@@ -57,114 +71,7 @@
   --color-gray-6: 28 28 30;
 }
 
-/*
- * 2.1a Base palette shade scale.
- * Each step is derived from the color above via color-mix() - mixed toward
- * white below 500, toward black above 500. 500 is the color itself, already
- * available as --color-<name>.
- *
- * These are declared once, not duplicated inside .dark: a var() reference
- * inside color-mix() is re-resolved at the point of use against whatever is
- * currently cascaded for --color-<name>, so the whole scale shifts
- * automatically when .dark overrides the base color above. No separate
- * dark-mode ramp needed.
- *
- * Unlike the base/semantic tokens above, these resolve to a full color
- * (not an RGB triplet) - use them directly, without wrapping in rgb().
- */
-:root {
-  --color-system-blue-50: color-mix(in srgb, white 95%, rgb(var(--color-blue)) 5%);
-  --color-system-blue-100: color-mix(in srgb, white 88%, rgb(var(--color-blue)) 12%);
-  --color-system-blue-200: color-mix(in srgb, white 70%, rgb(var(--color-blue)) 30%);
-  --color-system-blue-300: color-mix(in srgb, white 50%, rgb(var(--color-blue)) 50%);
-  --color-system-blue-400: color-mix(in srgb, white 25%, rgb(var(--color-blue)) 75%);
-  --color-system-blue-600: color-mix(in srgb, black 15%, rgb(var(--color-blue)) 85%);
-  --color-system-blue-700: color-mix(in srgb, black 30%, rgb(var(--color-blue)) 70%);
-  --color-system-blue-800: color-mix(in srgb, black 45%, rgb(var(--color-blue)) 55%);
-  --color-system-blue-900: color-mix(in srgb, black 60%, rgb(var(--color-blue)) 40%);
-
-  --color-system-green-50: color-mix(in srgb, white 95%, rgb(var(--color-green)) 5%);
-  --color-system-green-100: color-mix(in srgb, white 88%, rgb(var(--color-green)) 12%);
-  --color-system-green-200: color-mix(in srgb, white 70%, rgb(var(--color-green)) 30%);
-  --color-system-green-300: color-mix(in srgb, white 50%, rgb(var(--color-green)) 50%);
-  --color-system-green-400: color-mix(in srgb, white 25%, rgb(var(--color-green)) 75%);
-  --color-system-green-600: color-mix(in srgb, black 15%, rgb(var(--color-green)) 85%);
-  --color-system-green-700: color-mix(in srgb, black 30%, rgb(var(--color-green)) 70%);
-  --color-system-green-800: color-mix(in srgb, black 45%, rgb(var(--color-green)) 55%);
-  --color-system-green-900: color-mix(in srgb, black 60%, rgb(var(--color-green)) 40%);
-
-  --color-system-indigo-50: color-mix(in srgb, white 95%, rgb(var(--color-indigo)) 5%);
-  --color-system-indigo-100: color-mix(in srgb, white 88%, rgb(var(--color-indigo)) 12%);
-  --color-system-indigo-200: color-mix(in srgb, white 70%, rgb(var(--color-indigo)) 30%);
-  --color-system-indigo-300: color-mix(in srgb, white 50%, rgb(var(--color-indigo)) 50%);
-  --color-system-indigo-400: color-mix(in srgb, white 25%, rgb(var(--color-indigo)) 75%);
-  --color-system-indigo-600: color-mix(in srgb, black 15%, rgb(var(--color-indigo)) 85%);
-  --color-system-indigo-700: color-mix(in srgb, black 30%, rgb(var(--color-indigo)) 70%);
-  --color-system-indigo-800: color-mix(in srgb, black 45%, rgb(var(--color-indigo)) 55%);
-  --color-system-indigo-900: color-mix(in srgb, black 60%, rgb(var(--color-indigo)) 40%);
-
-  --color-system-orange-50: color-mix(in srgb, white 95%, rgb(var(--color-orange)) 5%);
-  --color-system-orange-100: color-mix(in srgb, white 88%, rgb(var(--color-orange)) 12%);
-  --color-system-orange-200: color-mix(in srgb, white 70%, rgb(var(--color-orange)) 30%);
-  --color-system-orange-300: color-mix(in srgb, white 50%, rgb(var(--color-orange)) 50%);
-  --color-system-orange-400: color-mix(in srgb, white 25%, rgb(var(--color-orange)) 75%);
-  --color-system-orange-600: color-mix(in srgb, black 15%, rgb(var(--color-orange)) 85%);
-  --color-system-orange-700: color-mix(in srgb, black 30%, rgb(var(--color-orange)) 70%);
-  --color-system-orange-800: color-mix(in srgb, black 45%, rgb(var(--color-orange)) 55%);
-  --color-system-orange-900: color-mix(in srgb, black 60%, rgb(var(--color-orange)) 40%);
-
-  --color-system-pink-50: color-mix(in srgb, white 95%, rgb(var(--color-pink)) 5%);
-  --color-system-pink-100: color-mix(in srgb, white 88%, rgb(var(--color-pink)) 12%);
-  --color-system-pink-200: color-mix(in srgb, white 70%, rgb(var(--color-pink)) 30%);
-  --color-system-pink-300: color-mix(in srgb, white 50%, rgb(var(--color-pink)) 50%);
-  --color-system-pink-400: color-mix(in srgb, white 25%, rgb(var(--color-pink)) 75%);
-  --color-system-pink-600: color-mix(in srgb, black 15%, rgb(var(--color-pink)) 85%);
-  --color-system-pink-700: color-mix(in srgb, black 30%, rgb(var(--color-pink)) 70%);
-  --color-system-pink-800: color-mix(in srgb, black 45%, rgb(var(--color-pink)) 55%);
-  --color-system-pink-900: color-mix(in srgb, black 60%, rgb(var(--color-pink)) 40%);
-
-  --color-system-purple-50: color-mix(in srgb, white 95%, rgb(var(--color-purple)) 5%);
-  --color-system-purple-100: color-mix(in srgb, white 88%, rgb(var(--color-purple)) 12%);
-  --color-system-purple-200: color-mix(in srgb, white 70%, rgb(var(--color-purple)) 30%);
-  --color-system-purple-300: color-mix(in srgb, white 50%, rgb(var(--color-purple)) 50%);
-  --color-system-purple-400: color-mix(in srgb, white 25%, rgb(var(--color-purple)) 75%);
-  --color-system-purple-600: color-mix(in srgb, black 15%, rgb(var(--color-purple)) 85%);
-  --color-system-purple-700: color-mix(in srgb, black 30%, rgb(var(--color-purple)) 70%);
-  --color-system-purple-800: color-mix(in srgb, black 45%, rgb(var(--color-purple)) 55%);
-  --color-system-purple-900: color-mix(in srgb, black 60%, rgb(var(--color-purple)) 40%);
-
-  --color-system-red-50: color-mix(in srgb, white 95%, rgb(var(--color-red)) 5%);
-  --color-system-red-100: color-mix(in srgb, white 88%, rgb(var(--color-red)) 12%);
-  --color-system-red-200: color-mix(in srgb, white 70%, rgb(var(--color-red)) 30%);
-  --color-system-red-300: color-mix(in srgb, white 50%, rgb(var(--color-red)) 50%);
-  --color-system-red-400: color-mix(in srgb, white 25%, rgb(var(--color-red)) 75%);
-  --color-system-red-600: color-mix(in srgb, black 15%, rgb(var(--color-red)) 85%);
-  --color-system-red-700: color-mix(in srgb, black 30%, rgb(var(--color-red)) 70%);
-  --color-system-red-800: color-mix(in srgb, black 45%, rgb(var(--color-red)) 55%);
-  --color-system-red-900: color-mix(in srgb, black 60%, rgb(var(--color-red)) 40%);
-
-  --color-system-teal-50: color-mix(in srgb, white 95%, rgb(var(--color-teal)) 5%);
-  --color-system-teal-100: color-mix(in srgb, white 88%, rgb(var(--color-teal)) 12%);
-  --color-system-teal-200: color-mix(in srgb, white 70%, rgb(var(--color-teal)) 30%);
-  --color-system-teal-300: color-mix(in srgb, white 50%, rgb(var(--color-teal)) 50%);
-  --color-system-teal-400: color-mix(in srgb, white 25%, rgb(var(--color-teal)) 75%);
-  --color-system-teal-600: color-mix(in srgb, black 15%, rgb(var(--color-teal)) 85%);
-  --color-system-teal-700: color-mix(in srgb, black 30%, rgb(var(--color-teal)) 70%);
-  --color-system-teal-800: color-mix(in srgb, black 45%, rgb(var(--color-teal)) 55%);
-  --color-system-teal-900: color-mix(in srgb, black 60%, rgb(var(--color-teal)) 40%);
-
-  --color-system-yellow-50: color-mix(in srgb, white 95%, rgb(var(--color-yellow)) 5%);
-  --color-system-yellow-100: color-mix(in srgb, white 88%, rgb(var(--color-yellow)) 12%);
-  --color-system-yellow-200: color-mix(in srgb, white 70%, rgb(var(--color-yellow)) 30%);
-  --color-system-yellow-300: color-mix(in srgb, white 50%, rgb(var(--color-yellow)) 50%);
-  --color-system-yellow-400: color-mix(in srgb, white 25%, rgb(var(--color-yellow)) 75%);
-  --color-system-yellow-600: color-mix(in srgb, black 15%, rgb(var(--color-yellow)) 85%);
-  --color-system-yellow-700: color-mix(in srgb, black 30%, rgb(var(--color-yellow)) 70%);
-  --color-system-yellow-800: color-mix(in srgb, black 45%, rgb(var(--color-yellow)) 55%);
-  --color-system-yellow-900: color-mix(in srgb, black 60%, rgb(var(--color-yellow)) 40%);
-}
-
-/* 2.2 Semantic tokens */
+/* SS2.2 Semantic tokens */
 :root {
   /* Label (text) */
   --label-primary: 0 0 0;
@@ -218,7 +125,7 @@
   --separator-opaque: 56 56 58;
 }
 
-/* 2.3 Material (frosted glass, for nav bars/sheets). Use with backdrop-filter: blur(20px) */
+/* SS2.3 Material (frosted glass -- nav bar / sheet) */
 :root {
   --material-thin: rgb(255 255 255 / 0.7);
   --material-regular: rgb(255 255 255 / 0.8);
@@ -230,7 +137,7 @@
   --material-thick: rgb(28 28 30 / 0.85);
 }
 
-/* 2.4 Increase Contrast (accessibility) - placeholder, refine values later */
+/* SS2.4 Increase Contrast (accessibility) */
 @media (prefers-contrast: more) {
   :root {
     --label-secondary: 60 60 67 / 0.85;
@@ -239,59 +146,115 @@
   }
 }
 
-/* ==========================================================================
-  3. Typography Scale
-   ========================================================================== */
-:root {
-  /* -apple-system / BlinkMacSystemFont resolve to the native system UI font
-     on their respective platforms; Inter Variable is the shared fallback. */
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "Inter Variable", "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+/* SS2.4b Reduced Transparency (accessibility) */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material-thin: rgb(var(--bg-primary));
+    --material-regular: rgb(var(--bg-primary));
+    --material-thick: rgb(var(--bg-secondary));
+  }
+}
 
-  --text-large-title: 2.125rem; /* 34px */
-  --text-title-1: 1.75rem; /* 28px */
-  --text-title-2: 1.375rem; /* 22px */
-  --text-title-3: 1.25rem; /* 20px */
-  --text-headline: 1.0625rem; /* 17px */
-  --text-body: 1.0625rem; /* 17px */
-  --text-callout: 1rem; /* 16px */
-  --text-subheadline: 0.9375rem; /* 15px */
-  --text-footnote: 0.8125rem; /* 13px */
-  --text-caption-1: 0.75rem; /* 12px */
-  --text-caption-2: 0.6875rem; /* 11px */
+/* SS2.7 Tint (custom accent color) -- overridden per-app via ContourProvider */
+:root {
+  --tint: var(--color-blue);
+}
+
+/* SS2.7a Tinted surface */
+:root {
+  --tint-fill: rgb(var(--tint) / 0.15);
+  --tint-fill-pressed: rgb(var(--tint) / 0.25);
+}
+
+/* SS2.8 Focus ring */
+:root {
+  --focus-ring-color: var(--tint);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color-on-material: 0 0 0; /* placeholder light, verify contrast per material */
+}
+.dark {
+  --focus-ring-color-on-material: 255 255 255; /* placeholder dark, verify contrast per material */
+}
+
+/* SS2.9 Shadow / Elevation (fallback when material can't be used) */
+:root {
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.07), 0 2px 4px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.08), 0 4px 6px rgb(0 0 0 / 0.04);
+}
+.dark {
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.4), 0 2px 4px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.45), 0 4px 6px rgb(0 0 0 / 0.3);
+}
+
+/* SS2.10 Progressive Blur (nav bar / tab bar / toolbar only) */
+:root {
+  --progressive-blur-layers: 4;
+  --progressive-blur-max: 20px;
+}
+.progressive-blur-container {
+  position: relative;
+}
+.progressive-blur-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .progressive-blur-layer {
+    display: none;
+  }
+  .progressive-blur-container {
+    background: rgb(var(--bg-primary));
+  }
+}
+@media (prefers-contrast: more) {
+  .progressive-blur-layer {
+    backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1)));
+  }
+  .progressive-blur-container {
+    background: rgb(var(--bg-primary) / 0.85);
+  }
+}
+
+/* SS3.2 Font stack -- Inter self-hosted via next/font (see app/layout.tsx), no manual @font-face needed */
+:root {
+  font-size: 100%; /* respect user setting, base for rem */
+}
+
+/* SS3.3 Typography scale tokens (rem, to support Dynamic Type via SS3.6) */
+:root {
+  --text-large-title: 2.125rem;
+  --text-title-1: 1.75rem;
+  --text-title-2: 1.375rem;
+  --text-title-3: 1.25rem;
+  --text-headline: 1.0625rem;
+  --text-body: 1.0625rem;
+  --text-callout: 1rem;
+  --text-subheadline: 0.9375rem;
+  --text-footnote: 0.8125rem;
+  --text-caption-1: 0.75rem;
+  --text-caption-2: 0.6875rem;
 
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
-
-  --leading-large-title: 2.5625rem; /* 41px */
-  --leading-title-1: 2.125rem; /* 34px */
-  --leading-title-2: 1.75rem; /* 28px */
-  --leading-title-3: 1.5625rem; /* 25px */
-  --leading-headline: 1.375rem; /* 22px */
-  --leading-body: 1.375rem; /* 22px */
-  --leading-callout: 1.3125rem; /* 21px */
-  --leading-subheadline: 1.25rem; /* 20px */
-  --leading-footnote: 1.125rem; /* 18px */
-  --leading-caption-1: 1rem; /* 16px */
-  --leading-caption-2: 0.8125rem; /* 13px */
 }
 
-@font-face {
-  font-family: "Inter Variable";
-  src: url("/fonts/InterVariable.woff2") format("woff2-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+/* SS3.6 Type scale multiplier (Dynamic Type) */
+:root {
+  --type-scale: 1; /* 0.85 | 1 | 1.15 | 1.3 ... user-selected */
+}
+html {
+  font-size: calc(100% * var(--type-scale));
 }
 
-/* ==========================================================================
-   4. Spacing Tokens
-   ========================================================================== */
-
-/* 4.1 Base scale (4pt grid) */
+/* SS4.1 Spacing base scale (4pt grid) */
 :root {
   --space-1: 4px;
   --space-2: 8px;
@@ -307,7 +270,7 @@
   --space-20: 80px;
 }
 
-/* 4.2 Semantic spacing */
+/* SS4.2 Semantic spacing */
 :root {
   --padding-control-x: var(--space-4);
   --padding-control-y: var(--space-2);
@@ -324,48 +287,102 @@
   --inset-grouped-gap: var(--space-8);
 }
 
-/* 4.3 Responsive page margin */
+/* SS4.2b --gap-section responsive */
+@media (min-width: 768px) {
+  :root { --gap-section: var(--space-10); }
+}
+@media (min-width: 1024px) {
+  :root { --gap-section: var(--space-12); }
+}
+
+/* SS4.2c --inset-grouped-margin-x responsive */
+@media (min-width: 768px) {
+  :root { --inset-grouped-margin-x: var(--space-5); }
+}
+@media (min-width: 1024px) {
+  :root { --inset-grouped-margin-x: var(--space-6); }
+}
+
+/* SS4.2d --inset-grouped-gap responsive */
+@media (min-width: 768px) {
+  :root { --inset-grouped-gap: var(--space-10); }
+}
+@media (min-width: 1024px) {
+  :root { --inset-grouped-gap: var(--space-12); }
+}
+
+/* SS4.2e Column gap for SplitView, responsive */
+:root {
+  --gap-splitview-column: var(--space-4); /* unused at compact (1 column) */
+}
+@media (min-width: 768px) {
+  :root { --gap-splitview-column: var(--space-5); }
+}
+@media (min-width: 1024px) {
+  :root { --gap-splitview-column: var(--space-6); }
+}
+
+/* SS4.3 Responsive page margin */
 :root {
   --page-margin: var(--margin-page-compact);
 }
 @media (min-width: 768px) {
-  :root {
-    --page-margin: var(--margin-page-regular);
-  }
+  :root { --page-margin: var(--margin-page-regular); }
 }
 @media (min-width: 1024px) {
-  :root {
-    --page-margin: var(--margin-page-regular-lg);
-  }
+  :root { --page-margin: var(--margin-page-regular-lg); }
 }
 
-/* ==========================================================================
-  5. Radius Tokens
-   ========================================================================== */
+/* SS4.4 Safe area insets */
 :root {
-  --radius-xs: 4px; /* badge, tag */
-  --radius-sm: 8px; /* input, small button */
-  --radius-md: 10px; /* standard button */
-  --radius-lg: 14px; /* card, sheet content */
-  --radius-xl: 20px; /* modal, large sheet */
-  --radius-2xl: 28px; /* large tile / icon container */
-  --radius-full: 9999px; /* pill, round avatar */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
-/* ==========================================================================
-  6. Motion / Animation Tokens
-   ========================================================================== */
+/* SS4.5 Grid min-item width (Grid columns="auto-fit"|"auto-fill") */
+:root {
+  --grid-min-item-xs: 120px;
+  --grid-min-item-sm: 160px;
+  --grid-min-item-md: 200px;
+  --grid-min-item-lg: 280px;
+  --grid-min-item-xl: 360px;
+}
+
+/* SS4.6 Container max-width (Container variant="content") */
+:root {
+  --container-max-width: 720px;
+}
+
+/* SS4.7 Swipe action width (ListItem leading/trailing actions) */
+:root {
+  --swipe-action-width: 80px;
+}
+
+/* SS5.1 Radius scale */
+:root {
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+}
+
+/* SS6.2 CSS easing & duration */
 :root {
   --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-spring-out: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
   --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 
-  --duration-instant: 100ms; /* press feedback */
-  --duration-fast: 200ms; /* hover */
-  --duration-normal: 300ms; /* fade, color */
-  --duration-slow: 400ms; /* sheet, modal */
-  --duration-slower: 500ms; /* page transition */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 400ms;
+  --duration-slower: 500ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -374,59 +391,16 @@
     --duration-fast: 0ms;
     --duration-normal: 0ms;
     --duration-slow: 0ms;
-    --duration-slower: 0ms;
-  }
-
-  /* Most components reach for a hardcoded `duration-200` Tailwind class
-     rather than the tokens above, so zeroing the custom properties alone
-     doesn't stop those transitions. design-tokens-summary.md #6.5 calls for
-     a light fade (~150ms) as the reduced-motion fallback, not a full kill,
-     so this caps those transitions down rather than to ~0. */
-  *,
-  *::before,
-  *::after {
-    animation-duration: 150ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 150ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  /* Radix's Popper positioning wrapper (Select, and later Popover/Dropdown/
-     Tooltip) sets top/left/transform via inline styles to place the
-     portaled content next to its trigger - that's layout, not an
-     animation. The blanket transition-duration above is enough to make
-     the browser transition it anyway (default transition-property is
-     "all"), so content visibly flies in from its initial (0,0) mount
-     position instead of appearing instantly. Exempt it. */
-  [data-radix-popper-content-wrapper] {
-    transition: none !important;
   }
 }
 
-/*
- * Class-based mirror of the media query above. Applied to <html> by
- * components/providers/preferences-provider.tsx when the user turns on
- * "Reduce motion" in-app, so the preference can override the OS setting
- * (or apply on an OS that doesn't expose one) instead of only ever
- * following prefers-reduced-motion.
- */
-.reduce-motion {
-  --duration-instant: 0ms;
-  --duration-fast: 0ms;
-  --duration-normal: 0ms;
-  --duration-slow: 0ms;
-  --duration-slower: 0ms;
-}
-
-.reduce-motion *,
-.reduce-motion *::before,
-.reduce-motion *::after {
-  animation-duration: 150ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 150ms !important;
-  scroll-behavior: auto !important;
-}
-
-.reduce-motion [data-radix-popper-content-wrapper] {
-  transition: none !important;
+/* SS6.9 Z-index / layering scale */
+:root {
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-sheet: 310;
+  --z-toast: 400;
+  --z-tooltip: 500;
 }
