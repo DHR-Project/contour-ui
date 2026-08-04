@@ -1,6 +1,6 @@
 /*
  * Contour design tokens.
- * Source of truth: local-docs/design-tokens-summary.md (SS0-SS6.9).
+ * Source of truth: local-docs/design-tokens-summary-v2.md.
  * Framework-agnostic CSS custom properties -- consumed directly by
  * components and mapped into Tailwind's @theme in app/globals.css.
  */
@@ -32,17 +32,22 @@
   --bp-regular-xl: 1280px;
 }
 
-/* SS2.1 Base palette (System Colors, RGB space-separated for alpha support) */
+/* SS2.1 Base palette (System Colors, RGB space-separated for alpha support)
+   Source: current-generation reference system color kit -- v2, supersedes
+   the v1 "traditional" system color values these were originally seeded from. */
 :root {
-  --color-blue: 0 122 255;
-  --color-green: 52 199 89;
-  --color-indigo: 88 86 214;
-  --color-orange: 255 149 0;
-  --color-pink: 255 45 85;
-  --color-purple: 175 82 222;
-  --color-red: 255 59 48;
-  --color-teal: 48 176 199;
+  --color-red: 255 56 60;
+  --color-orange: 255 141 40;
   --color-yellow: 255 204 0;
+  --color-green: 52 199 89;
+  --color-mint: 0 200 179;
+  --color-teal: 0 195 208;
+  --color-cyan: 0 192 232;
+  --color-blue: 0 136 255;
+  --color-indigo: 97 85 245;
+  --color-purple: 203 48 224;
+  --color-pink: 255 45 85;
+  --color-brown: 172 127 94;
 
   --color-gray-1: 142 142 147;
   --color-gray-2: 174 174 178;
@@ -53,15 +58,18 @@
 }
 
 .dark {
-  --color-blue: 10 132 255;
+  --color-red: 255 66 69;
+  --color-orange: 255 146 48;
+  --color-yellow: 255 214 0;
   --color-green: 48 209 88;
-  --color-indigo: 94 92 230;
-  --color-orange: 255 159 10;
+  --color-mint: 0 218 195;
+  --color-teal: 0 210 224;
+  --color-cyan: 60 211 254;
+  --color-blue: 0 145 255;
+  --color-indigo: 109 124 255;
+  --color-purple: 219 52 242;
   --color-pink: 255 55 95;
-  --color-purple: 191 90 242;
-  --color-red: 255 69 58;
-  --color-teal: 64 200 224;
-  --color-yellow: 255 214 10;
+  --color-brown: 183 138 102;
 
   --color-gray-1: 142 142 147;
   --color-gray-2: 99 99 102;
@@ -73,7 +81,7 @@
 
 /* SS2.2 Semantic tokens */
 :root {
-  /* Label (text) */
+  /* Label (text) -- on solid background */
   --label-primary: 0 0 0;
   --label-secondary: 60 60 67 / 0.6;
   --label-tertiary: 60 60 67 / 0.3;
@@ -83,17 +91,25 @@
   --bg-primary: 255 255 255;
   --bg-secondary: 242 242 247;
   --bg-tertiary: 255 255 255;
+  --bg-primary-elevated: 255 255 255;
+  --bg-secondary-elevated: 242 242 247;
+  --bg-tertiary-elevated: 255 255 255;
+
   --bg-grouped-primary: 242 242 247;
   --bg-grouped-secondary: 255 255 255;
+  --bg-grouped-tertiary: 242 242 247;
+  --bg-grouped-primary-elevated: 242 242 247;
+  --bg-grouped-secondary-elevated: 255 255 255;
+  --bg-grouped-tertiary-elevated: 242 242 247;
 
-  /* Fill (control background) */
-  --fill-primary: 120 120 128 / 0.2;
+  /* Fill (control background) -- on solid background */
+  --fill-primary: 120 120 120 / 0.2;
   --fill-secondary: 120 120 128 / 0.16;
   --fill-tertiary: 118 118 128 / 0.12;
   --fill-quaternary: 116 116 128 / 0.08;
 
   /* Separator */
-  --separator: 60 60 67 / 0.29;
+  --separator: 0 0 0 / 0.12;
   --separator-opaque: 198 198 200;
 
   /* Tint & state colors */
@@ -106,23 +122,89 @@
 
 .dark {
   --label-primary: 255 255 255;
-  --label-secondary: 235 235 245 / 0.6;
+  --label-secondary: 235 235 245 / 0.7;
   --label-tertiary: 235 235 245 / 0.3;
   --label-quaternary: 235 235 245 / 0.16;
 
   --bg-primary: 0 0 0;
   --bg-secondary: 28 28 30;
   --bg-tertiary: 44 44 46;
+  --bg-primary-elevated: 28 28 30;
+  --bg-secondary-elevated: 44 44 46;
+  --bg-tertiary-elevated: 58 58 60;
+
   --bg-grouped-primary: 0 0 0;
   --bg-grouped-secondary: 28 28 30;
+  --bg-grouped-tertiary: 44 44 46;
+  --bg-grouped-primary-elevated: 28 28 30;
+  --bg-grouped-secondary-elevated: 44 44 46;
+  --bg-grouped-tertiary-elevated: 58 58 60;
 
   --fill-primary: 120 120 128 / 0.36;
   --fill-secondary: 120 120 128 / 0.32;
   --fill-tertiary: 118 118 128 / 0.24;
   --fill-quaternary: 118 118 128 / 0.18;
 
-  --separator: 84 84 88 / 0.6;
+  --separator: 255 255 255 / 0.17;
   --separator-opaque: 56 56 58;
+}
+
+/* SS2.2a Fills -- Vibrant (v2). On --material-* surfaces only, not solid backgrounds. */
+:root {
+  --fill-vibrant-primary: 204 204 204;
+  --fill-vibrant-secondary: 224 224 224;
+  --fill-vibrant-tertiary: 237 237 237;
+}
+.dark {
+  --fill-vibrant-primary: 51 51 51;
+  --fill-vibrant-secondary: 31 31 31;
+  --fill-vibrant-tertiary: 18 18 18;
+}
+
+/* SS2.2b Labels -- Vibrant (v2). Text/icon directly on --material-* surfaces. */
+:root {
+  --label-vibrant-primary: 26 26 26;
+  --label-vibrant-secondary: 114 114 114;
+  --label-vibrant-tertiary: 191 191 191;
+  --label-vibrant-quaternary: 217 217 217;
+}
+.dark {
+  --label-vibrant-primary: 245 245 245;
+  --label-vibrant-secondary: 138 138 138;
+  --label-vibrant-tertiary: 64 64 64;
+  --label-vibrant-quaternary: 38 38 38;
+}
+
+/* SS2.2c Labels -- Vibrant Controls (v2). Fill/control labels on material.
+   No consumer yet (token gap, SS rule 2.3 guidelines) -- use when a control
+   (e.g. Segmented Control) sits directly on a material surface. */
+:root {
+  --label-vibrant-control-primary: 26 26 26;
+  --label-vibrant-control-secondary: 114 114 114;
+  --label-vibrant-control-tertiary: 191 191 191;
+}
+.dark {
+  --label-vibrant-control-primary: 245 245 245;
+  --label-vibrant-control-secondary: 138 138 138;
+  --label-vibrant-control-tertiary: 64 64 64;
+}
+
+/* SS2.2d Separator -- Vibrant (v2). Separator on material surfaces. */
+:root {
+  --separator-vibrant: 230 230 230;
+}
+.dark {
+  --separator-vibrant: 26 26 26;
+}
+
+/* SS2.2e Overlays (v2). Dimming layer behind Sheet/Modal/ActionSheet. */
+:root {
+  --overlay-default: 0 0 0 / 0.2;
+  --overlay-activity-view: 0 0 0 / 0.2;
+}
+.dark {
+  --overlay-default: 0 0 0 / 0.48;
+  --overlay-activity-view: 0 0 0 / 0.29;
 }
 
 /* SS2.3 Material (frosted glass -- nav bar / sheet) */
@@ -137,12 +219,18 @@
   --material-thick: rgb(28 28 30 / 0.85);
 }
 
-/* SS2.4 Increase Contrast (accessibility) */
+/* SS2.4 Increase Contrast (accessibility)
+   v2: --separator override updated to match the new black/white alpha model
+   (SS2.2) -- alpha values (0.3/0.35) are still placeholders, not yet tested
+   for real contrast (see guideline rule 5.6). */
 @media (prefers-contrast: more) {
   :root {
     --label-secondary: 60 60 67 / 0.85;
-    --separator: 60 60 67 / 0.6;
+    --separator: 0 0 0 / 0.3;
     --fill-tertiary: 118 118 128 / 0.25;
+  }
+  .dark {
+    --separator: 255 255 255 / 0.35;
   }
 }
 
@@ -206,7 +294,7 @@
 }
 @media (prefers-reduced-transparency: reduce) {
   .progressive-blur-layer {
-    display: none;
+    display: none !important;
   }
   .progressive-blur-container {
     background: rgb(var(--bg-primary));
@@ -214,7 +302,8 @@
 }
 @media (prefers-contrast: more) {
   .progressive-blur-layer {
-    backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1)));
+   -webkit-backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
+    backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
   }
   .progressive-blur-container {
     background: rgb(var(--bg-primary) / 0.85);
@@ -226,19 +315,80 @@
   font-size: 100%; /* respect user setting, base for rem */
 }
 
-/* SS3.3 Typography scale tokens (rem, to support Dynamic Type via SS3.6) */
+/* SS3.3 Dynamic Type v2 -- lookup table, no global multiplier.
+   These are the sizeMode="large" / density="default" values (Contour's
+   default) baked statically here as the SSR-safe baseline -- identical to
+   what lib/typography/scale.ts's generateTypeCSSVars("large") produces, so
+   there's no flash on first paint. ContourProvider overwrites all of these
+   on :root when the user picks a different sizeMode (SS3.6); the full
+   12-sizeMode x 11-style table lives in lib/typography/scale.ts, not here
+   (do not hand-expand every mode into static CSS -- see SS3.6). */
 :root {
-  --text-large-title: 2.125rem;
-  --text-title-1: 1.75rem;
-  --text-title-2: 1.375rem;
-  --text-title-3: 1.25rem;
-  --text-headline: 1.0625rem;
-  --text-body: 1.0625rem;
-  --text-callout: 1rem;
-  --text-subheadline: 0.9375rem;
-  --text-footnote: 0.8125rem;
-  --text-caption-1: 0.75rem;
-  --text-caption-2: 0.6875rem;
+  --text-large-title-size: 2.125rem;
+  --text-large-title-leading: 2.5625rem;
+  --text-large-title-leading-tight: 2.4375rem;
+  --text-large-title-leading-loose: 2.6875rem;
+  --text-large-title-letter-spacing: 0.025rem;
+
+  --text-title-1-size: 1.75rem;
+  --text-title-1-leading: 2.125rem;
+  --text-title-1-leading-tight: 2rem;
+  --text-title-1-leading-loose: 2.25rem;
+  --text-title-1-letter-spacing: 0.02375rem;
+
+  --text-title-2-size: 1.375rem;
+  --text-title-2-leading: 1.75rem;
+  --text-title-2-leading-tight: 1.625rem;
+  --text-title-2-leading-loose: 1.875rem;
+  --text-title-2-letter-spacing: -0.01625rem;
+
+  --text-title-3-size: 1.25rem;
+  --text-title-3-leading: 1.5625rem;
+  --text-title-3-leading-tight: 1.4375rem;
+  --text-title-3-leading-loose: 1.6875rem;
+  --text-title-3-letter-spacing: -0.028125rem;
+
+  --text-headline-size: 1.0625rem;
+  --text-headline-leading: 1.375rem;
+  --text-headline-leading-tight: 1.25rem;
+  --text-headline-leading-loose: 1.5rem;
+  --text-headline-letter-spacing: -0.026875rem;
+
+  --text-body-size: 1.0625rem;
+  --text-body-leading: 1.375rem;
+  --text-body-leading-tight: 1.25rem;
+  --text-body-leading-loose: 1.5rem;
+  --text-body-letter-spacing: -0.026875rem;
+
+  --text-callout-size: 1rem;
+  --text-callout-leading: 1.3125rem;
+  --text-callout-leading-tight: 1.1875rem;
+  --text-callout-leading-loose: 1.4375rem;
+  --text-callout-letter-spacing: -0.019375rem;
+
+  --text-subheadline-size: 0.9375rem;
+  --text-subheadline-leading: 1.25rem;
+  --text-subheadline-leading-tight: 1.125rem;
+  --text-subheadline-leading-loose: 1.375rem;
+  --text-subheadline-letter-spacing: -0.014375rem;
+
+  --text-footnote-size: 0.8125rem;
+  --text-footnote-leading: 1.125rem;
+  --text-footnote-leading-tight: 1rem;
+  --text-footnote-leading-loose: 1.25rem;
+  --text-footnote-letter-spacing: -0.005rem;
+
+  --text-caption-1-size: 0.75rem;
+  --text-caption-1-leading: 1rem;
+  --text-caption-1-leading-tight: 0.875rem;
+  --text-caption-1-leading-loose: 1.125rem;
+  --text-caption-1-letter-spacing: 0rem;
+
+  --text-caption-2-size: 0.6875rem;
+  --text-caption-2-leading: 0.8125rem;
+  --text-caption-2-leading-tight: 0.6875rem;
+  --text-caption-2-leading-loose: 0.9375rem;
+  --text-caption-2-letter-spacing: 0.00375rem;
 
   --weight-regular: 400;
   --weight-medium: 500;
@@ -246,13 +396,45 @@
   --weight-bold: 700;
 }
 
-/* SS3.6 Type scale multiplier (Dynamic Type) */
-:root {
-  --type-scale: 1; /* 0.85 | 1 | 1.15 | 1.3 ... user-selected */
+/* SS3.7 `density` -- component-level line-spacing override (Text `density`
+   prop). Only reassigns which `-leading` value is active; indirection via
+   the `-tight`/`-loose` custom properties above means this stays correct
+   for whatever sizeMode is currently active, without Text needing to know
+   sizeMode itself (contour-spec-text.md SS3a). */
+.density-tight {
+  --text-large-title-leading: var(--text-large-title-leading-tight);
+  --text-title-1-leading: var(--text-title-1-leading-tight);
+  --text-title-2-leading: var(--text-title-2-leading-tight);
+  --text-title-3-leading: var(--text-title-3-leading-tight);
+  --text-headline-leading: var(--text-headline-leading-tight);
+  --text-body-leading: var(--text-body-leading-tight);
+  --text-callout-leading: var(--text-callout-leading-tight);
+  --text-subheadline-leading: var(--text-subheadline-leading-tight);
+  --text-footnote-leading: var(--text-footnote-leading-tight);
+  --text-caption-1-leading: var(--text-caption-1-leading-tight);
+  --text-caption-2-leading: var(--text-caption-2-leading-tight);
 }
-html {
-  font-size: calc(100% * var(--type-scale));
+.density-loose {
+  --text-large-title-leading: var(--text-large-title-leading-loose);
+  --text-title-1-leading: var(--text-title-1-leading-loose);
+  --text-title-2-leading: var(--text-title-2-leading-loose);
+  --text-title-3-leading: var(--text-title-3-leading-loose);
+  --text-headline-leading: var(--text-headline-leading-loose);
+  --text-body-leading: var(--text-body-leading-loose);
+  --text-callout-leading: var(--text-callout-leading-loose);
+  --text-subheadline-leading: var(--text-subheadline-leading-loose);
+  --text-footnote-leading: var(--text-footnote-leading-loose);
+  --text-caption-1-leading: var(--text-caption-1-leading-loose);
+  --text-caption-2-leading: var(--text-caption-2-leading-loose);
 }
+
+/* SS3.6 `sizeMode` -- global Dynamic Type level, replaces the old
+   --type-scale multiplier entirely (non-linear scale across styles, see
+   lib/typography/scale.ts). ContourProvider recomputes every
+   --text-{style}-size/-leading[-tight/-loose]/-letter-spacing property
+   above via generateTypeCSSVars() and sets it on <html> when sizeMode
+   changes; `rem` stays mandatory here so browser zoom still stacks with it
+   (font-size: 100% above, not a Dynamic-Type-driven calc() anymore). */
 
 /* SS4.1 Spacing base scale (4pt grid) */
 :root {
@@ -360,6 +542,47 @@ html {
   --swipe-action-width: 80px;
 }
 
+/* SS4.8 Dimensions Kit (v2) -- source: current-generation reference design
+   data, mapped onto the existing size-class system (phone -> compact,
+   tablet -> regular+), no parallel breakpoint scale introduced. */
+:root {
+  /* compact (phone) */
+  --sheet-radius-top: 34px;
+  --sheet-radius-bottom: 58px;
+  --grabber-width: 58px;
+  --grabber-height: 4px;
+  --popover-radius: 38px;
+}
+@media (min-width: 768px) {
+  :root {
+    /* regular+ (tablet): Sheet presents as a centered modal, symmetric radius */
+    --sheet-radius-top: 38px;
+    --sheet-radius-bottom: 38px;
+  }
+}
+
+/* SS4.9 Context Menu / Dropdown dimensions (v2) */
+:root {
+  /* compact (phone) */
+  --menu-section-title-size: 0.8125rem; /* 13px */
+  --menu-section-title-padding-top: 4px;
+  --menu-section-title-padding-bottom: 10px;
+  --menu-item-padding-sides: 16px;
+  --menu-item-padding-y: 10px;
+  --menu-item-separator-padding: 10px;
+}
+@media (min-width: 768px) {
+  :root {
+    /* regular+ (tablet) */
+    --menu-section-title-size: 0.75rem; /* 12px */
+    --menu-section-title-padding-top: 5px;
+    --menu-section-title-padding-bottom: 7px;
+    --menu-item-padding-sides: 8px;
+    --menu-item-padding-y: 11px;
+    --menu-item-separator-padding: 8px;
+  }
+}
+
 /* SS5.1 Radius scale */
 :root {
   --radius-xs: 4px;
@@ -401,6 +624,49 @@ html {
   --z-sticky: 200;
   --z-overlay: 300;
   --z-sheet: 310;
+  --z-alert: 390; /* v2 -- below Toast, above every practical Sheet nesting depth */
   --z-toast: 400;
   --z-tooltip: 500;
+}
+
+/* SS10 Component-specific color tokens (v2). Narrow scope -- one component/
+   context each, not general-purpose semantic tokens (SS2). Do not reuse
+   across components; map 1:1 into the owning component instead. */
+
+/* SS10.1 Buttons */
+:root {
+  --button-bg-destructive: 255 56 60 / 0.14;
+}
+.dark {
+  --button-bg-destructive: 255 66 69 / 0.14;
+}
+
+/* SS10.2 Segmented Control */
+:root {
+  --segmented-control-selected-bg: 255 255 255;
+}
+.dark {
+  --segmented-control-selected-bg: 255 255 255 / 0.27;
+}
+
+/* SS10.3 Tab Bar -- light mode follows the app's custom tint (SS2.7) instead
+   of the source data's hard-coded Accents/Blue, so TabBar selection
+   re-colors with the rest of the app; dark mode keeps the source's fixed
+   white. */
+:root {
+  --tabbar-selection: var(--tint);
+}
+.dark {
+  --tabbar-selection: 255 255 255;
+}
+
+/* SS10.6 Sidebar -- row-selection state (not whole-panel background),
+   tracks window/tab focus. */
+:root {
+  --sidebar-bg-active: 218 230 242;
+  --sidebar-bg-inactive: 237 244 250;
+}
+.dark {
+  --sidebar-bg-active: 20 21 23;
+  --sidebar-bg-inactive: 19 20 20;
 }

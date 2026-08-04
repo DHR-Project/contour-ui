@@ -4,6 +4,17 @@
 /* Class-based dark mode (tokens.css uses .dark, not the media-query strategy). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Hover styles only for mouse/trackpad (guideline rule 4.1) -- Tailwind's
+   built-in hover: only checks (hover: hover), not pointer precision, so a
+   stylus-capable touchscreen could still match it. */
+@custom-variant hover-fine {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
@@ -36,29 +47,79 @@
   --color-warning: rgb(var(--color-warning));
   --color-info: rgb(var(--color-info));
 
-  /* Base palette, exposed for cases that need the raw system color. */
-  --color-blue: rgb(var(--color-blue));
-  --color-green: rgb(var(--color-green));
-  --color-indigo: rgb(var(--color-indigo));
-  --color-orange: rgb(var(--color-orange));
-  --color-pink: rgb(var(--color-pink));
-  --color-purple: rgb(var(--color-purple));
-  --color-red: rgb(var(--color-red));
-  --color-teal: rgb(var(--color-teal));
-  --color-yellow: rgb(var(--color-yellow));
+  /* Vibrant variants (SS2.2a-d) -- for content sitting directly on
+     --material-* surfaces, not solid backgrounds. */
+  --color-fill-vibrant-primary: rgb(var(--fill-vibrant-primary));
+  --color-fill-vibrant-secondary: rgb(var(--fill-vibrant-secondary));
+  --color-fill-vibrant-tertiary: rgb(var(--fill-vibrant-tertiary));
+  --color-label-vibrant-primary: rgb(var(--label-vibrant-primary));
+  --color-label-vibrant-secondary: rgb(var(--label-vibrant-secondary));
+  --color-label-vibrant-tertiary: rgb(var(--label-vibrant-tertiary));
+  --color-label-vibrant-quaternary: rgb(var(--label-vibrant-quaternary));
+  --color-label-vibrant-control-primary: rgb(var(--label-vibrant-control-primary));
+  --color-label-vibrant-control-secondary: rgb(var(--label-vibrant-control-secondary));
+  --color-label-vibrant-control-tertiary: rgb(var(--label-vibrant-control-tertiary));
+  --color-separator-vibrant: rgb(var(--separator-vibrant));
 
-  /* Typography scale -> text-* utilities. */
-  --text-large-title: var(--text-large-title);
-  --text-title-1: var(--text-title-1);
-  --text-title-2: var(--text-title-2);
-  --text-title-3: var(--text-title-3);
-  --text-headline: var(--text-headline);
-  --text-body: var(--text-body);
-  --text-callout: var(--text-callout);
-  --text-subheadline: var(--text-subheadline);
-  --text-footnote: var(--text-footnote);
-  --text-caption-1: var(--text-caption-1);
-  --text-caption-2: var(--text-caption-2);
+  /* Overlays (SS2.2e) -- dimming layer behind Sheet/Modal/ActionSheet. */
+  --color-overlay-default: rgb(var(--overlay-default));
+  --color-overlay-activity-view: rgb(var(--overlay-activity-view));
+
+  /* Base palette, exposed for cases that need the raw system color. */
+  --color-red: rgb(var(--color-red));
+  --color-orange: rgb(var(--color-orange));
+  --color-yellow: rgb(var(--color-yellow));
+  --color-green: rgb(var(--color-green));
+  --color-mint: rgb(var(--color-mint));
+  --color-teal: rgb(var(--color-teal));
+  --color-cyan: rgb(var(--color-cyan));
+  --color-blue: rgb(var(--color-blue));
+  --color-indigo: rgb(var(--color-indigo));
+  --color-purple: rgb(var(--color-purple));
+  --color-pink: rgb(var(--color-pink));
+  --color-brown: rgb(var(--color-brown));
+
+  /* Typography scale -> text-* utilities, each paired with its SS3.1
+     line-height and letter-spacing (Dynamic Type v2, SS3.3). */
+  --text-large-title: var(--text-large-title-size);
+  --text-large-title--line-height: var(--text-large-title-leading);
+  --text-large-title--letter-spacing: var(--text-large-title-letter-spacing);
+  --text-title-1: var(--text-title-1-size);
+  --text-title-1--line-height: var(--text-title-1-leading);
+  --text-title-1--letter-spacing: var(--text-title-1-letter-spacing);
+  --text-title-2: var(--text-title-2-size);
+  --text-title-2--line-height: var(--text-title-2-leading);
+  --text-title-2--letter-spacing: var(--text-title-2-letter-spacing);
+  --text-title-3: var(--text-title-3-size);
+  --text-title-3--line-height: var(--text-title-3-leading);
+  --text-title-3--letter-spacing: var(--text-title-3-letter-spacing);
+  --text-headline: var(--text-headline-size);
+  --text-headline--line-height: var(--text-headline-leading);
+  --text-headline--letter-spacing: var(--text-headline-letter-spacing);
+  --text-body: var(--text-body-size);
+  --text-body--line-height: var(--text-body-leading);
+  --text-body--letter-spacing: var(--text-body-letter-spacing);
+  --text-callout: var(--text-callout-size);
+  --text-callout--line-height: var(--text-callout-leading);
+  --text-callout--letter-spacing: var(--text-callout-letter-spacing);
+  --text-subheadline: var(--text-subheadline-size);
+  --text-subheadline--line-height: var(--text-subheadline-leading);
+  --text-subheadline--letter-spacing: var(--text-subheadline-letter-spacing);
+  --text-footnote: var(--text-footnote-size);
+  --text-footnote--line-height: var(--text-footnote-leading);
+  --text-footnote--letter-spacing: var(--text-footnote-letter-spacing);
+  --text-caption-1: var(--text-caption-1-size);
+  --text-caption-1--line-height: var(--text-caption-1-leading);
+  --text-caption-1--letter-spacing: var(--text-caption-1-letter-spacing);
+  --text-caption-2: var(--text-caption-2-size);
+  --text-caption-2--line-height: var(--text-caption-2-leading);
+  --text-caption-2--letter-spacing: var(--text-caption-2-letter-spacing);
+
+  /* Weight scale -> font-* utilities. */
+  --font-weight-regular: var(--weight-regular);
+  --font-weight-medium: var(--weight-medium);
+  --font-weight-semibold: var(--weight-semibold);
+  --font-weight-bold: var(--weight-bold);
 
   /* Radius scale -> rounded-* utilities. */
   --radius-xs: var(--radius-xs);
@@ -85,4 +146,46 @@
 body {
   background: rgb(var(--bg-primary));
   color: rgb(var(--label-primary));
+}
+
+/* Open/close keyframes for Radix content that mounts/unmounts outside
+   React's render (Dropdown, Tooltip, ...) -- Framer Motion can't hook into
+   Radix's own mount lifecycle here, so these approximate springs.snappy
+   (SS6.3/SS6.4) with --ease-spring-out (SS6.2) instead. Keyed off Radix's
+   data-state attribute so it also drives Radix's unmount-on-animationend. */
+@keyframes contour-scale-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes contour-scale-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@keyframes contour-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes contour-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
