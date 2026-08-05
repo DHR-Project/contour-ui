@@ -6,6 +6,20 @@ import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { Grid } from "@/components/ui/grid";
 import { VStack } from "@/components/ui/stack";
+import { Icon } from "@/components/icon";
+import type { IconName } from "@/components/icon";
+
+// One glyph per category -- a small, restrained stand-in for a full
+// illustration (guideline 6.1: all icon usage goes through the Icon
+// abstraction, never lucide-react directly).
+const CATEGORY_ICONS: Record<string, IconName> = {
+  layout: "layout-grid",
+  navigation: "compass",
+  controls: "sliders-horizontal",
+  display: "image",
+  feedback: "message-circle",
+  overlay: "layers",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -162,21 +176,55 @@ export default function DocsOverviewPage() {
 
       {/* Component overview by category */}
       <DocsSection title="Components" id="components-overview">
+        {/* Category illustration -- a glyph tile per category, doubling as a
+            visual index for the detailed lists below. */}
+        <Grid columns={{ compact: 2, regular: 6 }} gap="3">
+          {CATEGORIES.map((cat) => {
+            const count = COMPONENTS.filter((c) => c.category === cat.id).length;
+            if (count === 0) return null;
+            return (
+              <Card key={cat.id} elevation="flat" padding="4" className="bg-bg-secondary">
+                <VStack gap="2" align="center" className="text-center">
+                  <span
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-fill-secondary"
+                    aria-hidden="true"
+                  >
+                    <Icon name={CATEGORY_ICONS[cat.id]} size="lg" className="text-label-secondary" />
+                  </span>
+                  <Text textStyle="footnote" weight="semibold">
+                    {cat.label}
+                  </Text>
+                  <Text textStyle="caption-1" color="secondary">
+                    {count} component{count === 1 ? "" : "s"}
+                  </Text>
+                </VStack>
+              </Card>
+            );
+          })}
+        </Grid>
+
         <VStack gap="6">
           {CATEGORIES.map((cat) => {
             const items = COMPONENTS.filter((c) => c.category === cat.id);
             if (items.length === 0) return null;
             return (
               <div key={cat.id}>
-                <Text
-                  as="h3"
-                  textStyle="subheadline"
-                  weight="semibold"
-                  color="secondary"
-                  className="mb-(--space-3) uppercase tracking-wide"
-                >
-                  {cat.label}
-                </Text>
+                <div className="flex items-center gap-(--space-2) mb-(--space-3)">
+                  <Icon
+                    name={CATEGORY_ICONS[cat.id]}
+                    size="sm"
+                    className="text-label-tertiary"
+                  />
+                  <Text
+                    as="h3"
+                    textStyle="subheadline"
+                    weight="semibold"
+                    color="secondary"
+                    className="uppercase tracking-wide"
+                  >
+                    {cat.label}
+                  </Text>
+                </div>
                 <Grid columns={{ compact: 1, regular: 2 }} gap="2">
                   {items.map((comp) => (
                     <Link
