@@ -12,7 +12,14 @@ import {
 } from "react";
 import type { ForwardedRef, HTMLAttributes, ReactNode } from "react";
 import { Dialog as RadixDialog, VisuallyHidden } from "radix-ui";
-import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion";
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  usePresence,
+} from "framer-motion";
 import type { MotionValue, PanInfo, Transition } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
@@ -20,7 +27,7 @@ import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
 import { useSizeClass } from "@/lib/hooks/use-size-class";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { Icon } from "@/components/icon";
-import { useSheetZIndex } from "./use-sheet-stack";
+import { useSheetZIndex, sheetDragProgress } from "./use-sheet-stack";
 import type { SheetZIndex } from "./use-sheet-stack";
 import { resolveDragTarget, snapFractionToY } from "./sheet-drag";
 
@@ -191,6 +198,10 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(functi
   );
 });
 
+// SS7 receded-card transform (contour-spec-sheet-v2.md SS7).
+const RECEDED_SCALE = 0.94;
+const RECEDED_Y = -16;
+
 // Shared chrome between both presentations: recede transform for a Sheet
 // that has a newer Sheet stacked on top of it (SS7), plus the backdrop.
 function SheetChrome({
@@ -202,38 +213,93 @@ function SheetChrome({
 }) {
   const { zIndex, reducedMotion, isDraggable } = ctx;
   const shakeX = useMotionValue(0);
+  // Only the base (first-opened) Sheet dims the page -- a nested Sheet's
+  // own Overlay still renders (Radix needs it mounted for outside-click
+  // detection on that layer) but stays transparent, otherwise each nested
+  // level would stack another full-strength bg-overlay-default on top of
+  // the one below it and the page would visibly darken further per level.
+  const isBase = zIndex.depth <= 0;
+  const isReceded = zIndex.isReceded;
+
+  // Explicit motion values (not the `animate` prop) so the drag-tracking
+  // listener below can drive them imperatively too -- both write to the
+  // same scale/y, so whichever last touched them wins each frame.
+  const scale = useMotionValue(isReceded ? RECEDED_SCALE : 1);
+  const y = useMotionValue(isReceded ? RECEDED_Y : 0);
+
+  useEffect(() => {
+    void animate(scale, isReceded ? RECEDED_SCALE : 1, resolveTransition(springs.smooth, reducedMotion));
+    void animate(y, isReceded ? RECEDED_Y : 0, resolveTransition(springs.smooth, reducedMotion));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReceded, reducedMotion]);
+
+  // SS7 live tracking: while the Sheet directly above this one is actively
+  // being dragged, scale/shift this card in step with that drag instead of
+  // only snapping to its resting scale once the gesture ends --
+  // sheetDragProgress is written by whichever Sheet is topmost (the only
+  // one draggable at a time), 0 at rest up to 1 at the dismiss threshold.
+  useMotionValueEvent(sheetDragProgress, "change", (progress) => {
+    if (!isReceded) return;
+    scale.set(RECEDED_SCALE + (1 - RECEDED_SCALE) * progress);
+    y.set(RECEDED_Y + (0 - RECEDED_Y) * progress);
+  });
 
   return (
-    <motion.div
-      className="fixed inset-0"
-      animate={{ scale: zIndex.isReceded ? 0.94 : 1, y: zIndex.isReceded ? -16 : 0 }}
-      transition={resolveTransition(springs.smooth, reducedMotion)}
-      style={{
-        pointerEvents: zIndex.isReceded ? "none" : "auto",
-        transformOrigin: isDraggable ? "50% 100%" : "50% 50%",
-      }}
-    >
-      <RadixDialog.Overlay asChild forceMount>
+    <RadixDialog.Portal forceMount>
+      {/* Single stacking-context boundary for the whole Sheet (backdrop +
+          panel) -- z-(--z-sticky) only needs to be set once, here. Setting
+          it again on the backdrop or panel wrapper below would give each
+          its own competing stacking context (an element's own inline
+          zIndex always wins over its own class either way), which is what
+          let the backdrop's inline zIndex.backdropZ float above the panel
+          wrapper's plain z-(--z-sticky) class instead of staying under it. */}
+      <div className="fixed inset-0 z-(--z-sticky)">
+        {/* Backdrop lives outside the scale/y wrapper below -- it must stay a
+            plain full-viewport rectangle dimming the whole page, not shrink
+            and round its corners along with a receded Sheet's card. */}
+        <RadixDialog.Overlay asChild forceMount>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isBase ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.15 : durations.normal }}
+            className={cn("fixed inset-0", isBase && "bg-overlay-default")}
+            style={{ zIndex: zIndex.backdropZ }}
+          />
+        </RadixDialog.Overlay>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reducedMotion ? 0.15 : durations.normal }}
-          className="fixed inset-0 bg-overlay-default"
-          style={{ zIndex: zIndex.backdropZ }}
-        />
-      </RadixDialog.Overlay>
-      {children({ shakeX })}
-      {/* SS7: a receded Sheet gets its own light dim, independent of the
-          next Sheet's backdrop -- that backdrop dims the page behind the
-          whole stack, this dims specifically the covered Sheet. */}
-      {zIndex.isReceded && (
-        <div
-          className="pointer-events-none fixed inset-0 bg-overlay-default"
-          style={{ zIndex: zIndex.z, opacity: 0.15 }}
-        />
-      )}
-    </motion.div>
+          className="fixed inset-0"
+          style={{
+            scale,
+            y,
+            // Binding scale/y here gives this wrapper a `transform`, which
+            // creates its own stacking context regardless of z-index (CSS
+            // transforms spec) -- without an explicit z-index of its own,
+            // that context's *boundary* falls into the implicit z-index:0
+            // layer, painting under the backdrop's explicit zIndex.backdropZ
+            // even though the panel inside carries a higher inline zIndex.
+            // Matching the panel's own zIndex.z here keeps the wrapper (and
+            // everything in it) above the backdrop, as a unit.
+            zIndex: zIndex.z,
+            pointerEvents: isReceded ? "none" : "auto",
+            transformOrigin: isDraggable ? "50% 100%" : "50% 50%",
+          }}
+        >
+          {children({ shakeX })}
+          {/* SS7: a receded Sheet gets its own light dim, independent of the
+              base Sheet's backdrop -- that backdrop dims the page behind the
+              whole stack, this dims specifically the covered Sheet. Scales
+              with the panel above (same wrapper) so it stays aligned to the
+              card's shrunk bounds instead of covering the pre-scale area. */}
+          {isReceded && (
+            <div
+              className="pointer-events-none fixed inset-0 bg-overlay-default"
+              style={{ zIndex: zIndex.z, opacity: 0.15 }}
+            />
+          )}
+        </motion.div>
+      </div>
+    </RadixDialog.Portal>
   );
 }
 
@@ -288,9 +354,27 @@ interface PanelProps extends SheetContentProps {
 function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwardedRef, ...rest }: PanelProps) {
   const { snapPoints, pending, reducedMotion, attemptDismiss, title } = ctx;
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [topGap, setTopGap] = useState(0);
+  const [isPresent, safeToRemove] = usePresence();
 
   useEffect(() => {
+    // A full-height Bottom Sheet (snapPoints reaching 1) shouldn't cover the
+    // screen edge-to-edge -- native Bottom Sheets always leave a gap at the
+    // top. Measured via a probe (env() only resolves to a real px value once
+    // applied to a layout property) so it respects a real notch/safe-area
+    // when present, with --space-3 as the floor on devices with none.
+    const measureTopGap = () => {
+      const probe = document.createElement("div");
+      probe.style.cssText =
+        "position:fixed;top:0;height:0;padding-top:max(var(--space-3),var(--safe-area-top));visibility:hidden;pointer-events:none;";
+      document.body.appendChild(probe);
+      const gap = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      document.body.removeChild(probe);
+      setTopGap(gap);
+    };
     const update = () => setViewportHeight(window.innerHeight);
+
+    measureTopGap();
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
@@ -298,19 +382,54 @@ function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwa
 
   const maxSnap = snapPoints[snapPoints.length - 1];
   const initialSnap = snapPoints[0];
-  const panelHeightPx = maxSnap * (viewportHeight || 0);
-  const y = useMotionValue(viewportHeight ? snapFractionToY(0, maxSnap, viewportHeight) : 0);
+  // Every snap fraction is relative to this, not the raw viewport height, so
+  // the fully-open (fraction 1) snap point lands just below topGap instead
+  // of at the very top edge.
+  const availableHeight = Math.max(viewportHeight - topGap, 0);
+  const panelHeightPx = maxSnap * (availableHeight || 0);
+  const y = useMotionValue(0);
 
-  // Settle to the initial snap point once real viewport height is known
-  // (0 on the very first render, before the resize-listener effect runs).
+  // Present: slide up from fully off-screen (fraction 0) to the initial snap
+  // point once real viewport height is known (0 on the very first render,
+  // before the resize-listener effect runs) -- contour-spec-sheet-v2.md
+  // "Sheet present/dismiss": slide up from bottom + backdrop fade, springs.smooth.
   useEffect(() => {
     if (!viewportHeight) return;
-    y.set(snapFractionToY(initialSnap, maxSnap, viewportHeight));
+    y.set(snapFractionToY(0, maxSnap, availableHeight));
+    void animate(
+      y,
+      snapFractionToY(initialSnap, maxSnap, availableHeight),
+      resolveTransition(springs.smooth, reducedMotion),
+    );
     // Only on mount / when the measured viewport height first becomes
     // available -- subsequent snapPoints changes shouldn't yank an
     // already-open Sheet back to its initial position.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewportHeight > 0]);
+
+  // Dismiss: slide back down to off-screen before AnimatePresence actually
+  // unmounts the panel (mirrors the present animation above). Skipped when
+  // viewport height was never measured (nothing was ever visible to animate).
+  useEffect(() => {
+    if (isPresent || !viewportHeight) {
+      if (isPresent === false && !viewportHeight) safeToRemove?.();
+      return;
+    }
+    void animate(
+      y,
+      snapFractionToY(0, maxSnap, availableHeight),
+      resolveTransition(springs.smooth, reducedMotion),
+    ).then(() => safeToRemove?.());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPresent]);
+
+  // SS7 live tracking (write side): reports how far this drag has moved
+  // toward its own dismiss position, 0..1, so a receded Sheet underneath
+  // can scale back up in step -- see the matching listener in SheetChrome.
+  const handleDrag = () => {
+    if (!panelHeightPx) return;
+    sheetDragProgress.set(Math.min(Math.max(y.get() / panelHeightPx, 0), 1));
+  };
 
   const handleDragEnd = async (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (pending || !viewportHeight) return;
@@ -320,12 +439,16 @@ function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwa
       velocityY: info.velocity.y,
       snapPoints,
       maxSnap,
-      viewportHeight,
+      viewportHeight: availableHeight,
       includeDismiss: true,
     });
 
     if (target !== "dismiss") {
-      animate(y, snapFractionToY(target, maxSnap, viewportHeight), resolveTransition(springs.smooth, reducedMotion));
+      animate(y, snapFractionToY(target, maxSnap, availableHeight), resolveTransition(springs.smooth, reducedMotion));
+      // Not dismissing -- ease back to 0 rather than snapping, so a receded
+      // Sheet underneath (still subscribed) settles back in the same spring
+      // instead of jumping straight to its resting scale.
+      void animate(sheetDragProgress, 0, resolveTransition(springs.smooth, reducedMotion));
       return;
     }
 
@@ -340,11 +463,12 @@ function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwa
       velocityY: 0,
       snapPoints,
       maxSnap,
-      viewportHeight,
+      viewportHeight: availableHeight,
       includeDismiss: false,
     });
-    const restY = snapFractionToY(typeof restTarget === "number" ? restTarget : maxSnap, maxSnap, viewportHeight);
+    const restY = snapFractionToY(typeof restTarget === "number" ? restTarget : maxSnap, maxSnap, availableHeight);
     const overshootY = Math.min(currentY + panelHeightPx * 0.1, panelHeightPx);
+    void animate(sheetDragProgress, 0, resolveTransition(springs.bouncy, reducedMotion));
     await animate(y, overshootY, resolveTransition(springs.bouncy, reducedMotion));
     await animate(y, restY, resolveTransition(springs.bouncy, reducedMotion));
   };
@@ -379,6 +503,7 @@ function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwa
             drag={pending ? false : "y"}
             dragConstraints={{ top: 0, bottom: panelHeightPx }}
             dragElastic={{ top: 0.15, bottom: 0 }}
+            onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             style={{ ...styleProp, y, x: shakeX, height: panelHeightPx || undefined, zIndex: ctx.zIndex.z }}
             className={cn(

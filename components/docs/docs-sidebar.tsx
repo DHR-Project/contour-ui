@@ -35,7 +35,13 @@ const SEARCH_INDEX: { href: string; label: string; subtitle: string }[] = [
   })),
 ];
 
-export function DocsSidebar() {
+export interface DocsSidebarProps {
+  className?: string;
+  /** Called after a link is activated -- lets embedding contexts (e.g. the compact-nav Sheet) close themselves on navigation. */
+  onNavigate?: () => void;
+}
+
+export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -55,12 +61,13 @@ export function DocsSidebar() {
   function handleResultSelect(href: string) {
     setQuery("");
     router.push(href);
+    onNavigate?.();
   }
 
   return (
     <nav
       aria-label="Documentation navigation"
-      className="flex flex-col h-full overflow-y-auto py-(--space-6) px-(--space-4)"
+      className={cn("flex flex-col h-full overflow-y-auto no-scrollbar py-(--space-6) px-(--space-4)", className)}
     >
       {/* Search */}
       <div className="mb-(--space-6)">
@@ -82,6 +89,7 @@ export function DocsSidebar() {
             <li key={link.href}>
               <Link
                 href={link.href}
+                onClick={onNavigate}
                 className={cn(
                   "block px-(--space-3) py-(--space-2) rounded-md text-subheadline font-medium transition-colors duration-(--duration-fast)",
                   isActive
@@ -133,6 +141,7 @@ export function DocsSidebar() {
                     <li key={comp.slug}>
                       <Link
                         href={href}
+                        onClick={onNavigate}
                         className={cn(
                           "flex items-center justify-between gap-(--space-2) px-(--space-3) py-(--space-1) rounded-md text-footnote transition-colors duration-(--duration-fast)",
                           isActive
@@ -175,6 +184,7 @@ export function DocsSidebar() {
             <li key={link.href}>
               <Link
                 href={link.href}
+                onClick={onNavigate}
                 className={cn(
                   "block px-(--space-3) py-(--space-2) rounded-md text-caption-1 font-medium transition-colors duration-(--duration-fast)",
                   isActive

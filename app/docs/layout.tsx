@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DocsSidebar } from "@/components/docs/docs-sidebar";
+import { DocsMobileNav } from "@/components/docs/docs-mobile-nav";
 import { DocsToc } from "@/components/docs/docs-toc";
 import { Container } from "@/components/ui/container";
 import { Text } from "@/components/ui/text";
@@ -32,17 +33,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             Component Library
           </Text>
         </VStack>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           <DocsSidebar />
         </div>
       </aside>
 
-      {/* Mobile breadcrumb bar */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-(--z-sticky) bg-(--material-regular) backdrop-blur-lg border-b border-separator px-(--page-margin) py-(--space-3)">
-        <Text textStyle="headline" weight="semibold">
-          Contour Docs
-        </Text>
-      </div>
+      {/* Compact top bar -- hamburger opens the sidebar nav in a Sheet, since
+          the real <aside> above is hidden below `md`. */}
+      <DocsMobileNav />
 
       {/* Main content */}
       <main id="docs-main" className="flex-1 min-w-0 pt-14 md:pt-0">
