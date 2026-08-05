@@ -41,6 +41,7 @@ import { DocsCodeBlock } from "@/components/docs/docs-ui";
 import { SizeClassPreview } from "@/components/docs/docs-size-class-preview";
 import { Alert } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/toast";
+import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
 
 // ---------------------------------------------------------------------------
 // Demo registry -- each component slug maps to a list of small, titled
@@ -1386,6 +1387,55 @@ function ToastDemoBasic() {
   );
 }
 
+function SheetDemoBasic() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Open Sheet</Button>
+      <Sheet open={open} onOpenChange={setOpen} title="Shipping details">
+        <SheetContent>
+          <SheetHeader>
+            <Text textStyle="headline">Shipping details</Text>
+          </SheetHeader>
+          <Container variant="content">
+            <VStack gap="section" className="py-4">
+              <Text>
+                Touch presents this as a draggable Bottom Sheet; a mouse or trackpad presents it as
+                a centered Modal instead -- same markup either way.
+              </Text>
+              <Button onClick={() => setOpen(false)}>Done</Button>
+            </VStack>
+          </Container>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+function SheetDemoSnapPoints() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Open with Snap Points</Button>
+      <Sheet open={open} onOpenChange={setOpen} snapPoints={[0.4, 0.9]} title="Filters">
+        <SheetContent>
+          <SheetHeader>
+            <Text textStyle="headline">Filters</Text>
+          </SheetHeader>
+          <Container variant="content">
+            <VStack gap="section" className="py-4">
+              <Text color="secondary">
+                On touch, drag between 40% and 90% height, or drag past 40% to dismiss. With a
+                mouse/trackpad, snapPoints has no effect -- it always presents as a fixed Modal.
+              </Text>
+            </VStack>
+          </Container>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
 const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
   alert: [
     {
@@ -1843,6 +1893,21 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       title: "With submenu",
       code: `<ContextMenu\n  items={[\n    {\n      type: "submenu",\n      icon: "download",\n      label: "Export",\n      items: [\n        { type: "action", label: "PDF", onSelect: onExportPdf },\n        { type: "action", label: "CSV", onSelect: onExportCsv },\n      ],\n    },\n    { type: "separator" },\n    { type: "action", icon: "trash", label: "Delete", role: "destructive", onSelect: onDelete },\n  ]}\n>\n  <div>Right-click this area</div>\n</ContextMenu>`,
       Component: ContextMenuSubmenuDemo,
+    },
+  ],
+
+  sheet: [
+    {
+      title: "Basic Sheet",
+      description: "Adaptive Presentation -- Bottom Sheet on touch, centered Modal with a mouse/trackpad.",
+      code: `<Sheet open={open} onOpenChange={setOpen} title="Shipping details">\n  <SheetContent>\n    <SheetHeader>\n      <Text textStyle="headline">Shipping details</Text>\n    </SheetHeader>\n    <Container variant="content">\n      <VStack gap="section">...</VStack>\n    </Container>\n  </SheetContent>\n</Sheet>`,
+      Component: SheetDemoBasic,
+    },
+    {
+      title: "Snap points",
+      description: "snapPoints only applies to the draggable Bottom Sheet (touch) presentation.",
+      code: `<Sheet open={open} onOpenChange={setOpen} snapPoints={[0.4, 0.9]} title="Filters">\n  <SheetContent>...</SheetContent>\n</Sheet>`,
+      Component: SheetDemoSnapPoints,
     },
   ],
 };
