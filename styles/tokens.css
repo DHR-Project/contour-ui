@@ -628,6 +628,26 @@
   }
 }
 
+/* contour-spec-sheet-v2.md SS2a -- Sheet surface radius + grabber. Compact
+   (phone) only rounds the top corners (bottom sits flush with the screen
+   edge); regular+ rounds all 4 (Sheet reads as a centered modal card). */
+.contour-sheet-content {
+  border-top-left-radius: var(--sheet-radius-top);
+  border-top-right-radius: var(--sheet-radius-top);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+@media (min-width: 768px) {
+  .contour-sheet-content {
+    border-radius: var(--sheet-radius-bottom); /* == --sheet-radius-top at regular+, both 38px */
+  }
+}
+.contour-sheet-grabber {
+  width: var(--grabber-width);
+  height: var(--grabber-height);
+  border-radius: var(--radius-full);
+}
+
 /* SS4.9 Context Menu / Dropdown dimensions (v2) */
 :root {
   /* compact (phone) */

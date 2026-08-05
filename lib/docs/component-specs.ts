@@ -1096,12 +1096,12 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     slug: "sheet",
     name: "Sheet",
     description:
-      "Adaptive overlay — Bottom Sheet on compact, Centered Modal on regular+. Built on Radix Dialog + Framer Motion drag with snap points, nested stacking, and conditional dismiss.",
+      "Adaptive overlay — Bottom Sheet on touch, Centered Modal with a mouse/trackpad (input modality, not size-class). Built on Radix Dialog + Framer Motion drag with snap points, nested stacking, and conditional dismiss.",
     anatomy: [
       { name: "Sheet root", description: "Manages open state" },
       { name: "SheetContent", description: "Main surface with safe-area padding" },
       { name: "SheetHeader", description: "Title area" },
-      { name: "Grabber bar", description: "58×4px, compact only" },
+      { name: "Grabber bar", description: "58×4px, touch only" },
       { name: "Backdrop overlay", description: "Per nesting depth" },
     ],
     props: [
@@ -1113,8 +1113,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     states: [
       { state: "Closed", description: "Not rendered" },
-      { state: "Open (compact)", description: "Bottom Sheet, drag-enabled on pointer: coarse" },
-      { state: "Open (regular+)", description: "Centered Modal, no drag, dismiss via Close/Escape/click-outside" },
+      { state: "Open (touch)", description: "Bottom Sheet, drag-enabled -- pointer: coarse, at every size-class" },
+      { state: "Open (mouse/trackpad)", description: "Centered Modal, no drag, dismiss via Close/Escape/click-outside" },
       { state: "Blocked dismiss", description: "Bounce-back via springs.bouncy; shake animation on button press" },
       { state: "Receded", description: "Sheet below active nested Sheet: scale 0.94, y -16px" },
     ],

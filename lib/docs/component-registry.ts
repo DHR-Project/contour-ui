@@ -269,7 +269,8 @@ export const COMPONENTS: ComponentMeta[] = [
     name: "Sheet",
     description: "Adaptive presentation surface with snap points, drag-to-dismiss, and receding card stack.",
     category: "overlay",
-    status: "spec-only",
+    status: "complete",
+    importPath: "@/components/ui/sheet",
   },
   {
     slug: "dropdown",
