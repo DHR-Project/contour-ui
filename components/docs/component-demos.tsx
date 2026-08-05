@@ -1412,6 +1412,49 @@ function SheetDemoBasic() {
   );
 }
 
+// SS7: a Sheet opened from inside another Sheet's content recedes the one
+// underneath it (scale down, shift up, dim, pointer-events: none) -- and
+// only the base (outer) Sheet dims the page, the nested one stays
+// transparent so the two don't stack dim on top of dim.
+function SheetDemoNested() {
+  const [parentOpen, setParentOpen] = useState(false);
+  const [childOpen, setChildOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setParentOpen(true)}>Open Category Picker</Button>
+      <Sheet open={parentOpen} onOpenChange={setParentOpen} title="Choose a category">
+        <SheetContent>
+          <SheetHeader>
+            <Text textStyle="headline">Choose a category</Text>
+          </SheetHeader>
+          <Container variant="content">
+            <VStack gap="section" className="py-4">
+              <Text color="secondary">
+                Opening the nested Sheet recedes this one -- scaled down, dimmed, inert.
+              </Text>
+              <Button onClick={() => setChildOpen(true)}>New category...</Button>
+            </VStack>
+          </Container>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={childOpen} onOpenChange={setChildOpen} title="New category">
+        <SheetContent>
+          <SheetHeader>
+            <Text textStyle="headline">New category</Text>
+          </SheetHeader>
+          <Container variant="content">
+            <VStack gap="section" className="py-4">
+              <Text color="secondary">This Sheet sits above the receded one (--z-sheet + depth * 20).</Text>
+              <Button onClick={() => setChildOpen(false)}>Done</Button>
+            </VStack>
+          </Container>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
 function SheetDemoSnapPoints() {
   const [open, setOpen] = useState(false);
   return (
@@ -1908,6 +1951,13 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       description: "snapPoints only applies to the draggable Bottom Sheet (touch) presentation.",
       code: `<Sheet open={open} onOpenChange={setOpen} snapPoints={[0.4, 0.9]} title="Filters">\n  <SheetContent>...</SheetContent>\n</Sheet>`,
       Component: SheetDemoSnapPoints,
+    },
+    {
+      title: "Nested sheets",
+      description:
+        "A Sheet opened from inside another Sheet's content recedes the one underneath it -- scaled down, dimmed, inert.",
+      code: `<Sheet open={parentOpen} onOpenChange={setParentOpen} title="Choose a category">\n  <SheetContent>\n    <SheetHeader>\n      <Text textStyle="headline">Choose a category</Text>\n    </SheetHeader>\n    <Container variant="content">\n      <Button onClick={() => setChildOpen(true)}>New category...</Button>\n    </Container>\n  </SheetContent>\n</Sheet>\n\n<Sheet open={childOpen} onOpenChange={setChildOpen} title="New category">\n  <SheetContent>...</SheetContent>\n</Sheet>`,
+      Component: SheetDemoNested,
     },
   ],
 };

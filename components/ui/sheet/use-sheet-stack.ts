@@ -5,7 +5,16 @@ import { useId, useSyncExternalStore } from "react";
 // the client) -- registering synchronously before paint means a nested
 // Sheet's z-index is correct on its very first frame instead of flashing
 // the un-nested value for one tick.
-import { useIsomorphicLayoutEffect } from "framer-motion";
+import { useIsomorphicLayoutEffect, motionValue } from "framer-motion";
+import type { MotionValue } from "framer-motion";
+
+// Shared across the whole stack -- only the topmost (interactively
+// draggable) Sheet ever writes to this, live during its own drag gesture:
+// 0 at rest, up to 1 at the dismiss threshold. A receded Sheet underneath
+// subscribes to it so it scales back up in step with the drag instead of
+// only snapping to its resting scale once the gesture ends
+// (contour-spec-sheet-v2.md SS7 "receding card").
+export const sheetDragProgress: MotionValue<number> = motionValue(0);
 
 // Mirrors --z-sheet (styles/tokens.css SS6.9, 310) -- same precedent as
 // Alert's static z-390 class for --z-alert. Kept in sync manually; there's
