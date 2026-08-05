@@ -40,6 +40,13 @@ export function dismissToast(id: string) {
   emit();
 }
 
+/** Dismisses every active toast at once -- backs the Toaster's clear action. */
+export function clearToasts() {
+  if (toasts.length === 0) return;
+  toasts = [];
+  emit();
+}
+
 export function useToast() {
   const [state, setState] = useState(toasts);
 
@@ -50,5 +57,5 @@ export function useToast() {
     };
   }, []);
 
-  return { toasts: state, toast, dismiss: dismissToast };
+  return { toasts: state, toast, dismiss: dismissToast, clear: clearToasts };
 }

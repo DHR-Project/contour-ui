@@ -341,7 +341,7 @@ function RailToc({
       exit={swapVariants.exit}
       className="w-50 shrink-0 pr-[max(var(--page-margin),var(--safe-area-right))]"
     >
-      <nav ref={navRef} className="sticky top-0 max-h-screen overflow-y-auto no-scrollbar py-(--space-10)">
+      <nav ref={navRef} className="scroll-mask-y sticky top-0 max-h-screen overflow-y-auto no-scrollbar py-(--space-10)">
         <Text
           as="span"
           textStyle="caption-1"

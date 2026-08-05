@@ -525,7 +525,7 @@ function DraggableSheetPanel({ ctx, className, style: styleProp, children, forwa
             </div>
             <CloseButton pending={pending} onPointerDown={() => void handleNonDragDismiss(shakeX)} />
             <div
-              className="min-h-0 flex-1 overflow-y-auto"
+              className="scroll-mask-y min-h-0 flex-1 overflow-y-auto"
               style={{
                 paddingBottom: "var(--safe-area-bottom)",
                 paddingLeft: "var(--inset-grouped-margin-x)",
@@ -591,7 +591,7 @@ function ModalSheetPanel({ ctx, className, style: styleProp, children, forwarded
             )}
             <CloseButton pending={pending} onPointerDown={() => void handleDismiss(shakeX)} />
             <div
-              className="min-h-0 flex-1 overflow-y-auto"
+              className="scroll-mask-y min-h-0 flex-1 overflow-y-auto"
               style={{
                 paddingBottom: "var(--safe-area-bottom)",
                 paddingLeft: "var(--inset-grouped-margin-x)",

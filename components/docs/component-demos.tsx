@@ -41,6 +41,7 @@ import { DocsCodeBlock } from "@/components/docs/docs-ui";
 import { SizeClassPreview } from "@/components/docs/docs-size-class-preview";
 import { Alert } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/toast";
+import type { ToastInput, ToastPosition } from "@/components/ui/toast";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
 
 // ---------------------------------------------------------------------------
@@ -1375,15 +1376,83 @@ function AlertDemoBasic() {
   );
 }
 
+// The three Toast examples below deliberately share the single <Toaster />
+// mounted by ToastDemoPlacement -- a real app mounts exactly one at the root,
+// and every demo on this page is rendered at the same time, so the buttons in
+// the other two examples feed that same stack.
 function ToastDemoBasic() {
   return (
     <div className="p-4 flex gap-2 flex-wrap justify-center">
-      <Toaster />
       <Button onClick={() => toast({ title: "Copied to clipboard" })}>Default</Button>
       <Button onClick={() => toast({ title: "Saved successfully", variant: "success" })}>Success</Button>
       <Button onClick={() => toast({ title: "Disk almost full", variant: "warning" })}>Warning</Button>
       <Button onClick={() => toast({ title: "Upload failed", variant: "destructive" })}>Destructive</Button>
     </div>
+  );
+}
+
+const TOAST_STACK_SAMPLES: ToastInput[] = [
+  { title: "Message sent", description: "Delivered to Design team." },
+  { title: "Backup finished", variant: "success" },
+  { title: "Storage almost full", description: "90% of your quota is used.", variant: "warning" },
+  { title: "Upload failed", description: "Check your connection.", variant: "destructive" },
+  { title: "3 files renamed" },
+  { title: "Sync complete", variant: "success" },
+  { title: "Invite accepted", description: "Alex joined the workspace." },
+];
+
+function ToastDemoStack() {
+  const fire = (count: number) => {
+    TOAST_STACK_SAMPLES.slice(0, count).forEach((sample, index) => {
+      setTimeout(() => toast({ ...sample, duration: 30000 }), index * 220);
+    });
+  };
+
+  return (
+    <div className="p-4 flex gap-2 flex-wrap justify-center">
+      <Button onClick={() => fire(3)}>Send 3 toasts</Button>
+      <Button variant="tinted" onClick={() => fire(7)}>Send 7 toasts</Button>
+    </div>
+  );
+}
+
+const TOAST_POSITIONS: ToastPosition[] = [
+  "top-left",
+  "top-center",
+  "top-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
+];
+
+function ToastDemoPlacement() {
+  const [position, setPosition] = useState<ToastPosition>("bottom-right");
+
+  return (
+    <VStack gap="4" className="p-4">
+      <Grid columns={3} gap="2">
+        {TOAST_POSITIONS.map((value) => (
+          <Button
+            key={value}
+            size="sm"
+            variant={value === position ? "filled" : "tinted"}
+            onClick={() => setPosition(value)}
+          >
+            {value}
+          </Button>
+        ))}
+      </Grid>
+      <Button
+        onClick={() =>
+          TOAST_STACK_SAMPLES.slice(0, 4).forEach((sample, index) =>
+            setTimeout(() => toast({ ...sample, duration: 30000 }), index * 220)
+          )
+        }
+      >
+        Send toasts to {position}
+      </Button>
+      <Toaster position={position} />
+    </VStack>
   );
 }
 
@@ -1491,10 +1560,25 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
   toast: [
     {
       title: "Toast Variants",
-      description: "Default, success, warning, and destructive variants.",
+      description:
+        "Default, success, warning, and destructive variants. Every example on this page feeds the one <Toaster> mounted under Placement below -- an app mounts exactly one, at the root.",
       code: `toast({ title: "Saved successfully", variant: "success" })`,
       Component: ToastDemoBasic,
-    }
+    },
+    {
+      title: "Grouped stack",
+      description:
+        "Multiple toasts collapse into a paper stack. Hover it with a mouse to preview the list; click or tap it to pin it open. Either way a Show Less button and a Clear button sit at the anchored edge -- one stacks the list back up, the other dismisses every toast (one click with a mouse; on touch the X expands into its label first). The list may use the full page height, and scrolls beyond that -- anchored so the newest toast stays in view, with the clipped edge faded by scroll-mask-y.",
+      code: `// Any number of toasts can be active -- the stack collapses them\ntoast({ title: "Message sent" })\ntoast({ title: "Backup finished", variant: "success" })\ntoast({ title: "Storage almost full", variant: "warning" })`,
+      Component: ToastDemoStack,
+    },
+    {
+      title: "Placement",
+      description:
+        "position accepts one of the six anchors, or a per-size-class pair. The stacking direction, the direction the list expands and the enter animation all follow the anchor: a bottom-anchored stack rises from below and expands upward, a top-anchored one drops from above and expands downward.",
+      code: `// Fixed anchor\n<Toaster position="top-right" />\n\n// Adaptive (the default)\n<Toaster position={{ compact: "top-center", regular: "bottom-right" }} />`,
+      Component: ToastDemoPlacement,
+    },
   ],
   flex: [
     {

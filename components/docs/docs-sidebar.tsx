@@ -15,6 +15,7 @@ const TOP_LINKS = [
   { href: "/docs", label: "Overview" },
   { href: "/docs/guidelines", label: "Guidelines" },
   { href: "/docs/tokens", label: "Tokens" },
+  { href: "/docs/scroll-mask", label: "Scroll Mask" },
   { href: "/docs/settings", label: "Settings" },
 ];
 
@@ -67,7 +68,7 @@ export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
   return (
     <nav
       aria-label="Documentation navigation"
-      className={cn("flex flex-col h-full overflow-y-auto no-scrollbar py-(--space-6) px-(--space-4)", className)}
+      className={cn("scroll-mask-y flex flex-col h-full overflow-y-auto no-scrollbar py-(--space-6) px-(--space-4)", className)}
     >
       {/* Search */}
       <div className="mb-(--space-6)">
