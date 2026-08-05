@@ -255,6 +255,22 @@ export default function GuidelinesPage() {
             in this use case.
           </Text>
         </DocsSubsection>
+
+        <DocsSubsection id="rule-4-8" title="4.8 Every scroll container fades its clipped edge" badge="required">
+          <Text textStyle="body" color="secondary" className="max-w-prose">
+            Any element that scrolls (<DocsCode>overflow-y: auto/scroll</DocsCode> or the{" "}
+            <DocsCode>x</DocsCode> equivalent) must carry the matching{" "}
+            <DocsCode>scroll-mask-*</DocsCode> utility on that same element —{" "}
+            <DocsCode>scroll-mask-y</DocsCode> for a vertical scroller,{" "}
+            <DocsCode>scroll-mask-x</DocsCode> for a horizontal one, or the single-edge variants. A
+            hard cut at a scroll boundary reads as a layout bug and hides the fact that there is
+            more to see. The only exception is a boundary that is already visually terminated: a
+            full-bleed region ending at the window edge, or a surface closed by its own border
+            (Dropdown, SearchField results) — the mask box is the border box, so masking those
+            would fade the border with the content. See <DocsCode>/docs/scroll-mask</DocsCode> for
+            the utilities and their fade-distance modifiers.
+          </Text>
+        </DocsSubsection>
       </DocsSection>
 
       {/* §5 Accessibility Baseline */}

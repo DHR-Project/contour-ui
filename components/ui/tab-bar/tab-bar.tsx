@@ -198,7 +198,7 @@ export function TabBar({ items, value, onValueChange, className }: TabBarProps) 
                 Button already applies via its own `md:min-h-0`). */}
             <div
               role="tablist"
-              className="flex min-w-0 flex-1 items-center gap-(--space-1) overflow-x-auto"
+              className="scroll-mask-x flex min-w-0 flex-1 items-center gap-(--space-1) overflow-x-auto"
             >
               {items.map((item) => {
                 const active = itemValue(item) === value;

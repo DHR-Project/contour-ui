@@ -40,7 +40,7 @@ export function DocsCodeBlock({ children, lang = "text", copyable = false }: Doc
     // container's edge instead of triggering its own overflow-x-auto.
     <div className="relative min-w-0 w-full">
       <pre
-        className="w-full min-w-0 overflow-x-auto rounded-md bg-fill-secondary p-(--space-4) text-caption-1 font-mono text-label-primary"
+        className="scroll-mask-x w-full min-w-0 overflow-x-auto rounded-md bg-fill-secondary p-(--space-4) text-caption-1 font-mono text-label-primary"
         style={copyable ? { paddingRight: "var(--space-9)" } : undefined}
         data-lang={lang}
       >
