@@ -5,6 +5,7 @@ import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { Grid } from "@/components/ui/grid";
 import { VStack } from "@/components/ui/stack";
+import { ComponentPictogram } from "@/components/docs/component-pictograms";
 
 export const metadata: Metadata = {
   title: "Components",
@@ -74,9 +75,17 @@ export default function ComponentsIndexPage() {
                     <VStack gap="2">
                       {/* Header row */}
                       <div className="flex items-start justify-between gap-(--space-2)">
-                        <Text textStyle="body" weight="semibold">
-                          {comp.name}
-                        </Text>
+                        <div className="flex items-center gap-(--space-3) min-w-0">
+                          <span
+                            className="flex items-center justify-center w-8 h-8 rounded-lg bg-fill-secondary text-label-secondary shrink-0"
+                            aria-hidden="true"
+                          >
+                            <ComponentPictogram slug={comp.slug} size="md" />
+                          </span>
+                          <Text textStyle="body" weight="semibold" className="truncate">
+                            {comp.name}
+                          </Text>
+                        </div>
 
                         {comp.status === "spec-only" && (
                           <span className="shrink-0 mt-0.5 text-caption-2 font-semibold text-[rgb(var(--color-orange))] bg-[rgb(var(--color-orange)/0.12)] px-(--space-2) py-px rounded-full">
