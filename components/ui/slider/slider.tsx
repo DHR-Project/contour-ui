@@ -112,7 +112,12 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(function Slider(
         <RadixSlider.Thumb
           key={index}
           aria-label={thumbLabels?.[index] ?? singleThumbLabel}
-          className="relative block h-7 w-7 rounded-full bg-bg-primary shadow-sm before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-solid focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-[rgb(var(--focus-ring-color))]"
+          // Fixed white, not `bg-primary` -- same reasoning as Switch's
+          // thumb (contour-spec-switch-v2.md): `bg-primary` flips to black
+          // in dark mode, which disappears against the also-black page
+          // background instead of standing out. Always-white keeps the
+          // thumb visible in both modes.
+          className="relative block h-7 w-7 rounded-full bg-white shadow-sm before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-solid focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-[rgb(var(--focus-ring-color))]"
         />
       ))}
     </RadixSlider.Root>

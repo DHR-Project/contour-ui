@@ -59,10 +59,16 @@ export interface DropdownProps {
 // not --popover-radius directly -- at the item's --radius-sm (8px) plus the
 // container's own 6px (p-1.5) padding, that's 14px, matching --radius-lg.
 // `relative` anchors popLayout's absolutely-positioned exiting screen (see
-// stackVariants below) so it stays clipped by `overflow-hidden` instead of
-// escaping to whatever ancestor happens to be positioned.
+// stackVariants below) so it stays clipped by `overflow-x-hidden` instead of
+// escaping to whatever ancestor happens to be positioned -- `overflow-y-auto`
+// (rather than `hidden`) still clips the same way but additionally lets a
+// menu taller than the viewport scroll internally, capped to Radix's own
+// `--radix-dropdown-menu-content-available-height` (guideline: popovers must
+// fit on screen with their own scroll, not overflow it). `contour-material`
+// (tokens.css SS2.3a) replaces the old solid `bg-bg-tertiary` -- floating
+// content should read as frosted glass, not a flat panel (guideline rule 1.2).
 export const contentClassName =
-  "relative z-[var(--z-dropdown)] min-w-48 origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-hidden rounded-[var(--radius-lg)] border border-separator bg-bg-tertiary p-1.5 shadow-md " +
+  "relative z-[var(--z-dropdown)] min-w-48 max-h-(--radix-dropdown-menu-content-available-height) origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-[var(--radius-lg)] border border-separator contour-material p-1.5 shadow-md " +
   "data-[state=open]:animate-[contour-scale-fade-in_var(--duration-fast)_var(--ease-spring-out)] " +
   "data-[state=closed]:animate-[contour-scale-fade-out_var(--duration-fast)_var(--ease-standard)]";
 
@@ -350,6 +356,7 @@ export function Dropdown({ trigger, items, side = "bottom", align = "start" }: D
         setOpen(next);
         if (!next) setStack([]);
       }}
+
     >
       {/* onPointerDown intercepts touchstart to open immediately, ahead of
           Radix's own click handling (SSA.5: the menu should open right away

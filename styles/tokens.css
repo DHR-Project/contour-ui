@@ -23,6 +23,12 @@
     --icon-stroke-width: 2.5;
   }
 }
+/* Manual override (ContourProvider highContrast, SS2.4) -- mirrors the media
+   query above so the in-app toggle produces the same result as the OS
+   setting, class applied to <html> alongside .dark. */
+:root.high-contrast {
+  --icon-stroke-width: 2.5;
+}
 
 /* SS1 Breakpoint / size-class system */
 :root {
@@ -219,6 +225,39 @@
   --material-thick: rgb(28 28 30 / 0.85);
 }
 
+/* SS2.3a Static material surface -- for any single floating panel that
+   isn't scroll-linked (Dropdown/ContextMenu content, SearchField results,
+   Popover), as opposed to Progressive Blur (SS2.10) which is only for bars
+   with content scrolling underneath them (design-tokens-summary-v2.md
+   §2.3/guideline rule 1.2: "depth through material, not shadow" -- every
+   floating content surface should use this, not `bg-bg-tertiary`).
+   `--material-regular` (not `--thick`) -- at 0.9 alpha, `--thick` is nearly
+   opaque and the blur it's paired with becomes imperceptible; `--thick` is
+   reserved for TabBar's pill, which specifically needs extra legibility
+   sitting over its OWN separate progressive-blur band underneath (a
+   different, already-blurred surface), not for a popover floating directly
+   over ordinary page content.
+   `backdrop-filter: blur(20px)` per design-tokens-summary-v2.md §2.3 (flat,
+   not progressive -- that variant is bar-specific). Reduced Transparency
+   already resolves --material-regular to a solid color (above); the blur
+   itself still needs its own explicit off-switch here (guideline rule 2.4b:
+   "turn off backdrop-filter too, not just the background color"). */
+.contour-material {
+  background: var(--material-regular);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .contour-material {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+.reduce-transparency .contour-material {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* SS2.4 Increase Contrast (accessibility)
    v2: --separator override updated to match the new black/white alpha model
    (SS2.2) -- alpha values (0.3/0.35) are still placeholders, not yet tested
@@ -233,6 +272,15 @@
     --separator: 255 255 255 / 0.35;
   }
 }
+/* Manual override (ContourProvider highContrast) -- see SS0.2 note above. */
+:root.high-contrast {
+  --label-secondary: 60 60 67 / 0.85;
+  --separator: 0 0 0 / 0.3;
+  --fill-tertiary: 118 118 128 / 0.25;
+}
+.dark.high-contrast {
+  --separator: 255 255 255 / 0.35;
+}
 
 /* SS2.4b Reduced Transparency (accessibility) */
 @media (prefers-reduced-transparency: reduce) {
@@ -241,6 +289,12 @@
     --material-regular: rgb(var(--bg-primary));
     --material-thick: rgb(var(--bg-secondary));
   }
+}
+/* Manual override (ContourProvider reduceTransparency) -- see SS0.2 note above. */
+:root.reduce-transparency {
+  --material-thin: rgb(var(--bg-primary));
+  --material-regular: rgb(var(--bg-primary));
+  --material-thick: rgb(var(--bg-secondary));
 }
 
 /* SS2.7 Tint (custom accent color) -- overridden per-app via ContourProvider */
@@ -300,6 +354,12 @@
     background: rgb(var(--bg-primary));
   }
 }
+.reduce-transparency .progressive-blur-layer {
+  display: none !important;
+}
+.reduce-transparency .progressive-blur-container {
+  background: rgb(var(--bg-primary));
+}
 @media (prefers-contrast: more) {
   .progressive-blur-layer {
    -webkit-backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
@@ -308,6 +368,13 @@
   .progressive-blur-container {
     background: rgb(var(--bg-primary) / 0.85);
   }
+}
+.high-contrast .progressive-blur-layer {
+  -webkit-backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
+  backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
+}
+.high-contrast .progressive-blur-container {
+  background: rgb(var(--bg-primary) / 0.85);
 }
 
 /* SS3.2 Font stack -- Inter self-hosted via next/font (see app/layout.tsx), no manual @font-face needed */
@@ -615,6 +682,13 @@
     --duration-normal: 0ms;
     --duration-slow: 0ms;
   }
+}
+/* Manual override (ContourProvider reduceMotion) -- see SS0.2 note above. */
+:root.reduce-motion {
+  --duration-instant: 0ms;
+  --duration-fast: 0ms;
+  --duration-normal: 0ms;
+  --duration-slow: 0ms;
 }
 
 /* SS6.9 Z-index / layering scale */

@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
 import { describe, expect, it, beforeEach } from "vitest";
-import { ContourProvider, useContourSizeMode } from "./contour-provider";
+import { ContourProvider, useContourPreferences } from "./contour-provider";
 
 function Consumer() {
-  const { sizeMode, setSizeMode } = useContourSizeMode();
+  const { sizeMode, setSizeMode } = useContourPreferences();
   return (
     <button onClick={() => setSizeMode("xxxLarge")} data-size-mode={sizeMode}>
       {sizeMode}

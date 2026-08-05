@@ -25,12 +25,15 @@ import {
   Info,
   LoaderCircle,
   Minus,
+  Monitor,
+  Moon,
   Plus,
   Search,
   Settings,
   Share2,
   Sidebar,
   Star,
+  Sun,
   Trash2,
   TriangleAlert,
   Upload,
@@ -63,6 +66,8 @@ export const iconRegistry = {
   home: House,
   info: Info,
   minus: Minus,
+  monitor: Monitor,
+  moon: Moon,
   plus: Plus,
   search: Search,
   settings: Settings,
@@ -70,8 +75,14 @@ export const iconRegistry = {
   sidebar: Sidebar,
   spinner: LoaderCircle,
   star: Star,
+  sun: Sun,
   trash: Trash2,
   "triangle-alert": TriangleAlert,
   upload: Upload,
   user: User,
 } satisfies Record<string, LucideIcon>;
+
+// Flat name list -- for anything that needs to enumerate every registered
+// icon (e.g. the docs site's icon gallery) without importing the registry
+// object itself (which would pull the lucide-react components too).
+export const iconNames = Object.keys(iconRegistry) as (keyof typeof iconRegistry)[];

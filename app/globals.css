@@ -15,6 +15,19 @@
   }
 }
 
+/* Hides the scrollbar track/thumb on an overflow-auto/scroll container
+   without disabling scrolling -- for compact overlay-style scroll regions
+   (e.g. DocsToc's floating panel) where a visible scrollbar would clutter
+   a small floating surface. Cross-browser: Firefox/IE-Edge use a property,
+   WebKit/Blink need the pseudo-element hidden explicitly. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme inline {
   --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
@@ -187,5 +200,17 @@ body {
   }
   to {
     opacity: 0;
+  }
+}
+
+/* Reduced-motion alternative to the spinner rotation: pulse opacity between
+   0.4 and 1 to communicate "still working" without continuous rotation (spec
+   contour-spec-progress.md SS4 "prefers-reduced-motion"). */
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
   }
 }

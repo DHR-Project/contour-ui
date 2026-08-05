@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useId } from "react";
+import type { FocusEvent, KeyboardEvent } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
@@ -8,6 +9,16 @@ import { Text } from "@/components/ui/text";
 
 export type TextFieldSize = "sm" | "md";
 export type TextFieldType = "text" | "email" | "password" | "number" | "search";
+// "full" is the pill shape SearchField overrides to (contour-spec-
+// search-field.md SS2) -- kept as a TextField-level prop rather than a CSS
+// override from outside, since the radius lives on an inner div the
+// `className` prop doesn't reach.
+export type TextFieldRounded = "sm" | "full";
+
+const ROUNDED_CLASS: Record<TextFieldRounded, string> = {
+  sm: "rounded-sm",
+  full: "rounded-full",
+};
 
 // Fixed control-density padding (group 1, not responsive -- contour-spec-
 // textfield.md SS "Visual"); `size` only scales it down, mirroring Button's
@@ -36,9 +47,20 @@ export interface TextFieldProps {
   disabled?: boolean;
   size?: TextFieldSize;
   type?: TextFieldType;
+  rounded?: TextFieldRounded;
   id?: string;
   className?: string;
+  autoFocus?: boolean;
+  onFocus?: (event: FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (event: FocusEvent<HTMLInputElement>) => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   "aria-label"?: string;
+  // Combobox wiring (SearchField, contour-spec-search-field.md SS5f) --
+  // passthrough only, TextField itself has no combobox behavior.
+  role?: string;
+  "aria-expanded"?: boolean;
+  "aria-controls"?: string;
+  "aria-activedescendant"?: string;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
@@ -54,9 +76,18 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
     disabled = false,
     size = "md",
     type = "text",
+    rounded = "sm",
     id,
     className,
+    autoFocus,
+    onFocus,
+    onBlur,
+    onKeyDown,
     "aria-label": ariaLabel,
+    role,
+    "aria-expanded": ariaExpanded,
+    "aria-controls": ariaControls,
+    "aria-activedescendant": ariaActivedescendant,
   },
   ref,
 ) {
@@ -67,7 +98,8 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
     <div className={cn("flex flex-col gap-(--space-1)", className)}>
       <div
         className={cn(
-          "flex items-center gap-(--gap-icon-text) rounded-sm border bg-bg-primary transition-colors duration-(--duration-fast)",
+          "flex items-center gap-(--gap-icon-text) border bg-bg-primary transition-colors duration-(--duration-fast)",
+          ROUNDED_CLASS[rounded],
           PADDING_CLASS[size],
           disabled && "opacity-40",
           error
@@ -86,11 +118,22 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           onChange={(event) => onValueChange(event.target.value)}
           placeholder={placeholder}
           disabled={disabled}
+          autoFocus={autoFocus}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onKeyDown={onKeyDown}
           aria-label={ariaLabel}
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={errorId}
+          role={role}
+          aria-expanded={ariaExpanded}
+          aria-controls={ariaControls}
+          aria-activedescendant={ariaActivedescendant}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-label-primary outline-none placeholder:text-label-tertiary disabled:cursor-not-allowed",
+            // type="search" gets its own native clear "x" in WebKit/Blink --
+            // redundant with (and rendered on top of) our own trailingIcon
+            // clear button, so it's suppressed unconditionally here.
+            "min-w-0 flex-1 bg-transparent text-label-primary outline-none placeholder:text-label-tertiary disabled:cursor-not-allowed [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
             TEXT_CLASS[size],
           )}
         />

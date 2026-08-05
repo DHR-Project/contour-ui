@@ -2,9 +2,10 @@
 
 import { Children } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 
 export type ListStyle = "plain" | "grouped";
 
