@@ -8,6 +8,7 @@ import { Grid } from "@/components/ui/grid";
 import { VStack } from "@/components/ui/stack";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
+import { ComponentPictogram } from "@/components/docs/component-pictograms";
 
 // One glyph per category -- a small, restrained stand-in for a full
 // illustration (guideline 6.1: all icon usage goes through the Icon
@@ -230,8 +231,14 @@ export default function DocsOverviewPage() {
                     <Link
                       key={comp.slug}
                       href={`/docs/components/${comp.slug}`}
-                      className="flex items-center justify-between gap-(--space-3) px-(--space-4) py-(--space-3) rounded-lg border border-separator bg-bg-primary hover-fine:bg-fill-quaternary transition-colors duration-(--duration-fast)"
+                      className="flex items-center gap-(--space-3) px-(--space-4) py-(--space-3) rounded-lg border border-separator bg-bg-primary hover-fine:bg-fill-quaternary transition-colors duration-(--duration-fast)"
                     >
+                      <span
+                        className="flex items-center justify-center w-7 h-7 rounded-md bg-fill-quaternary text-label-tertiary shrink-0"
+                        aria-hidden="true"
+                      >
+                        <ComponentPictogram slug={comp.slug} size="sm" />
+                      </span>
                       <VStack gap="1" className="flex-1 min-w-0">
                         <Text textStyle="footnote" weight="medium">
                           {comp.name}
