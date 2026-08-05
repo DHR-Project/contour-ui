@@ -257,7 +257,8 @@ export const COMPONENTS: ComponentMeta[] = [
   {
     slug: "toast",
     name: "Toast",
-    description: "Ephemeral notification stack that collapses or expands based on input modality.",
+    description:
+      "Ephemeral notification stack that collapses or expands based on input modality, anchored to any of six screen positions.",
     category: "feedback",
     status: "complete",
     importPath: "@/components/ui/toast",
