@@ -66,12 +66,12 @@ export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
   }
 
   return (
-    <nav
-      aria-label="Documentation navigation"
-      className={cn("scroll-mask-y flex flex-col h-full overflow-y-auto no-scrollbar py-(--space-6) px-(--space-4)", className)}
-    >
-      {/* Search */}
-      <div className="mb-(--space-6)">
+    <div className={cn("flex flex-col h-full", className)}>
+      {/* Search -- kept outside the scrolling/masked <nav> below: its results
+          popover is a descendant, and an ancestor with mask-image (from
+          scroll-mask-y) isolates a new backdrop root, breaking the popover's
+          own backdrop-blur (it can no longer sample real page content). */}
+      <div className="shrink-0 px-(--space-4) pt-(--space-6) pb-(--space-4)">
         <SearchField
           value={query}
           onValueChange={setQuery}
@@ -82,123 +82,136 @@ export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
         />
       </div>
 
-      {/* Top-level links */}
-      <Flex as="ul" direction="column" gap="1" className="mb-(--space-6)">
-        {TOP_LINKS.map((link) => {
-          const isActive = pathname === link.href;
-          return (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                onClick={onNavigate}
-                className={cn(
-                  "block px-(--space-3) py-(--space-2) rounded-md text-subheadline font-medium transition-colors duration-(--duration-fast)",
-                  isActive
-                    ? "bg-fill-secondary text-label-primary"
-                    : "text-label-secondary hover-fine:bg-fill-tertiary hover-fine:text-label-primary",
-                )}
-              >
-                {link.label}
-              </Link>
-            </li>
-          );
-        })}
-      </Flex>
+      <nav
+        aria-label="Documentation navigation"
+        className="scroll-mask-y flex-1 min-h-0 overflow-y-auto no-scrollbar px-(--space-4) pb-(--space-6)"
+      >
+        {/* Top-level links */}
+        <Flex as="ul" direction="column" gap="1" className="mb-(--space-6)">
+          {TOP_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "block px-(--space-3) py-(--space-2) rounded-md text-subheadline font-medium transition-colors duration-(--duration-fast)",
+                    isActive
+                      ? "bg-fill-secondary text-label-primary"
+                      : "text-label-secondary hover-fine:bg-fill-tertiary hover-fine:text-label-primary",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
+        </Flex>
 
-      {/* Divider */}
-      <div className="h-px bg-separator mb-(--space-6)" role="separator" aria-hidden="true" />
+        {/* Divider */}
+        <div
+          className="h-px bg-separator mb-(--space-6)"
+          role="separator"
+          aria-hidden="true"
+        />
 
-      {/* Components section */}
-      <VStack gap="5">
-        <Text
-          as="span"
-          textStyle="caption-1"
-          weight="semibold"
-          color="secondary"
-          className="px-(--space-3) uppercase tracking-wide"
-        >
-          Components
-        </Text>
+        {/* Components section */}
+        <VStack gap="5">
+          <Text
+            as="span"
+            textStyle="caption-1"
+            weight="semibold"
+            color="secondary"
+            className="px-(--space-3) uppercase tracking-wide"
+          >
+            Components
+          </Text>
 
-        {CATEGORIES.map((cat) => {
-          const items = COMPONENTS.filter((c) => c.category === cat.id);
-          if (items.length === 0) return null;
-          return (
-            <div key={cat.id}>
-              <Text
-                as="span"
-                textStyle="caption-2"
-                weight="semibold"
-                color="tertiary"
-                className="block px-(--space-3) mb-(--space-1) uppercase tracking-wide"
-              >
-                {cat.label}
-              </Text>
-              <Flex as="ul" direction="column" gap="1">
-                {items.map((comp) => {
-                  const href = `/docs/components/${comp.slug}`;
-                  const isActive = pathname === href;
-                  return (
-                    <li key={comp.slug}>
-                      <Link
-                        href={href}
-                        onClick={onNavigate}
-                        className={cn(
-                          "flex items-center justify-between gap-(--space-2) px-(--space-3) py-(--space-1) rounded-md text-footnote transition-colors duration-(--duration-fast)",
-                          isActive
-                            ? "bg-fill-secondary text-label-primary font-medium"
-                            : "text-label-secondary hover-fine:bg-fill-tertiary hover-fine:text-label-primary",
-                        )}
-                      >
-                        <span>{comp.name}</span>
-                        {comp.status === "spec-only" && (
-                          <span
-                            aria-label="Spec only, no code yet"
-                            className="shrink-0 inline-block w-1.5 h-1.5 rounded-full bg-[rgb(var(--color-orange))]"
-                          />
-                        )}
-                        {comp.status === "deferred" && (
-                          <span
-                            aria-label="Deferred"
-                            className="shrink-0 inline-block w-1.5 h-1.5 rounded-full bg-[rgb(var(--color-gray-3))]"
-                          />
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </Flex>
-            </div>
-          );
-        })}
-      </VStack>
+          {CATEGORIES.map((cat) => {
+            const items = COMPONENTS.filter((c) => c.category === cat.id);
+            if (items.length === 0) return null;
+            return (
+              <div key={cat.id}>
+                <Text
+                  as="span"
+                  textStyle="caption-2"
+                  weight="semibold"
+                  color="tertiary"
+                  className="block px-(--space-3) mb-(--space-1) uppercase tracking-wide"
+                >
+                  {cat.label}
+                </Text>
+                <Flex as="ul" direction="column" gap="1">
+                  {items.map((comp) => {
+                    const href = `/docs/components/${comp.slug}`;
+                    const isActive = pathname === href;
+                    return (
+                      <li key={comp.slug}>
+                        <Link
+                          href={href}
+                          onClick={onNavigate}
+                          className={cn(
+                            "flex items-center justify-between gap-(--space-2) px-(--space-3) py-(--space-1) rounded-md text-footnote transition-colors duration-(--duration-fast)",
+                            isActive
+                              ? "bg-fill-secondary text-label-primary font-medium"
+                              : "text-label-secondary hover-fine:bg-fill-tertiary hover-fine:text-label-primary",
+                          )}
+                        >
+                          <span>{comp.name}</span>
+                          {comp.status === "spec-only" && (
+                            <span
+                              aria-label="Spec only, no code yet"
+                              className="shrink-0 inline-block w-1.5 h-1.5 rounded-full bg-[rgb(var(--color-orange))]"
+                            />
+                          )}
+                          {comp.status === "deferred" && (
+                            <span
+                              aria-label="Deferred"
+                              className="shrink-0 inline-block w-1.5 h-1.5 rounded-full bg-[rgb(var(--color-gray-3))]"
+                            />
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </Flex>
+              </div>
+            );
+          })}
+        </VStack>
 
-      {/* Divider */}
-      <div className="h-px bg-separator my-(--space-6)" role="separator" aria-hidden="true" />
+        {/* Divider */}
+        <div
+          className="h-px bg-separator my-(--space-6)"
+          role="separator"
+          aria-hidden="true"
+        />
 
-      {/* Contributor-only links -- deliberately separated from the reader-facing
+        {/* Contributor-only links -- deliberately separated from the reader-facing
           links above (see CLAUDE.local.md dogfooding + content-separation rule). */}
-      <Flex as="ul" direction="column" gap="1">
-        {CONTRIBUTOR_LINKS.map((link) => {
-          const isActive = pathname === link.href;
-          return (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                onClick={onNavigate}
-                className={cn(
-                  "block px-(--space-3) py-(--space-2) rounded-md text-caption-1 font-medium transition-colors duration-(--duration-fast)",
-                  isActive
-                    ? "bg-fill-secondary text-label-primary"
-                    : "text-label-tertiary hover-fine:bg-fill-tertiary hover-fine:text-label-secondary",
-                )}
-              >
-                {link.label}
-              </Link>
-            </li>
-          );
-        })}
-      </Flex>
-    </nav>
+        <Flex as="ul" direction="column" gap="1">
+          {CONTRIBUTOR_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "block px-(--space-3) py-(--space-2) rounded-md text-caption-1 font-medium transition-colors duration-(--duration-fast)",
+                    isActive
+                      ? "bg-fill-secondary text-label-primary"
+                      : "text-label-tertiary hover-fine:bg-fill-tertiary hover-fine:text-label-secondary",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
+        </Flex>
+      </nav>
+    </div>
   );
 }

@@ -318,7 +318,14 @@ export function Toaster({
               : "pb-[max(var(--space-6),var(--safe-area-bottom))]",
           // House rule: a scroll container always fades its clipped edge
           // rather than cutting content off mid-toast.
-          needsScroll && "scroll-mask-y"
+          needsScroll && "scroll-mask-y",
+          // A mask-image isolates a new backdrop root for descendants, which
+          // silently breaks each ToastItem's own backdrop-blur (it can no
+          // longer sample real page content) once this viewport is masked.
+          // Blurring the viewport itself instead -- same element the mask
+          // lives on -- keeps the blur working and lets the existing mask
+          // fade it out at the clipped edge along with everything else.
+          needsScroll && "backdrop-blur-[20px]"
         )}
         style={{
           maxHeight: needsScroll ? listMaxHeight : undefined,

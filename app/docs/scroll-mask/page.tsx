@@ -115,7 +115,7 @@ export default function ScrollMaskPage() {
             the bottom fade disappears as you reach the end.
           </Text>
           <HStack gap="4" wrap="wrap" align="start">
-            <VStack gap="2">
+            <VStack gap="2" container={false}>
               <Text textStyle="caption-1" color="tertiary" weight="semibold">
                 scroll-mask-y
               </Text>
@@ -131,7 +131,7 @@ export default function ScrollMaskPage() {
               </Card>
             </VStack>
 
-            <VStack gap="2">
+            <VStack gap="2" container={false}>
               <Text textStyle="caption-1" color="tertiary" weight="semibold">
                 No mask
               </Text>
@@ -173,7 +173,7 @@ export default function ScrollMaskPage() {
             fade. Shorten the fade on dense lists so it never eats a whole row.
           </Text>
           <HStack gap="4" wrap="wrap" align="start">
-            <VStack gap="2">
+            <VStack gap="2" container={false}>
               <Text textStyle="caption-1" color="tertiary" weight="semibold">
                 scroll-mask-y-from-95%
               </Text>
@@ -189,7 +189,7 @@ export default function ScrollMaskPage() {
               </Card>
             </VStack>
 
-            <VStack gap="2">
+            <VStack gap="2" container={false}>
               <Text textStyle="caption-1" color="tertiary" weight="semibold">
                 scroll-mask-y-from-60%
               </Text>
