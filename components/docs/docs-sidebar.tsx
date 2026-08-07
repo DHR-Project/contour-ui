@@ -36,7 +36,7 @@ export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
         className="scroll-mask-y flex-1 min-h-0 overflow-y-auto no-scrollbar px-(--space-4) pb-(--space-6)"
       >
         {/* Top-level links */}
-        <Flex as="ul" direction="column" gap="1" className="mb-(--space-6)">
+        <Flex as="ul" direction="column" gap="1" className="my-(--space-6) md:mt-0">
           {TOP_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (

@@ -181,16 +181,27 @@ export default function DocsOverviewPage() {
             visual index for the detailed lists below. */}
         <Grid columns={{ compact: 2, regular: 6 }} gap="3">
           {CATEGORIES.map((cat) => {
-            const count = COMPONENTS.filter((c) => c.category === cat.id).length;
+            const count = COMPONENTS.filter(
+              (c) => c.category === cat.id,
+            ).length;
             if (count === 0) return null;
             return (
-              <Card key={cat.id} elevation="flat" padding="4" className="bg-bg-secondary">
+              <Card
+                key={cat.id}
+                elevation="flat"
+                padding="4"
+                className="bg-bg-secondary"
+              >
                 <VStack gap="2" align="center" className="text-center">
                   <span
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-fill-secondary"
                     aria-hidden="true"
                   >
-                    <Icon name={CATEGORY_ICONS[cat.id]} size="lg" className="text-label-secondary" />
+                    <Icon
+                      name={CATEGORY_ICONS[cat.id]}
+                      size="lg"
+                      className="text-label-secondary"
+                    />
                   </span>
                   <Text textStyle="footnote" weight="semibold">
                     {cat.label}
@@ -210,7 +221,13 @@ export default function DocsOverviewPage() {
             if (items.length === 0) return null;
             return (
               <div key={cat.id}>
-                <div className="flex items-center gap-(--space-2) mb-(--space-3)">
+                <div
+                  id={cat.label}
+                  aria-labelledby={
+                    cat.label ? `${cat.label}-heading` : undefined
+                  }
+                  className="flex items-center gap-(--space-2) mb-(--space-3)"
+                >
                   <Icon
                     name={CATEGORY_ICONS[cat.id]}
                     size="sm"
@@ -222,6 +239,7 @@ export default function DocsOverviewPage() {
                     weight="semibold"
                     color="secondary"
                     className="uppercase tracking-wide"
+                    id={cat.label ? `${cat.label}-heading` : undefined}
                   >
                     {cat.label}
                   </Text>
