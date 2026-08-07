@@ -110,7 +110,7 @@ export const COMPONENTS: ComponentMeta[] = [
     description: "Navigation column for SplitView that mirrors TabBar items with row-level selection state.",
     category: "navigation",
     status: "deferred",
-    deferredReason: "Not yet implemented — waiting for SplitView / RouteTransition",
+    deferredReason: "Not yet implemented",
   },
 
   // Controls
@@ -294,14 +294,16 @@ export const COMPONENTS: ComponentMeta[] = [
     name: "RouteTransition",
     description: "Navigation stack animation wrapper for App Router, using React Activity for route caching.",
     category: "overlay",
-    status: "spec-only",
+    status: "complete",
+    importPath: "@/components/ui/route-transition",
   },
   {
     slug: "split-view",
     name: "SplitView",
     description: "Multi-column adaptive layout built on RouteTransition with draggable column resize.",
     category: "overlay",
-    status: "spec-only",
+    status: "complete",
+    importPath: "@/components/ui/split-view",
   },
 ];
 

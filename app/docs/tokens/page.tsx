@@ -142,6 +142,7 @@ const MOTION_TOKENS = [
 
 const ZINDEX_TOKENS = [
   { name: "--z-base", value: "0", description: "Default stacking layer" },
+  { name: "--z-sidebar", value: "50", description: "SplitView's floating Sidebar overlay" },
   { name: "--z-dropdown", value: "100", description: "Dropdown, ContextMenu" },
   { name: "--z-sticky", value: "200", description: "Sticky headers" },
   { name: "--z-overlay", value: "300", description: "General overlay" },

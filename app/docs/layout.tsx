@@ -19,8 +19,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen">
       {/* Sidebar — fixed on desktop, hidden on mobile (mobile uses top-nav only).
           TODO(docs): replace this hand-rolled <aside> + DocsSidebar nav with
-          the real Sidebar component once it ships (currently deferred,
-          pending SplitView / RouteTransition -- see /docs/components/sidebar). */}
+          the real Sidebar component once it ships (currently deferred --
+          see /docs/components/sidebar). */}
       <aside
         aria-label="Documentation navigation"
         className="hidden md:flex flex-col w-[240px] shrink-0 border-r border-separator bg-bg-primary sticky top-0 h-screen"

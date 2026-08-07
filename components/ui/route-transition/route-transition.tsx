@@ -1,0 +1,98 @@
+"use client";
+
+import { Activity, useState } from "react";
+import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { springs, durations } from "@/lib/motion";
+import { useSizeClass } from "@/lib/hooks/use-size-class";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+import { useNavigationDirection } from "./use-navigation-direction";
+
+export interface RouteTransitionProps {
+  children: ReactNode;
+  /**
+   * How many previously visited routes stay mounted (hidden via React
+   * `<Activity>`) after navigating away, so their state/scroll position
+   * survives instead of being torn down. 0 disables caching. Default 1,
+   * hard-capped at 10 regardless of what's passed.
+   */
+  cacheDepth?: number;
+}
+
+const MAX_CACHE_DEPTH = 10;
+
+interface CachedRoute {
+  path: string;
+  tree: ReactNode;
+}
+
+export function RouteTransition({ children, cacheDepth = 1 }: RouteTransitionProps) {
+  const pathname = usePathname();
+  const direction = useNavigationDirection();
+  const sizeClass = useSizeClass();
+  const reducedMotion = useReducedMotion();
+
+  const effectiveCacheDepth = Math.min(cacheDepth, MAX_CACHE_DEPTH);
+  const [cachedRoutes, setCachedRoutes] = useState<CachedRoute[]>([]);
+  const [lastCachedPathname, setLastCachedPathname] = useState<string | null>(null);
+
+  // Caches each route's children as it's visited, so navigating away can
+  // keep the previous view mounted (hidden) below. Derived inline during
+  // render rather than in an effect -- an unconditional setState in an
+  // effect body forces an extra cascading render on every navigation,
+  // which this project's react-hooks/set-state-in-effect rule flags;
+  // calling setState conditionally during render is React's documented
+  // way to derive state from a changed input without that extra pass.
+  if (effectiveCacheDepth > 0 && lastCachedPathname !== pathname) {
+    setCachedRoutes((prev) => {
+      const next = [{ path: pathname, tree: children }, ...prev.filter((route) => route.path !== pathname)];
+      return next.slice(0, effectiveCacheDepth);
+    });
+    setLastCachedPathname(pathname);
+  }
+
+  // regular+ shows list/detail simultaneously (SplitView) rather than one
+  // view at a time, so a full-screen push/pop slide has nothing to justify
+  // it there -- cross-fade only. compact gets the real push/pop slide.
+  const isCompact = sizeClass === "compact";
+
+  const offscreenX = direction === "pop" ? "-100%" : "100%";
+  const slideVariants = {
+    initial: { x: offscreenX, opacity: 0 },
+    animate: { x: 0, opacity: 1 },
+    exit: { x: direction === "pop" ? "100%" : "-100%", opacity: 0 },
+  };
+  const fadeVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  const variants = reducedMotion || !isCompact ? fadeVariants : slideVariants;
+  const transition = reducedMotion || !isCompact ? { duration: durations.fast } : springs.gentle;
+
+  return (
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={pathname}
+          initial={variants.initial}
+          animate={variants.animate}
+          exit={variants.exit}
+          transition={transition}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
+      {effectiveCacheDepth > 0 &&
+        cachedRoutes
+          .filter((route) => route.path !== pathname)
+          .map((route) => (
+            <Activity key={route.path} mode="hidden">
+              {route.tree}
+            </Activity>
+          ))}
+    </>
+  );
+}

@@ -707,6 +707,7 @@
 /* SS6.9 Z-index / layering scale */
 :root {
   --z-base: 0;
+  --z-sidebar: 50; /* v2 -- SplitView's floating Sidebar overlay (contour-spec-splitview-v2.md SS2). Below Dropdown/Overlay/Sheet/Toast/Tooltip so those still float above it, same tier NavBar/TabBar/Toolbar already use via their own z-40. */
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-overlay: 300;
