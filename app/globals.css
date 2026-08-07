@@ -392,3 +392,48 @@ body {
   --scroll-mask-fade-from-r: --value(percentage);
   --scroll-mask-fade-from-r: --value([length], [percentage]);
 }
+
+@utility material-thin {
+  background: var(--material-thin);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .reduce-transparency & {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@utility material-regular {
+  background: var(--material-regular);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .reduce-transparency & {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@utility material-thick {
+  background: var(--material-thick);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .reduce-transparency & {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

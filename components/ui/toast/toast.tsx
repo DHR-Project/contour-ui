@@ -81,8 +81,13 @@ const DEFAULT_REGULAR_POSITION: ToastPosition = "bottom-right";
 type ToastEdge = "top" | "bottom";
 type ToastAlign = "left" | "center" | "right";
 
-function resolvePosition(position: ToastPositionProp | undefined, isCompact: boolean): ToastPosition {
-  const fallback = isCompact ? DEFAULT_COMPACT_POSITION : DEFAULT_REGULAR_POSITION;
+function resolvePosition(
+  position: ToastPositionProp | undefined,
+  isCompact: boolean,
+): ToastPosition {
+  const fallback = isCompact
+    ? DEFAULT_COMPACT_POSITION
+    : DEFAULT_REGULAR_POSITION;
   if (!position) return fallback;
   if (typeof position === "string") return position;
   return (isCompact ? position.compact : position.regular) ?? fallback;
@@ -112,7 +117,9 @@ export function Toaster({
 
   const [expansion, setExpansion] = React.useState<Expansion>("collapsed");
   const isExpanded = expansion !== "collapsed";
-  const collapseTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const collapseTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const viewportRef = React.useRef<HTMLOListElement>(null);
 
@@ -121,7 +128,9 @@ export function Toaster({
   // height varies with an optional description line.
   const [heights, setHeights] = React.useState<Record<string, number>>({});
   const handleHeightChange = React.useCallback((id: string, height: number) => {
-    setHeights((prev) => (prev[id] === height ? prev : { ...prev, [id]: height }));
+    setHeights((prev) =>
+      prev[id] === height ? prev : { ...prev, [id]: height },
+    );
   }, []);
   const handleHeightRelease = React.useCallback((id: string) => {
     setHeights((prev) => {
@@ -172,15 +181,19 @@ export function Toaster({
   // is unreachable, so a bottom-anchored list built out of negative offsets
   // could never scroll.
   // -------------------------------------------------------------------------
-  const itemHeights = toasts.map((toast) => heights[toast.id] ?? DEFAULT_TOAST_HEIGHT);
+  const itemHeights = toasts.map(
+    (toast) => heights[toast.id] ?? DEFAULT_TOAST_HEIGHT,
+  );
   const stackHeight = Math.max(
     itemHeights.reduce((sum, height) => sum + height + TOAST_GAP, -TOAST_GAP),
-    0
+    0,
   );
   // How far the collapsed peek extends past the front toast, so the hit area
   // (and the box the peek is drawn in) covers the whole paper stack.
-  const peekExtent = Math.min(toasts.length - 1, STACK_VISIBLE_LIMIT - 1) * STACK_PEEK;
-  const collapsedHeight = toasts.length === 0 ? 0 : (itemHeights[0] ?? 0) + Math.max(peekExtent, 0);
+  const peekExtent =
+    Math.min(toasts.length - 1, STACK_VISIBLE_LIMIT - 1) * STACK_PEEK;
+  const collapsedHeight =
+    toasts.length === 0 ? 0 : (itemHeights[0] ?? 0) + Math.max(peekExtent, 0);
 
   // Visible for as long as the list is open -- including a hover preview, so
   // the way out of the list never has to be discovered by clicking first.
@@ -195,7 +208,9 @@ export function Toaster({
   const expandedOffsets: number[] = [];
   let runningOffset = 0;
   for (const height of itemHeights) {
-    expandedOffsets.push(isBottomAnchored ? stackHeight - runningOffset - height : runningOffset);
+    expandedOffsets.push(
+      isBottomAnchored ? stackHeight - runningOffset - height : runningOffset,
+    );
     runningOffset += height + TOAST_GAP;
   }
 
@@ -206,11 +221,13 @@ export function Toaster({
   const viewportPaddingY = edgeInset * 2;
   const maxHeight = expandedMaxHeight ?? windowHeight;
   const listMaxHeight = Math.max(maxHeight - actionsSpace, 0);
-  const contentHeight = (isExpanded ? stackHeight : collapsedHeight) + viewportPaddingY;
+  const contentHeight =
+    (isExpanded ? stackHeight : collapsedHeight) + viewportPaddingY;
   // Clipping is only switched on when the list genuinely overflows: an
   // `overflow-y: auto` box also clips horizontally, which would cut off
   // swipe-to-dismiss and the toast shadows.
-  const needsScroll = isExpanded && maxHeight > 0 && contentHeight > listMaxHeight;
+  const needsScroll =
+    isExpanded && maxHeight > 0 && contentHeight > listMaxHeight;
 
   // With the list scrolling, the newest toast is the one to keep in view --
   // it sits at the far end of the content for bottom-anchored positions.
@@ -239,7 +256,9 @@ export function Toaster({
   const handleMouseEnter = () => {
     if (isCoarsePointer) return;
     if (collapseTimeout.current) clearTimeout(collapseTimeout.current);
-    setExpansion((prev) => (prev === "collapsed" && toasts.length > 1 ? "hover" : prev));
+    setExpansion((prev) =>
+      prev === "collapsed" && toasts.length > 1 ? "hover" : prev,
+    );
   };
 
   const handleMouseLeave = () => {
@@ -254,7 +273,8 @@ export function Toaster({
 
   const handleClick = (event: React.MouseEvent) => {
     // Toast actions and the Show Less button own their clicks.
-    if ((event.target as HTMLElement).closest("button, a, [role='button']")) return;
+    if ((event.target as HTMLElement).closest("button, a, [role='button']"))
+      return;
     if (toasts.length < 2) return;
     setExpansion((prev) => (prev === "pinned" ? "collapsed" : "pinned"));
   };
@@ -280,7 +300,7 @@ export function Toaster({
           align === "left" && "left-0",
           align === "center" && "left-1/2 -translate-x-1/2",
           align === "right" && "right-0",
-          className
+          className,
         )}
         initial={false}
         animate={{
@@ -305,75 +325,69 @@ export function Toaster({
         />
 
         <RadixToast.Viewport
-        ref={viewportRef}
-        className={cn(
-          "pointer-events-none relative w-full min-h-0 shrink-0 list-none outline-none",
-          isCompact ? "p-4" : "p-6",
-          edge === "top"
-            ? isCompact
-              ? "pt-[max(var(--space-4),var(--safe-area-top))]"
-              : "pt-[max(var(--space-6),var(--safe-area-top))]"
-            : isCompact
-              ? "pb-[max(var(--space-4),var(--safe-area-bottom))]"
-              : "pb-[max(var(--space-6),var(--safe-area-bottom))]",
-          // House rule: a scroll container always fades its clipped edge
-          // rather than cutting content off mid-toast.
-          needsScroll && "scroll-mask-y",
-          // A mask-image isolates a new backdrop root for descendants, which
-          // silently breaks each ToastItem's own backdrop-blur (it can no
-          // longer sample real page content) once this viewport is masked.
-          // Blurring the viewport itself instead -- same element the mask
-          // lives on -- keeps the blur working and lets the existing mask
-          // fade it out at the clipped edge along with everything else.
-          needsScroll && "backdrop-blur-[20px]"
-        )}
-        style={{
-          maxHeight: needsScroll ? listMaxHeight : undefined,
-          overflowY: needsScroll ? "auto" : "visible",
-        }}
-      >
-        <motion.div
-          className="pointer-events-auto relative w-full shrink-0"
-          initial={false}
-          // Every item below is absolutely positioned (see ToastItem), so
-          // nothing here is derived from document flow -- the wrapper's own
-          // height has to be set explicitly in both states, computed purely
-          // from measured per-item heights. Deriving it from a
-          // flow-participating child instead created a feedback loop: a
-          // child's own measured height would depend on this height, which
-          // depends on that same measurement.
-          //
-          // It's animated with the same spring the items use because for a
-          // bottom-anchored stack the box grows upward by exactly as much as
-          // each item's offset grows downward. Snapping the height while the
-          // offsets animate would make the front toast jump up and slide
-          // back; animating both in lockstep holds it perfectly still.
-          animate={{ height: isExpanded ? stackHeight : collapsedHeight }}
-          transition={springs.smooth}
-          onUpdate={needsScroll ? anchorScroll : undefined}
-          onAnimationComplete={needsScroll ? anchorScroll : undefined}
+          ref={viewportRef}
+          className={cn(
+            "pointer-events-none relative w-full min-h-0 shrink-0 list-none outline-none",
+            isCompact ? "p-4" : "p-6",
+            edge === "top"
+              ? isCompact
+                ? "pt-[max(var(--space-4),var(--safe-area-top))]"
+                : "pt-[max(var(--space-6),var(--safe-area-top))]"
+              : isCompact
+                ? "pb-[max(var(--space-4),var(--safe-area-bottom))]"
+                : "pb-[max(var(--space-6),var(--safe-area-bottom))]",
+            // No need scroll-mask here, it makes the blur not works
+            // House rule: a scroll container always fades its clipped edge
+            // rather than cutting content off mid-toast.
+            // needsScroll && "scroll-mask-y",
+          )}
+          style={{
+            maxHeight: needsScroll ? listMaxHeight : undefined,
+            overflowY: needsScroll ? "auto" : "visible",
+          }}
         >
-          <AnimatePresence mode="popLayout">
-            {toasts.map((toast, index) => (
-              <ToastItem
-                key={toast.id}
-                toast={toast}
-                index={index}
-                isExpanded={isExpanded}
-                isCompact={isCompact}
-                edge={edge}
-                expandedY={expandedOffsets[index]}
-                collapsedY={
-                  isBottomAnchored
-                    ? peekExtent - index * STACK_PEEK
-                    : index * STACK_PEEK
-                }
-                onHeightChange={handleHeightChange}
-                onHeightRelease={handleHeightRelease}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+          <motion.div
+            className="pointer-events-auto relative w-full shrink-0"
+            initial={false}
+            // Every item below is absolutely positioned (see ToastItem), so
+            // nothing here is derived from document flow -- the wrapper's own
+            // height has to be set explicitly in both states, computed purely
+            // from measured per-item heights. Deriving it from a
+            // flow-participating child instead created a feedback loop: a
+            // child's own measured height would depend on this height, which
+            // depends on that same measurement.
+            //
+            // It's animated with the same spring the items use because for a
+            // bottom-anchored stack the box grows upward by exactly as much as
+            // each item's offset grows downward. Snapping the height while the
+            // offsets animate would make the front toast jump up and slide
+            // back; animating both in lockstep holds it perfectly still.
+            animate={{ height: isExpanded ? stackHeight : collapsedHeight }}
+            transition={springs.smooth}
+            onUpdate={needsScroll ? anchorScroll : undefined}
+            onAnimationComplete={needsScroll ? anchorScroll : undefined}
+          >
+            <AnimatePresence mode="popLayout">
+              {toasts.map((toast, index) => (
+                <ToastItem
+                  key={toast.id}
+                  toast={toast}
+                  index={index}
+                  isExpanded={isExpanded}
+                  isCompact={isCompact}
+                  edge={edge}
+                  expandedY={expandedOffsets[index]}
+                  collapsedY={
+                    isBottomAnchored
+                      ? peekExtent - index * STACK_PEEK
+                      : index * STACK_PEEK
+                  }
+                  onHeightChange={handleHeightChange}
+                  onHeightRelease={handleHeightRelease}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
         </RadixToast.Viewport>
       </motion.div>
     </RadixToast.Provider>
@@ -452,20 +466,30 @@ function ToastActions({
           ref={ref}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9, transition: { duration: durations.fast } }}
+          exit={{
+            opacity: 0,
+            scale: 0.9,
+            transition: { duration: durations.fast },
+          }}
           transition={springs.smooth}
           className={cn(
             "absolute inset-x-0 z-200 flex items-center justify-center gap-2",
             isCompact ? "px-4" : "px-6",
-            edgeInsetClass
+            edgeInsetClass,
           )}
         >
           <button
             type="button"
             onClick={onShowLess}
-            className={cn(ACTION_PILL, "gap-1 px-3 py-1.5 text-footnote font-semibold text-tint")}
+            className={cn(
+              ACTION_PILL,
+              "gap-1 px-3 py-1.5 text-footnote font-semibold text-tint",
+            )}
           >
-            <Icon name={edge === "top" ? "chevron-up" : "chevron-down"} size="sm" />
+            <Icon
+              name={edge === "top" ? "chevron-up" : "chevron-down"}
+              size="sm"
+            />
             {showLessLabel}
           </button>
 
@@ -484,7 +508,7 @@ const ACTION_PILL = cn(
   "pointer-events-auto flex shrink-0 items-center rounded-full outline-none",
   "bg-(--material-thick) shadow-lg ring-1 ring-inset ring-black/5 backdrop-blur-[20px] dark:ring-white/10",
   "hover:bg-black/5 active:bg-black/10",
-  "focus-visible:outline-solid focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-[rgb(var(--focus-ring-color))]"
+  "focus-visible:outline-solid focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:outline-offset-(--focus-ring-offset) focus-visible:outline-[rgb(var(--focus-ring-color))]",
 );
 
 // Dismisses every toast. With a mouse the intent is already legible -- a
@@ -534,7 +558,11 @@ function ClearButton({
       onClick={handleClick}
       transition={springs.smooth}
       aria-label={label}
-      className={cn(ACTION_PILL, "justify-center overflow-hidden py-1.5 text-footnote font-semibold text-tint", armed ? "px-3" : "px-2")}
+      className={cn(
+        ACTION_PILL,
+        "justify-center overflow-hidden py-1.5 text-footnote font-semibold text-tint",
+        armed ? "px-3" : "px-2",
+      )}
     >
       <AnimatePresence mode="popLayout" initial={false}>
         {armed ? (
@@ -593,7 +621,15 @@ function ToastItem({
   onHeightChange: (id: string, height: number) => void;
   onHeightRelease: (id: string) => void;
 }) {
-  const { id, title, description, variant = "default", icon, action, duration } = toast;
+  const {
+    id,
+    title,
+    description,
+    variant = "default",
+    icon,
+    action,
+    duration,
+  } = toast;
 
   const IconComponent = icon ? icon : VARIANT_ICONS[variant];
 
@@ -606,7 +642,11 @@ function ToastItem({
   // which edge the stack hangs from.
   const isPastVisibleLimit = index >= STACK_VISIBLE_LIMIT;
   const scale = isExpanded ? 1 : Math.max(0, 1 - index * 0.05);
-  const opacity = isExpanded ? 1 : isPastVisibleLimit ? 0 : Math.max(1 - index * 0.3, 0.4);
+  const opacity = isExpanded
+    ? 1
+    : isPastVisibleLimit
+      ? 0
+      : Math.max(1 - index * 0.3, 0.4);
   const yOffset = isExpanded ? expandedY : collapsedY;
 
   // Toasts always travel along the vertical axis, never sideways: down from
@@ -626,7 +666,12 @@ function ToastItem({
   const edgeInset = isCompact
     ? "max(var(--space-4),var(--safe-area-top))"
     : "max(var(--space-6),var(--safe-area-top))";
-  const topInset = edge === "top" ? edgeInset : isCompact ? "var(--space-4)" : "var(--space-6)";
+  const topInset =
+    edge === "top"
+      ? edgeInset
+      : isCompact
+        ? "var(--space-4)"
+        : "var(--space-6)";
   const sideInset = isCompact ? "var(--space-4)" : "var(--space-6)";
 
   const itemRef = React.useRef<HTMLLIElement>(null);
@@ -640,7 +685,9 @@ function ToastItem({
     // offsetHeight rather than getBoundingClientRect().height: the latter is
     // measured *after* the collapsed stack's scale transform, so back layers
     // would report a height 5-10% short of their real layout height.
-    const observer = new ResizeObserver(() => onHeightChange(id, node.offsetHeight));
+    const observer = new ResizeObserver(() =>
+      onHeightChange(id, node.offsetHeight),
+    );
     observer.observe(node);
     onHeightChange(id, node.offsetHeight);
     return () => {
@@ -655,7 +702,11 @@ function ToastItem({
       duration={duration}
       // §7: warning/destructive are announced immediately (assertive),
       // everything else politely.
-      type={variant === "warning" || variant === "destructive" ? "foreground" : "background"}
+      type={
+        variant === "warning" || variant === "destructive"
+          ? "foreground"
+          : "background"
+      }
       onOpenChange={(open) => {
         if (!open) dismissToast(id);
       }}
@@ -693,7 +744,7 @@ function ToastItem({
           "flex items-start gap-3 rounded-lg p-4 shadow-lg outline-none",
           "bg-(--material-thick) backdrop-blur-[20px]",
           // Contrast ring
-          "ring-1 ring-inset ring-black/5 dark:ring-white/10"
+          "ring-1 ring-inset ring-black/5 dark:ring-white/10",
         )}
       >
         {IconComponent && (
@@ -702,8 +753,9 @@ function ToastItem({
               "mt-0.5 shrink-0",
               variant === "success" && "text-[rgb(var(--color-success))]",
               variant === "warning" && "text-[rgb(var(--color-warning))]",
-              variant === "destructive" && "text-[rgb(var(--color-destructive))]",
-              variant === "default" && "text-label-primary"
+              variant === "destructive" &&
+                "text-[rgb(var(--color-destructive))]",
+              variant === "default" && "text-label-primary",
             )}
           >
             <Icon name={IconComponent} size="md" />
@@ -735,7 +787,7 @@ function ToastItem({
               className={cn(
                 "shrink-0 rounded px-2 py-1 outline-none transition-colors",
                 "text-subheadline font-semibold text-tint",
-                "hover:bg-black/5 active:bg-black/10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-tint"
+                "hover:bg-black/5 active:bg-black/10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-tint",
               )}
             >
               {action.label}

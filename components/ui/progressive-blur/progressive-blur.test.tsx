@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { ProgressiveBlur } from "./progressive-blur";
 
 describe("ProgressiveBlur", () => {
-  it("renders multiple stacked blur layers", () => {
+  it("renders a single masked blur layer", () => {
     const { container } = render(<ProgressiveBlur position="top" />);
-    expect(container.querySelectorAll(".progressive-blur-layer").length).toBeGreaterThan(1);
+    expect(container.querySelectorAll(".progressive-blur-layer").length).toBe(1);
   });
 
   it("is hidden from assistive tech (purely decorative)", () => {

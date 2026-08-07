@@ -243,19 +243,7 @@
    itself still needs its own explicit off-switch here (guideline rule 2.4b:
    "turn off backdrop-filter too, not just the background color"). */
 .contour-material {
-  background: var(--material-regular);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-}
-@media (prefers-reduced-transparency: reduce) {
-  .contour-material {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-.reduce-transparency .contour-material {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  @apply material-regular;
 }
 
 /* SS2.4 Increase Contrast (accessibility)
@@ -333,14 +321,25 @@
   --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.45), 0 4px 6px rgb(0 0 0 / 0.3);
 }
 
-/* SS2.10 Progressive Blur (nav bar / tab bar / toolbar only) */
+/* SS2.10 Progressive Blur (nav bar / tab bar / toolbar only) -- a single
+   masked backdrop-blur layer plus a same-direction page-bg tint, not N
+   stacked backdrop-filter layers. CSS has no way to vary blur radius across
+   a gradient, so the earlier 4-layer stack only approximated a smooth ramp
+   by banding discrete blur amounts together; a single layer's mask-image
+   alpha fade reads just as continuous while costing 1 backdrop-filter
+   instead of 4. The tint keeps the faded edge from looking too see-through,
+   since the mask only fades the blur's visibility, not its own opacity. */
 :root {
-  --progressive-blur-layers: 4;
   --progressive-blur-max: 20px;
+  --progressive-blur-tint-alpha: 0.5;
 }
-.progressive-blur-container {
-  position: relative;
-}
+/* No position rule here on purpose: the component always pairs this class
+   with Tailwind's `absolute` utility on the very same element, and Tailwind
+   utilities live in a lower-priority `@layer` than this unlayered stylesheet
+   -- an unlayered `position: relative` here would silently win over
+   `absolute`, collapsing the container to 0 height (it has no in-flow
+   content once it's not the .progressive-blur-layer child's containing
+   block). `absolute` alone already gives descendants a positioning context. */
 .progressive-blur-layer {
   position: absolute;
   inset: 0;
@@ -360,21 +359,15 @@
 .reduce-transparency .progressive-blur-container {
   background: rgb(var(--bg-primary));
 }
+/* Increase Contrast keeps the blur on (unlike Reduced Transparency above)
+   but leans harder on the tint for legibility instead of removing layers. */
 @media (prefers-contrast: more) {
-  .progressive-blur-layer {
-   -webkit-backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
-    backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
-  }
-  .progressive-blur-container {
-    background: rgb(var(--bg-primary) / 0.85);
+  :root {
+    --progressive-blur-tint-alpha: 0.85;
   }
 }
-.high-contrast .progressive-blur-layer {
-  -webkit-backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
-  backdrop-filter: blur(calc(var(--progressive-blur-max) / 2 * var(--layer-index, 1))) !important;
-}
-.high-contrast .progressive-blur-container {
-  background: rgb(var(--bg-primary) / 0.85);
+.high-contrast {
+  --progressive-blur-tint-alpha: 0.85;
 }
 
 /* SS3.2 Font stack -- Inter self-hosted via next/font (see app/layout.tsx), no manual @font-face needed */
