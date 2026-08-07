@@ -57,11 +57,13 @@ export function RouteTransition({ children, cacheDepth = 1 }: RouteTransitionPro
   // it there -- cross-fade only. compact gets the real push/pop slide.
   const isCompact = sizeClass === "compact";
 
-  const offscreenX = direction === "pop" ? "-100%" : "100%";
+  // 50%, not a full viewport width -- a 100% travel distance read as too
+  // much motion for a simple push/pop.
+  const offscreenX = direction === "pop" ? "-50%" : "50%";
   const slideVariants = {
     initial: { x: offscreenX, opacity: 0 },
     animate: { x: 0, opacity: 1 },
-    exit: { x: direction === "pop" ? "100%" : "-100%", opacity: 0 },
+    exit: { x: direction === "pop" ? "50%" : "-50%", opacity: 0 },
   };
   const fadeVariants = {
     initial: { opacity: 0 },

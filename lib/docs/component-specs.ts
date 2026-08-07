@@ -1243,8 +1243,12 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     doDont: [
       {
-        do: "Place RouteTransition in app/template.tsx (not layout.tsx) — template re-renders on every route change",
+        do: "For a simple app with no persistent chrome, place RouteTransition in app/template.tsx",
         dont: "Use cacheDepth > 10 — hard-capped internally to prevent memory leaks",
+      },
+      {
+        do: "For a layout with persistent chrome (sidebar, nav bar) that must not re-animate, call RouteTransition directly inside that layout.tsx, wrapping only the page content — a nested template.tsx there would remount on every navigation (Next's own per-segment key) and lose AnimatePresence's coordinated exit/enter along with it",
+        dont: "Let RouteTransition's children include layout chrome — anything inside its motion.div remounts and re-animates on every navigation, including elements that should stay static",
       },
       {
         do: "Make all data-fetching effects idempotent when using cacheDepth > 0",
