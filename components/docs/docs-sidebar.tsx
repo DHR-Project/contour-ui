@@ -1,40 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { COMPONENTS, CATEGORIES } from "@/lib/docs/component-registry";
+import { TOP_LINKS, CONTRIBUTOR_LINKS } from "@/lib/docs/nav-links";
 import { cn } from "@/lib/utils/cn";
 import { Flex } from "@/components/ui/flex";
 import { VStack } from "@/components/ui/stack";
 import { Text } from "@/components/ui/text";
-import { SearchField } from "@/components/ui/search-field";
-import type { SearchFieldResult } from "@/components/ui/search-field";
-
-const TOP_LINKS = [
-  { href: "/docs", label: "Overview" },
-  { href: "/docs/guidelines", label: "Guidelines" },
-  { href: "/docs/tokens", label: "Tokens" },
-  { href: "/docs/scroll-mask", label: "Scroll Mask" },
-  { href: "/docs/settings", label: "Settings" },
-];
-
-// Separate from TOP_LINKS -- contributor/process content, kept visually
-// distinct from the reader-facing docs links above it (see /docs/contributing).
-const CONTRIBUTOR_LINKS = [{ href: "/docs/contributing", label: "Contributing" }];
-
-// Flat index across every link the sidebar renders -- pages plus the full
-// component registry -- so the search box at the top can jump to any of
-// them, not just components.
-const SEARCH_INDEX: { href: string; label: string; subtitle: string }[] = [
-  ...TOP_LINKS.map((link) => ({ href: link.href, label: link.label, subtitle: "Page" })),
-  ...CONTRIBUTOR_LINKS.map((link) => ({ href: link.href, label: link.label, subtitle: "Page" })),
-  ...COMPONENTS.map((c) => ({
-    href: `/docs/components/${c.slug}`,
-    label: c.name,
-    subtitle: "Component",
-  })),
-];
+import { DocsSearch } from "./docs-search";
 
 export interface DocsSidebarProps {
   className?: string;
@@ -44,42 +18,17 @@ export interface DocsSidebarProps {
 
 export function DocsSidebar({ className, onNavigate }: DocsSidebarProps = {}) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-
-  // undefined => popover stays closed (SearchField contract); only switch to
-  // a real (possibly empty) array once there's something to search for.
-  const results: SearchFieldResult[] | undefined = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return undefined;
-    return SEARCH_INDEX.filter((entry) => entry.label.toLowerCase().includes(normalized)).map((entry) => ({
-      id: entry.href,
-      label: entry.label,
-      subtitle: entry.subtitle,
-    }));
-  }, [query]);
-
-  function handleResultSelect(href: string) {
-    setQuery("");
-    router.push(href);
-    onNavigate?.();
-  }
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
-      {/* Search -- kept outside the scrolling/masked <nav> below: its results
-          popover is a descendant, and an ancestor with mask-image (from
-          scroll-mask-y) isolates a new backdrop root, breaking the popover's
-          own backdrop-blur (it can no longer sample real page content). */}
-      <div className="shrink-0 px-(--space-4) pt-(--space-6) pb-(--space-4)">
-        <SearchField
-          value={query}
-          onValueChange={setQuery}
-          results={results}
-          onResultSelect={handleResultSelect}
-          placeholder="Search docs"
-          aria-label="Search documentation"
-        />
+      {/* Search -- opens a centered overlay (docs-search.tsx) instead of an
+          inline popover, so it's free to float above the whole page rather
+          than being confined to the sidebar's own width and scroll bounds.
+          Hidden below `md`: compact gets its own icon trigger in the top bar
+          (docs-mobile-nav.tsx) instead, reachable without opening this
+          drawer first. */}
+      <div className="hidden md:block shrink-0 px-(--space-4) pt-(--space-6) pb-(--space-4)">
+        <DocsSearch onNavigate={onNavigate} />
       </div>
 
       <nav

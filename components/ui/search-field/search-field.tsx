@@ -37,6 +37,8 @@ export interface SearchFieldProps {
   onResultSelect?: (id: string) => void;
   loading?: boolean;
   emptyMessage?: string;
+  /** Which side of the field the results popover opens toward. Default "below" (SS5). "above" is for callers that dock the field near the bottom of the viewport (e.g. a compact-mode search sheet), where there's no room to open downward. */
+  resultsPlacement?: "below" | "above";
 
   className?: string;
   id?: string;
@@ -74,6 +76,7 @@ export function SearchField({
   onResultSelect,
   loading = false,
   emptyMessage = "No results found",
+  resultsPlacement = "below",
   className,
   id,
   "aria-label": ariaLabel,
@@ -272,7 +275,12 @@ export function SearchField({
             // rather than running off it when there are many results.
             // contour-material (tokens.css SS2.3a): frosted glass, not a
             // flat panel, matching every other floating surface.
-            className="absolute left-0 right-0 top-[calc(100%+var(--space-2))] z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg border border-separator contour-material shadow-md"
+            className={cn(
+              "absolute left-0 right-0 z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg border border-separator contour-material shadow-md",
+              resultsPlacement === "above"
+                ? "bottom-[calc(100%+var(--space-2))]"
+                : "top-[calc(100%+var(--space-2))]",
+            )}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div

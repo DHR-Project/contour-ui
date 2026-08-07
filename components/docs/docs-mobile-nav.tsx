@@ -8,6 +8,7 @@ import { Text } from "@/components/ui/text";
 import { springs } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { DocsSidebar } from "./docs-sidebar";
+import { DocsSearch } from "./docs-search";
 
 // Compact-only top bar -- the real sidebar (docs-sidebar.tsx) is hidden
 // below `md`, so this is the only way to reach docs navigation on mobile.
@@ -32,9 +33,10 @@ export function DocsMobileNav() {
           aria-label="Toggle navigation"
           onClick={() => setOpen(true)}
         />
-        <Text textStyle="headline" weight="semibold">
+        <Text textStyle="headline" weight="semibold" className="flex-1">
           Contour Docs
         </Text>
+        <DocsSearch variant="icon" />
       </div>
 
       <RadixDialog.Root open={open} onOpenChange={setOpen}>
