@@ -60,6 +60,14 @@ interface TocHeading {
 function scanHeadings(container: HTMLElement): TocHeading[] {
   const nodes = container.querySelectorAll<HTMLElement>('h2[id$="-heading"], h3[id$="-heading"]');
   return Array.from(nodes)
+    // RouteTransition's Activity-based route cache (cacheDepth) keeps the
+    // previous page's DOM mounted (display: none) inside this same
+    // container after navigating away -- its section ids ("anatomy-heading"
+    // etc.) aren't unique per route, so without this filter a cached page
+    // still in the DOM produces duplicate entries. offsetParent is null for
+    // display:none elements and their descendants, cheaper than reading
+    // computed style per node.
+    .filter((node) => node.offsetParent !== null)
     .map((node) => ({
       id: node.id.replace(/-heading$/, ""),
       title: node.textContent?.trim() ?? "",

@@ -4,10 +4,8 @@ import { Activity, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { springs, durations } from "@/lib/motion";
-import { useSizeClass } from "@/lib/hooks/use-size-class";
+import { durations } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
-import { useNavigationDirection } from "./use-navigation-direction";
 
 export interface RouteTransitionProps {
   children: ReactNode;
@@ -29,8 +27,6 @@ interface CachedRoute {
 
 export function RouteTransition({ children, cacheDepth = 1 }: RouteTransitionProps) {
   const pathname = usePathname();
-  const direction = useNavigationDirection();
-  const sizeClass = useSizeClass();
   const reducedMotion = useReducedMotion();
 
   const effectiveCacheDepth = Math.min(cacheDepth, MAX_CACHE_DEPTH);
@@ -52,36 +48,16 @@ export function RouteTransition({ children, cacheDepth = 1 }: RouteTransitionPro
     setLastCachedPathname(pathname);
   }
 
-  // regular+ shows list/detail simultaneously (SplitView) rather than one
-  // view at a time, so a full-screen push/pop slide has nothing to justify
-  // it there -- cross-fade only. compact gets the real push/pop slide.
-  const isCompact = sizeClass === "compact";
-
-  // 50%, not a full viewport width -- a 100% travel distance read as too
-  // much motion for a simple push/pop.
-  const offscreenX = direction === "pop" ? "-50%" : "50%";
-  const slideVariants = {
-    initial: { x: offscreenX, opacity: 0 },
-    animate: { x: 0, opacity: 1 },
-    exit: { x: direction === "pop" ? "50%" : "-50%", opacity: 0 },
-  };
-  const fadeVariants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
-
-  const variants = reducedMotion || !isCompact ? fadeVariants : slideVariants;
-  const transition = reducedMotion || !isCompact ? { duration: durations.fast } : springs.gentle;
+  const transition = { duration: reducedMotion ? durations.instant : durations.fast };
 
   return (
     <>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={pathname}
-          initial={variants.initial}
-          animate={variants.animate}
-          exit={variants.exit}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={transition}
         >
           {children}

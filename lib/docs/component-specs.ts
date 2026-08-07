@@ -1224,11 +1224,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     slug: "route-transition",
     name: "RouteTransition",
     description:
-      "Core navigation animation wrapper placed in app/template.tsx, driving push/pop page transitions via Framer Motion AnimatePresence with optional Activity state caching.",
+      "Core navigation animation wrapper (in app/template.tsx, or invoked directly inside a layout.tsx with persistent chrome) driving a light cross-fade between page content via Framer Motion AnimatePresence, with optional Activity state caching.",
     anatomy: [
       { name: "motion.div wrapper", description: "Keyed by pathname" },
-      { name: "AnimatePresence mode='wait'", description: "Ensures exit animation completes before enter begins" },
-      { name: "useNavigationDirection() hook", description: "Reads history.state flag for push/pop direction" },
+      { name: "AnimatePresence mode='wait'", description: "Outgoing page exits before the incoming one enters" },
       { name: "<Activity> subtrees", description: "Optional caching for route state preservation" },
     ],
     props: [
@@ -1236,10 +1235,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "cacheDepth", type: "number", default: "1", description: "LRU route cache depth (hard cap: 10)" },
     ],
     states: [
-      { state: "Push", description: "Slide in from right + fade, springs.gentle" },
-      { state: "Pop", description: "Slide in from left + fade, springs.gentle" },
-      { state: "regular+", description: "Cross-fade only (--duration-fast)" },
-      { state: "prefers-reduced-motion", description: "Animation fully disabled" },
+      { state: "Default", description: "Cross-fade only, no slide or blur (--duration-fast)" },
+      { state: "prefers-reduced-motion", description: "Same cross-fade, shorter (--duration-instant)" },
     ],
     doDont: [
       {
@@ -1256,7 +1253,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       },
     ],
     tokens: [
-      { name: "--duration-fast", section: "§6.2", description: "regular+ cross-fade" },
+      { name: "--duration-fast", section: "§6.2", description: "Default cross-fade" },
+      { name: "--duration-instant", section: "§6.2", description: "Reduced-motion cross-fade" },
     ],
   },
 

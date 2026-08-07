@@ -9,10 +9,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
 }));
 
-// jsdom's matchMedia stub (vitest.setup.ts) always reports `matches: false`,
-// so useSizeClass() resolves to "compact" here regardless of window width --
-// matches how Sheet's tests document the same constraint for coarse-pointer
-// detection.
 describe("useNavigationDirection", () => {
   beforeEach(() => {
     mockPathname = "/items";
