@@ -346,8 +346,8 @@ body {
 }
 
 @utility scroll-mask-y {
-  --scroll-mask-fade-from-t: 80%;
-  --scroll-mask-fade-from-b: 80%;
+  --scroll-mask-fade-from-t: 99%;
+  --scroll-mask-fade-from-b: 99%;
 }
 
 @utility scroll-mask-y-from-* {
