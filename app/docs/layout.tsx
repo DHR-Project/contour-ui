@@ -31,7 +31,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             and losing AnimatePresence's coordinated exit/enter -- calling it
             here instead, inside the stable DocsLayout, keeps one persistent
             RouteTransition instance across every /docs/* navigation. */}
-        <main id="docs-main" className="flex-1 min-w-0 pt-14 md:pt-0">
+        <main id="docs-main" className="flex-1 min-w-0">
           <div className="py-(--space-10)">
             <RouteTransition>
               <Container variant="content">{children}</Container>
