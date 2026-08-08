@@ -48,7 +48,7 @@ describe("SplitView", () => {
     expect(screen.queryByRole("separator", { name: "Resize sidebar" })).not.toBeInTheDocument();
   });
 
-  it("docks the sidebar at the bottom and drops content padding on compact", () => {
+  it("hides the sidebar entirely and drops content padding on compact", () => {
     render(
       <SizeClassOverrideProvider value="compact">
         <CoarsePointerOverrideProvider value={false}>
@@ -59,7 +59,7 @@ describe("SplitView", () => {
       </SizeClassOverrideProvider>,
     );
 
-    expect(screen.getByText("Sidebar nav").closest(".fixed")).toHaveClass("inset-x-0", "bottom-0");
+    expect(screen.queryByText("Sidebar nav")).not.toBeInTheDocument();
     expect(screen.getByText("Route content").parentElement).not.toHaveClass("pl-(--sidebar-current-width)");
     expect(screen.queryByRole("separator", { name: "Resize sidebar" })).not.toBeInTheDocument();
   });
