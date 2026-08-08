@@ -3,6 +3,7 @@
 // neither component has to import the other, which would form a cycle.
 export const TOP_LINKS = [
   { href: "/docs", label: "Overview" },
+  { href: "/docs/components", label: "Components" },
   { href: "/docs/guidelines", label: "Guidelines" },
   { href: "/docs/tokens", label: "Tokens" },
   { href: "/docs/scroll-mask", label: "Scroll Mask" },

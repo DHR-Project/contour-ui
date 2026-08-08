@@ -1,12 +1,23 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Sidebar } from "./sidebar";
-import type { SidebarItem } from "./sidebar";
+import type { SidebarGroup, SidebarItem } from "./sidebar";
 
 const ITEMS: SidebarItem[] = [
   { value: "home", icon: "home", label: "Home" },
   { value: "search", icon: "search", label: "Search" },
   { value: "alerts", icon: "bell", label: "Alerts", badge: 3 },
+];
+
+const GROUPS: SidebarGroup[] = [
+  { items: [{ value: "all-notes", icon: "layers", label: "All Notes" }] },
+  {
+    label: "iCloud",
+    items: [
+      { value: "notes", icon: "layout-grid", label: "Notes" },
+      { value: "recipes", icon: "heart", label: "Recipes" },
+    ],
+  },
 ];
 
 describe("Sidebar", () => {
@@ -59,5 +70,27 @@ describe("Sidebar", () => {
     expect(activeRow.querySelector('[aria-hidden="true"]')).toHaveClass(
       "bg-[rgb(var(--sidebar-bg-active))]",
     );
+  });
+
+  it("renders labelled groups, with every item still reachable as a tab", () => {
+    render(<Sidebar items={GROUPS} value="all-notes" onValueChange={() => {}} />);
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+    expect(screen.getByText("iCloud")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^Notes$/ })).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("omits a group header for an unlabelled group", () => {
+    render(<Sidebar items={GROUPS} value="all-notes" onValueChange={() => {}} />);
+    expect(screen.getByRole("tab", { name: /All Notes/ })).toBeInTheDocument();
+  });
+
+  it("selects the correct item across group boundaries", () => {
+    let value = "all-notes";
+    const onValueChange = (next: string) => {
+      value = next;
+    };
+    render(<Sidebar items={GROUPS} value={value} onValueChange={onValueChange} />);
+    fireEvent.click(screen.getByRole("tab", { name: /Recipes/ }));
+    expect(value).toBe("recipes");
   });
 });

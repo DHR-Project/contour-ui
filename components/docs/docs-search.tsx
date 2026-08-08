@@ -40,10 +40,13 @@ const SEARCH_INDEX: { href: string; label: string; subtitle: string }[] = [
 
 export interface DocsSearchProps {
   className?: string;
-  /** "field" (default) is the full idle-state SearchField look-alike used in the desktop sidebar. "icon" is a compact icon-only trigger for the compact top bar (docs-mobile-nav.tsx), which has no room for the full pill + placeholder text. */
+  /** "field" (default) is the full idle-state SearchField look-alike used in the desktop sidebar. "icon" is a compact icon-only trigger for the compact top bar (docs-mobile-nav.tsx), which has no room for the full pill + placeholder text. Ignored when `open` is passed -- see below. */
   variant?: "field" | "icon";
-  /** Called after a result is selected -- lets embedding contexts (e.g. the compact-nav Sheet's DocsSidebar) close themselves on navigation. */
+  /** Called after a result is selected -- lets embedding contexts (e.g. the compact-nav Sheet's DocsSidebarNav) close themselves on navigation. */
   onNavigate?: () => void;
+  /** Controlled open state -- omit to let the component render its own trigger and manage `open` itself (default). Pass both when the trigger lives elsewhere, e.g. NavBar's trailingActions in docs-mobile-nav.tsx: this component then renders only the overlay, driven by the caller's own button. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 // Opens a centered overlay search field rather than docking inline -- the
@@ -57,11 +60,16 @@ export function DocsSearch({
   className,
   variant = "field",
   onNavigate,
+  open: controlledOpen,
+  onOpenChange,
 }: DocsSearchProps = {}) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const isCompact = useSizeClass() === "compact";
-  const [open, setOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (next: boolean) => onOpenChange?.(next) : setInternalOpen;
   const [query, setQuery] = useState("");
 
   // undefined => popover stays closed (SearchField contract); only switch to
@@ -91,7 +99,7 @@ export function DocsSearch({
 
   return (
     <>
-      {variant === "icon" ? (
+      {isControlled ? null : variant === "icon" ? (
         <Button
           variant="plain"
           size="sm"

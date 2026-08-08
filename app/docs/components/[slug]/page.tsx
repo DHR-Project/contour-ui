@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getComponent, getAllSlugs } from "@/lib/docs/component-registry";
 import { getComponentSpec } from "@/lib/docs/component-specs";
 import { ComponentDemo } from "@/components/docs/component-demos";
-import { ComponentDetailBreadcrumb } from "@/components/docs/component-detail-breadcrumb";
 import { Text } from "@/components/ui/text";
 import {
   DocsSection,
@@ -41,8 +40,6 @@ export default async function ComponentDetailPage({ params }: Props) {
 
   return (
     <div className="flex flex-col gap-(--gap-section)">
-      <ComponentDetailBreadcrumb title={component.name} />
-
       {/* Header */}
       <header className="flex flex-col gap-(--space-3)">
         <div className="flex items-start gap-(--space-3) flex-wrap">
