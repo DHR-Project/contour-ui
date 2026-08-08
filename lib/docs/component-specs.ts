@@ -293,10 +293,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     slug: "sidebar",
     name: "Sidebar",
     description:
-      "Navigation column for SplitView with shared-element selection indicator. Renders as a floating overlay (Progressive Blur, position: fixed) with icon+label rows mirroring TabBar items.",
-    notes: "This component is deferred — awaiting SplitView and RouteTransition implementation first.",
+      "Navigation column for SplitView with shared-element selection indicator. Renders as a floating overlay with icon+label rows mirroring TabBar items -- SplitView owns the fixed positioning and column width.",
     anatomy: [
-      { name: "Sidebar root", description: "position: fixed, Progressive Blur backdrop" },
+      { name: "Sidebar root", description: "Fills the column SplitView sizes it into; uniform material backdrop" },
       { name: "Navigation rows", description: "icon + label + badge via ListItemContent" },
       { name: "Selection background", description: "layoutId morph between rows (springs.smooth)" },
     ],
@@ -319,6 +318,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     tokens: [
       { name: "--sidebar-bg-active / --sidebar-bg-inactive", section: "§10.6" },
+      { name: "--material-thick", section: "§2.3", description: "Root backdrop" },
       { name: "--fill-quaternary", section: "§2.2", description: "Hover state" },
     ],
   },

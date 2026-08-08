@@ -32,6 +32,8 @@ import type { SearchFieldResult } from "@/components/ui/search-field";
 import { NavBar } from "@/components/ui/nav-bar";
 import { TabBar } from "@/components/ui/tab-bar";
 import type { TabBarItem } from "@/components/ui/tab-bar";
+import { Sidebar } from "@/components/ui/sidebar";
+import type { SidebarItem } from "@/components/ui/sidebar";
 import { Toolbar } from "@/components/ui/toolbar";
 import { Dropdown } from "@/components/ui/dropdown";
 import { ContextMenu } from "@/components/ui/context-menu";
@@ -306,6 +308,25 @@ function TabBarDemo() {
         <TabBar items={items} value={value} onValueChange={setValue} />
       </Flex>
     </ScrollBox>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
+
+function SidebarDemo() {
+  const items: SidebarItem[] = [
+    { value: "home", icon: "home", label: "Home" },
+    { value: "search", icon: "search", label: "Search" },
+    { value: "alerts", icon: "bell", label: "Alerts", badge: 3 },
+    { value: "profile", icon: "user", label: "Profile" },
+  ];
+  const [value, setValue] = useState("home");
+  return (
+    <div className="h-80 w-64 overflow-hidden rounded-md border border-separator">
+      <Sidebar items={items} value={value} onValueChange={setValue} />
+    </div>
   );
 }
 
@@ -1357,7 +1378,23 @@ function ContextMenuSubmenuDemo() {
 // inside a client component instead. See ComponentDemo below.
 // ---------------------------------------------------------------------------
 
-function AlertDemoBasic() {
+function AlertDemoSingleAction() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Check for Updates</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="You're up to date"
+        description="Contour 2.4 is currently the newest version available."
+        actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoTwoActions() {
   const [open, setOpen] = useState(false);
   return (
     <div className="p-4 flex justify-center">
@@ -1371,6 +1408,41 @@ function AlertDemoBasic() {
           { label: "Cancel", role: "cancel", onClick: () => {} },
           { label: "Delete", role: "destructive", emphasized: true, onClick: () => {} }
         ]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoThreeActions() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Save Changes</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="Save changes before closing?"
+        description="Your edits will be lost if you don't save them."
+        actions={[
+          { label: "Discard Changes", role: "destructive", onClick: () => {} },
+          { label: "Save", emphasized: true, onClick: () => {} },
+          { label: "Cancel", role: "cancel", onClick: () => {} },
+        ]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoTitleOnly() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Copy Link</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="Link copied to clipboard"
+        actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}
       />
     </div>
   );
@@ -1551,11 +1623,32 @@ function SheetDemoSnapPoints() {
 const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
   alert: [
     {
-      title: "Basic Alert",
-      description: "A two-action alert with a destructive action.",
+      title: "Single action",
+      description:
+        "1 action stacks full-width -- no row layout with just one button.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="You're up to date"\n  description="Contour 2.4 is currently the newest version available."\n  actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}\n/>`,
+      Component: AlertDemoSingleAction,
+    },
+    {
+      title: "Two actions",
+      description:
+        "2 actions lay out side by side, split 50/50 with a vertical separator. The cancel action always sits on the right.",
       code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Delete this item?"\n  description="This action cannot be undone."\n  actions={[\n    { label: "Cancel", role: "cancel", onClick: () => {} },\n    { label: "Delete", role: "destructive", emphasized: true, onClick: () => {} }\n  ]}\n/>`,
-      Component: AlertDemoBasic,
-    }
+      Component: AlertDemoTwoActions,
+    },
+    {
+      title: "Three actions",
+      description:
+        "3+ actions stack in a column instead of a row. The cancel action always sits at the bottom regardless of its position in the actions array.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Save changes before closing?"\n  description="Your edits will be lost if you don't save them."\n  actions={[\n    { label: "Discard Changes", role: "destructive", onClick: () => {} },\n    { label: "Save", emphasized: true, onClick: () => {} },\n    { label: "Cancel", role: "cancel", onClick: () => {} },\n  ]}\n/>`,
+      Component: AlertDemoThreeActions,
+    },
+    {
+      title: "Title only",
+      description: "description is optional -- omit it for a title-only alert.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Link copied to clipboard"\n  actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}\n/>`,
+      Component: AlertDemoTitleOnly,
+    },
   ],
   toast: [
     {
@@ -1677,6 +1770,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       code: `<TabBar\n  items={[\n    { icon: "home", label: "Home" },\n    { icon: "search", label: "Search" },\n    { icon: "bell", label: "Alerts", badge: 3 },\n    { icon: "user", label: "Profile" },\n  ]}\n  value={value}\n  onValueChange={setValue}\n/>`,
       Component: TabBarDemo,
       sizeClassPreview: true,
+    },
+  ],
+
+  sidebar: [
+    {
+      title: "Navigation column",
+      code: `<Sidebar\n  items={[\n    { value: "home", icon: "home", label: "Home" },\n    { value: "search", icon: "search", label: "Search" },\n    { value: "alerts", icon: "bell", label: "Alerts", badge: 3 },\n    { value: "profile", icon: "user", label: "Profile" },\n  ]}\n  value={value}\n  onValueChange={setValue}\n/>`,
+      Component: SidebarDemo,
     },
   ],
 

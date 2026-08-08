@@ -299,8 +299,8 @@
 /* SS2.8 Focus ring */
 :root {
   --focus-ring-color: var(--tint);
-  --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
+  --focus-ring-width: 1px;
+  --focus-ring-offset: 0px;
   --focus-ring-color-on-material: 0 0 0; /* placeholder light, verify contrast per material */
 }
 .dark {
@@ -330,7 +330,7 @@
    instead of 4. The tint keeps the faded edge from looking too see-through,
    since the mask only fades the blur's visibility, not its own opacity. */
 :root {
-  --progressive-blur-max: 20px;
+  --progressive-blur-max: 4px;
   --progressive-blur-tint-alpha: 0.5;
 }
 /* No position rule here on purpose: the component always pairs this class

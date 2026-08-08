@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
 import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 
 export interface AlertAction {
   label: string;
@@ -94,7 +95,7 @@ export function Alert({
 
                 <div
                   className={cn(
-                    "flex border-t border-separator",
+                    "flex gap-(--space-2) border-t border-separator p-(--space-3)",
                     isRow ? "flex-row" : "flex-col",
                   )}
                 >
@@ -120,29 +121,15 @@ export function Alert({
                           onOpenChange(false);
                         }}
                       >
-                        <button
-                          type="button"
+                        <Button
                           autoFocus={isFirstSafeAction}
-                          className={cn(
-                            "flex h-11 flex-1 select-none items-center justify-center outline-none",
-                            "focus-visible:bg-black/5 active:bg-black/5 transition-colors duration-100",
-                            "text-body", // style font size + line height
-                            action.role === "destructive"
-                              ? "text-[rgb(var(--color-destructive))]"
-                              : "text-tint",
-                            action.emphasized
-                              ? "font-semibold"
-                              : "font-regular",
-                            isRow &&
-                              i > 0 &&
-                              "border-l border-separator",
-                            !isRow &&
-                              i > 0 &&
-                              "border-t border-separator",
-                          )}
+                          variant={action.emphasized ? "filled" : "plain"}
+                          role={action.role === "destructive" ? "destructive" : "default"}
+                          fullWidth={!isRow}
+                          className={isRow ? "flex-1" : undefined}
                         >
                           {action.label}
-                        </button>
+                        </Button>
                       </Component>
                     );
                   })}

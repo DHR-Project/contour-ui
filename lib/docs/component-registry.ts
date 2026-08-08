@@ -109,8 +109,8 @@ export const COMPONENTS: ComponentMeta[] = [
     name: "Sidebar",
     description: "Navigation column for SplitView that mirrors TabBar items with row-level selection state.",
     category: "navigation",
-    status: "deferred",
-    deferredReason: "Not yet implemented",
+    status: "complete",
+    importPath: "@/components/ui/sidebar",
   },
 
   // Controls

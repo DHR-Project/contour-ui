@@ -11,6 +11,7 @@ import { ListItemContent } from "@/components/ui/list";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { Text } from "@/components/ui/text";
+import { Button } from "../button";
 
 export interface SearchFieldResult {
   id: string;
@@ -59,9 +60,18 @@ const containerVariants = {
 // content doesn't bounce, entering content does; per-variant `transition`
 // lets AnimatePresence apply each independently.
 const contentVariants = {
-  exit: { opacity: 0, filter: "blur(4px)", transition: { duration: durations.fast } },
+  exit: {
+    opacity: 0,
+    filter: "blur(4px)",
+    transition: { duration: durations.fast },
+  },
   enter: { opacity: 0, filter: "blur(4px)", scale: 0.96 },
-  center: { opacity: 1, filter: "blur(0px)", scale: 1, transition: springs.bouncy },
+  center: {
+    opacity: 1,
+    filter: "blur(0px)",
+    scale: 1,
+    transition: springs.bouncy,
+  },
 };
 
 export function SearchField({
@@ -87,7 +97,10 @@ export function SearchField({
   const [dismissed, setDismissed] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const reducedMotion = useReducedMotion();
 
   // Measures the Cancel button's own (static) rendered width once, so its
@@ -96,14 +109,16 @@ export function SearchField({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [cancelWidth, setCancelWidth] = useState(0);
   useLayoutEffect(() => {
-    if (cancelRef.current) setCancelWidth(cancelRef.current.getBoundingClientRect().width);
+    if (cancelRef.current)
+      setCancelWidth(cancelRef.current.getBoundingClientRect().width);
   }, []);
 
   const generatedId = useId();
   const listboxId = `searchfield-listbox-${generatedId}`;
   const highlightLayoutId = `searchfield-highlight-${generatedId}`;
 
-  const showPopover = focused && !dismissed && (loading || results !== undefined);
+  const showPopover =
+    focused && !dismissed && (loading || results !== undefined);
   const hasResults = results !== undefined && results.length > 0;
   const contentKey = loading
     ? "loading"
@@ -130,6 +145,49 @@ export function SearchField({
     debounceRef.current = setTimeout(() => onSearch(value), debounceMs);
     return () => clearTimeout(debounceRef.current);
   }, [value, debounceMs, onSearch]);
+
+  // Caps the popover at the real available space instead of a flat 60vh:
+  // on iOS Safari, `vh` reflects the layout viewport, which does not shrink
+  // when the on-screen keyboard covers part of the screen, so a field docked
+  // near the bottom (resultsPlacement="above") would let the popover grow up
+  // past the top of what's actually visible. `visualViewport` tracks the
+  // keyboard-shrunk area, and getBoundingClientRect() is visual-viewport-
+  // relative in modern browsers, so this stays correct as the keyboard
+  // opens/closes.
+  const [maxPopoverHeight, setMaxPopoverHeight] = useState<number | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    if (!showPopover) return;
+
+    const gap = 8; // matches the --space-2 gap between the field and popover
+    const margin = 16; // breathing room so the popover never touches the screen edge
+
+    function recompute() {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const viewportHeight =
+        window.visualViewport?.height ?? window.innerHeight;
+      const available =
+        resultsPlacement === "above"
+          ? rect.top - gap - margin
+          : viewportHeight - rect.bottom - gap - margin;
+      setMaxPopoverHeight(
+        Math.max(0, Math.min(available, viewportHeight * 0.6)),
+      );
+    }
+
+    recompute();
+    window.visualViewport?.addEventListener("resize", recompute);
+    window.visualViewport?.addEventListener("scroll", recompute);
+    window.addEventListener("resize", recompute);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", recompute);
+      window.visualViewport?.removeEventListener("scroll", recompute);
+      window.removeEventListener("resize", recompute);
+    };
+  }, [showPopover, resultsPlacement]);
 
   function handleValueChange(next: string) {
     setDismissed(false);
@@ -185,11 +243,15 @@ export function SearchField({
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
-        setHighlightedIndex((prev) => (prev === null || prev === results!.length - 1 ? 0 : prev + 1));
+        setHighlightedIndex((prev) =>
+          prev === null || prev === results!.length - 1 ? 0 : prev + 1,
+        );
         break;
       case "ArrowUp":
         event.preventDefault();
-        setHighlightedIndex((prev) => (prev === null || prev === 0 ? results!.length - 1 : prev - 1));
+        setHighlightedIndex((prev) =>
+          prev === null || prev === 0 ? results!.length - 1 : prev - 1,
+        );
         break;
       case "Enter":
         if (highlightedIndex === null) {
@@ -206,11 +268,20 @@ export function SearchField({
 
   const cancelTransition = reducedMotion ? { duration: 0 } : springs.smooth;
 
+  // Cancel lives beside the field only while there's no popover to hold it --
+  // once results/loading/empty is showing, it moves into the popover's own
+  // sticky header instead (see the popover render below) so it doesn't sit
+  // apart from the content it's dismissing.
+  const showFieldCancel = focused && !showPopover;
+
   return (
     // `relative` here (not just around the field) so the popover below can
     // span the full row -- field + gap + Cancel -- instead of just the
     // field's own (shrunk-when-focused) width.
-    <div className={cn("relative flex items-center gap-(--space-2)", className)}>
+    <div
+      ref={containerRef}
+      className={cn("relative flex items-center gap-(--space-2)", className)}
+    >
       <div className="min-w-0 flex-1">
         <TextField
           ref={inputRef}
@@ -233,7 +304,9 @@ export function SearchField({
           aria-expanded={showPopover}
           aria-controls={listboxId}
           aria-activedescendant={
-            highlightedIndex !== null ? `${listboxId}-option-${highlightedIndex}` : undefined
+            highlightedIndex !== null
+              ? `${listboxId}-option-${highlightedIndex}`
+              : undefined
           }
         />
       </div>
@@ -244,7 +317,7 @@ export function SearchField({
           in step with it instead of snapping the instant Cancel mounts. */}
       <motion.div
         initial={{ width: 0 }}
-        animate={{ width: focused ? cancelWidth : 0 }}
+        animate={{ width: showFieldCancel ? cancelWidth : 0 }}
         transition={cancelTransition}
         className="shrink-0 overflow-hidden"
       >
@@ -252,10 +325,10 @@ export function SearchField({
           ref={cancelRef}
           type="button"
           onClick={handleCancel}
-          tabIndex={focused ? 0 : -1}
-          aria-hidden={!focused}
+          tabIndex={showFieldCancel ? 0 : -1}
+          aria-hidden={!showFieldCancel}
           initial={{ opacity: 0 }}
-          animate={{ opacity: focused ? 1 : 0 }}
+          animate={{ opacity: showFieldCancel ? 1 : 0 }}
           transition={cancelTransition}
           className="whitespace-nowrap text-subheadline font-medium text-tint"
         >
@@ -273,15 +346,34 @@ export function SearchField({
             transition={containerTransition}
             // max-h + overflow-y-auto: fits on screen with its own scroll
             // rather than running off it when there are many results.
+            // max-h-[60vh] is the design-intended soft cap; maxPopoverHeight
+            // (once measured) further clamps it to the real available space,
+            // which matters on iOS Safari where the keyboard shrinks the
+            // visible area without shrinking `vh` -- see the effect above.
             // contour-material (tokens.css SS2.3a): frosted glass, not a
             // flat panel, matching every other floating surface.
+            style={
+              maxPopoverHeight !== undefined
+                ? { maxHeight: maxPopoverHeight }
+                : undefined
+            }
             className={cn(
-              "absolute left-0 right-0 z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg border border-separator contour-material shadow-md",
+              "absolute left-0 right-0 z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg ring-1 ring-separator contour-material shadow-md",
               resultsPlacement === "above"
                 ? "bottom-[calc(100%+var(--space-2))]"
                 : "top-[calc(100%+var(--space-2))]",
             )}
           >
+            {/* Cancel's popover-open home (see showFieldCancel above) --
+                sticky so it stays reachable while the results list scrolls
+                underneath it; needs its own material background + z-index so
+                scrolled rows pass behind it instead of painting over it. */}
+            <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator contour-material px-(--space-3) py-(--space-2)">
+              <Button size="sm" variant="plain" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </div>
+
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={contentKey}
@@ -295,7 +387,11 @@ export function SearchField({
                     {/* Progress isn't implemented yet (spec-only) -- same
                         spinner+animate-spin fallback Button uses for its
                         own loading state. */}
-                    <Icon name="spinner" size="md" className="animate-spin text-label-secondary" />
+                    <Icon
+                      name="spinner"
+                      size="md"
+                      className="animate-spin text-label-secondary"
+                    />
                   </div>
                 ) : !results ? null : results.length === 0 ? (
                   <div className="p-(--space-4)">
