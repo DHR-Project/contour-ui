@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Dialog as RadixDialog, VisuallyHidden } from "radix-ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { NavBar } from "@/components/ui/nav-bar";
 import { springs } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+import { getComponent } from "@/lib/docs/component-registry";
 import { DocsSidebarNav } from "./docs-sidebar-nav";
 import { DocsSearch } from "./docs-search";
+
+const COMPONENT_DETAIL_PATTERN = /^\/docs\/components\/([^/]+)$/;
 
 // Compact-only top bar -- the real sidebar (docs-sidebar-rail.tsx) is
 // hidden below `md` (SplitView's own contract), so this NavBar + drawer
@@ -21,22 +25,41 @@ export function DocsMobileNav() {
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const reducedMotion = useReducedMotion();
+  const router = useRouter();
+  const pathname = usePathname();
   const slideTransition = reducedMotion ? { duration: 0.15 } : springs.smooth;
+
+  // Component detail pages are a push destination *under* /docs/components
+  // (reached from its browse grid, from search, or from a category folder
+  // in the sidebar) -- so on compact they get a Back leading action instead
+  // of the hamburger, the same way the hamburger has no reason to
+  // disappear on any of the top-level pages that don't have a parent to
+  // go back to.
+  const detailSlug = pathname.match(COMPONENT_DETAIL_PATTERN)?.[1];
+  const detailComponent = detailSlug ? getComponent(detailSlug) : undefined;
 
   return (
     <>
       <div className="md:hidden">
         <NavBar
-          title="Contour Docs"
+          title={detailComponent ? detailComponent.name : "Contour Docs"}
           // Fixed compact bar, not the iOS large-title collapse -- this is
           // a persistent app-shell header across every /docs/* page, not a
           // single scrollable screen's own title.
           largeTitleMode={false}
-          leadingAction={{
-            icon: "sidebar",
-            label: "Toggle navigation",
-            onClick: () => setNavOpen(true),
-          }}
+          leadingAction={
+            detailComponent
+              ? {
+                  icon: "chevron-left",
+                  label: "Back to Components",
+                  onClick: () => router.push("/docs/components"),
+                }
+              : {
+                  icon: "sidebar",
+                  label: "Toggle navigation",
+                  onClick: () => setNavOpen(true),
+                }
+          }
           trailingActions={[
             { icon: "search", label: "Search documentation", onClick: () => setSearchOpen(true) },
           ]}

@@ -4,11 +4,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/ui/sidebar";
 import type { SidebarGroup } from "@/components/ui/sidebar";
 import { TOP_LINKS, CONTRIBUTOR_LINKS } from "@/lib/docs/nav-links";
+import { COMPONENTS, CATEGORIES } from "@/lib/docs/component-registry";
 import type { IconName } from "@/components/icon";
 
 // One icon per TOP_LINKS/CONTRIBUTOR_LINKS entry -- kept here (not on the
 // shared nav-links.ts data) since icon choice is a sidebar-presentation
-// concern, not something docs-search.tsx's flat index also needs.
+// concern, not something docs-search.tsx's flat index also needs. The 30+
+// individual component rows below deliberately have no icon: Sidebar's
+// `icon` is optional exactly for this case, a long content list where a
+// meaningful per-row icon doesn't exist (what glyph means "Badge" vs
+// "Divider"?) -- they indent instead of pretending to have one.
 const ICONS: Record<string, IconName> = {
   "/docs": "home",
   "/docs/components": "layout-grid",
@@ -19,15 +24,15 @@ const ICONS: Record<string, IconName> = {
   "/docs/contributing": "user",
 };
 
+function componentHref(slug: string): string {
+  return `/docs/components/${slug}`;
+}
+
 // Groups mirror Apple Notes: an unlabelled leading group for the
-// reader-facing pages, then a labelled group for contributor-only content
-// -- same split docs-sidebar.tsx used to draw with a plain divider (see
-// CLAUDE.local.md dogfooding + content-separation rule), now expressed as
-// Sidebar's own SidebarGroup[] instead of a bespoke <div> layout. The
-// per-component deep links this replaced live on /docs/components (a full
-// browse grid) and in the search overlay instead of the persistent rail --
-// a flat list of 30+ icon-less rows doesn't fit Sidebar's one-icon-per-row
-// contract.
+// reader-facing pages, then one collapsible folder per component category
+// (collapsed by default -- Sidebar auto-opens whichever one holds the
+// active page), then a labelled group for contributor-only content (see
+// CLAUDE.local.md dogfooding + content-separation rule).
 const GROUPS: SidebarGroup[] = [
   {
     items: TOP_LINKS.map((link) => ({
@@ -36,6 +41,17 @@ const GROUPS: SidebarGroup[] = [
       label: link.label,
     })),
   },
+  ...CATEGORIES.map(
+    (category): SidebarGroup => ({
+      label: category.label,
+      collapsible: true,
+      defaultOpen: false,
+      items: COMPONENTS.filter((c) => c.category === category.id).map((c) => ({
+        value: componentHref(c.slug),
+        label: c.name,
+      })),
+    }),
+  ).filter((group) => group.items.length > 0),
   {
     label: "Contributing",
     items: CONTRIBUTOR_LINKS.map((link) => ({
@@ -46,20 +62,18 @@ const GROUPS: SidebarGroup[] = [
   },
 ];
 
-const ALL_HREFS = [...TOP_LINKS, ...CONTRIBUTOR_LINKS].map((link) => link.href);
+const ALL_HREFS = new Set([
+  ...TOP_LINKS.map((link) => link.href),
+  ...CONTRIBUTOR_LINKS.map((link) => link.href),
+  ...COMPONENTS.map((c) => componentHref(c.slug)),
+]);
 
-// Longest-prefix match against every known href -- so /docs/components/badge
-// (no sidebar row of its own) still highlights the "Components" row it was
-// reached from, the same way the old DocsSidebar highlighted parent links
-// via pathname comparison.
+// Every real docs route now has its own sidebar row (component detail
+// pages included), so this is a plain membership check -- no more
+// longest-prefix guessing needed for pages that don't have a row of their
+// own.
 function activeHref(pathname: string): string {
-  let best = "/docs";
-  for (const href of ALL_HREFS) {
-    if ((pathname === href || pathname.startsWith(`${href}/`)) && href.length > best.length) {
-      best = href;
-    }
-  }
-  return best;
+  return ALL_HREFS.has(pathname) ? pathname : "";
 }
 
 export interface DocsSidebarNavProps {

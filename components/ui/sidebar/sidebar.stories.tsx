@@ -56,3 +56,49 @@ export const Grouped: Story = () => {
     </div>
   );
 };
+
+// Collapsible folders + icon-less leaves -- a long content list (a
+// component registry, a file tree) rather than a handful of app-shell
+// destinations. Categories start collapsed; the one holding the active
+// item opens itself.
+const COLLAPSIBLE_GROUPS: SidebarGroup[] = [
+  {
+    label: "Layout",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
+      { value: "flex", label: "Flex" },
+      { value: "grid", label: "Grid" },
+      { value: "stack", label: "Stack" },
+      { value: "container", label: "Container" },
+    ],
+  },
+  {
+    label: "Controls",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
+      { value: "button", label: "Button" },
+      { value: "switch", label: "Switch" },
+      { value: "checkbox", label: "Checkbox" },
+    ],
+  },
+  {
+    label: "Feedback",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
+      { value: "alert", label: "Alert" },
+      { value: "toast", label: "Toast" },
+    ],
+  },
+];
+
+export const CollapsibleGroups: Story = () => {
+  const [value, setValue] = useState("switch");
+  return (
+    <div className="h-96 w-64 overflow-hidden rounded-md border border-separator">
+      <Sidebar items={COLLAPSIBLE_GROUPS} value={value} onValueChange={setValue} />
+    </div>
+  );
+};

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Sidebar } from "./sidebar";
 import type { SidebarGroup, SidebarItem } from "./sidebar";
@@ -17,6 +17,24 @@ const GROUPS: SidebarGroup[] = [
       { value: "notes", icon: "layout-grid", label: "Notes" },
       { value: "recipes", icon: "heart", label: "Recipes" },
     ],
+  },
+];
+
+const COLLAPSIBLE_GROUPS: SidebarGroup[] = [
+  {
+    label: "Layout",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
+      { value: "flex", label: "Flex" },
+      { value: "grid", label: "Grid" },
+    ],
+  },
+  {
+    label: "Controls",
+    collapsible: true,
+    defaultOpen: false,
+    items: [{ value: "button", label: "Button" }],
   },
 ];
 
@@ -92,5 +110,53 @@ describe("Sidebar", () => {
     render(<Sidebar items={GROUPS} value={value} onValueChange={onValueChange} />);
     fireEvent.click(screen.getByRole("tab", { name: /Recipes/ }));
     expect(value).toBe("recipes");
+  });
+
+  it("renders an item with no icon at all -- icon is optional", () => {
+    render(
+      <Sidebar
+        items={[{ value: "flex", label: "Flex" }]}
+        value="flex"
+        onValueChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole("tab", { name: "Flex" })).toBeInTheDocument();
+  });
+
+  it("starts a collapsible group with defaultOpen:false collapsed, hiding its items", () => {
+    render(<Sidebar items={COLLAPSIBLE_GROUPS} value="__none__" onValueChange={() => {}} />);
+    expect(screen.queryByRole("tab", { name: "Flex" })).not.toBeInTheDocument();
+    expect(screen.getByText("Layout")).toBeInTheDocument();
+  });
+
+  it("expands a collapsed group's items on clicking its header, and re-collapses on a second click", async () => {
+    render(<Sidebar items={COLLAPSIBLE_GROUPS} value="__none__" onValueChange={() => {}} />);
+    const header = screen.getByRole("button", { name: "Layout" });
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(header);
+    expect(header).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("tab", { name: "Flex" })).toBeInTheDocument();
+
+    fireEvent.click(header);
+    expect(header).toHaveAttribute("aria-expanded", "false");
+    // AnimatePresence's exit animation unmounts the item asynchronously.
+    await waitFor(() => expect(screen.queryByRole("tab", { name: "Flex" })).not.toBeInTheDocument());
+  });
+
+  it("starts a collapsible group open when it contains the active value, even with defaultOpen:false", () => {
+    render(<Sidebar items={COLLAPSIBLE_GROUPS} value="button" onValueChange={() => {}} />);
+    expect(screen.getByRole("tab", { name: "Button" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Flex" })).not.toBeInTheDocument();
+  });
+
+  it("auto-expands a collapsed group when `value` changes to one of its items", () => {
+    const { rerender } = render(
+      <Sidebar items={COLLAPSIBLE_GROUPS} value="__none__" onValueChange={() => {}} />,
+    );
+    expect(screen.queryByRole("tab", { name: "Button" })).not.toBeInTheDocument();
+
+    rerender(<Sidebar items={COLLAPSIBLE_GROUPS} value="button" onValueChange={() => {}} />);
+    expect(screen.getByRole("tab", { name: "Button" })).toBeInTheDocument();
   });
 });
