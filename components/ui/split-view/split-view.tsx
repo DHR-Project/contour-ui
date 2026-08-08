@@ -8,7 +8,7 @@ import { useSizeClass } from "@/lib/hooks/use-size-class";
 import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
 
 export interface SplitViewProps {
-  /** Typically a <TabBar> in its "sidebar" position -- see contour-spec-splitview-v2.md SS1. */
+  /** Rendered fixed to the left edge on regular+ only -- not shown at all on compact. Callers that need equivalent navigation on compact (e.g. a full-width list screen, a drawer) own that separately. */
   sidebar: ReactNode;
   /** The current route's content -- SplitView renders this as-is, relying on RouteTransition (app/template.tsx) for the navigation animation. */
   children: ReactNode;
@@ -100,8 +100,6 @@ export function SplitView({ sidebar, children, minSidebarWidth = 240, maxSidebar
       )}
 
       <div className={cn(!isCompact && "pl-(--sidebar-current-width)")}>{children}</div>
-
-      {isCompact && <div className="fixed inset-x-0 bottom-0 z-(--z-sidebar)">{sidebar}</div>}
     </div>
   );
 }
