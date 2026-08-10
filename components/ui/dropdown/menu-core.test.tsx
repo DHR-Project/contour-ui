@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ContextMenu, DropdownMenu } from "radix-ui";
-import { renderMenuItems } from "./menu-core";
+import { contextMenuContentClassName, dropdownContentClassName, renderMenuItems } from "./menu-core";
 import type { DropdownItemDef } from "./menu-core";
 
 // Runs the same assertions against Dropdown's and ContextMenu's real Radix
@@ -27,7 +27,9 @@ const harnesses: Harness[] = [
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>Open</DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content>{renderMenuItems(DropdownMenu, items)}</DropdownMenu.Content>
+            <DropdownMenu.Content className={dropdownContentClassName}>
+              {renderMenuItems(DropdownMenu, dropdownContentClassName, items)}
+            </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>,
       ),
@@ -43,7 +45,9 @@ const harnesses: Harness[] = [
         <ContextMenu.Root>
           <ContextMenu.Trigger>Open</ContextMenu.Trigger>
           <ContextMenu.Portal>
-            <ContextMenu.Content>{renderMenuItems(ContextMenu, items)}</ContextMenu.Content>
+            <ContextMenu.Content className={contextMenuContentClassName}>
+              {renderMenuItems(ContextMenu, contextMenuContentClassName, items)}
+            </ContextMenu.Content>
           </ContextMenu.Portal>
         </ContextMenu.Root>,
       ),
@@ -52,6 +56,30 @@ const harnesses: Harness[] = [
     },
   },
 ];
+
+// Regression coverage for a real bug: ContextMenu used to reuse Dropdown's
+// content class verbatim, which bound `max-height`/`transform-origin` to
+// DropdownMenu.Content's own CSS vars -- vars that are simply never set
+// inside ContextMenu.Content (each Radix menu family sets its own,
+// differently-named ones). The effect on a real device: no height cap, so
+// ContextMenu's popover had nothing to make it scroll and just ran off the
+// screen. Plain string assertions (not a render) since jsdom can't verify
+// the resulting layout/scroll behavior itself.
+describe("dropdownContentClassName / contextMenuContentClassName", () => {
+  it("each binds to its own Radix family's content-available-height var, not the other's", () => {
+    expect(dropdownContentClassName).toContain("max-h-(--radix-dropdown-menu-content-available-height)");
+    expect(dropdownContentClassName).not.toContain("--radix-context-menu-content-available-height");
+    expect(contextMenuContentClassName).toContain("max-h-(--radix-context-menu-content-available-height)");
+    expect(contextMenuContentClassName).not.toContain("--radix-dropdown-menu-content-available-height");
+  });
+
+  it("each binds to its own Radix family's content-transform-origin var, not the other's", () => {
+    expect(dropdownContentClassName).toContain("origin-[var(--radix-dropdown-menu-content-transform-origin)]");
+    expect(dropdownContentClassName).not.toContain("--radix-context-menu-content-transform-origin");
+    expect(contextMenuContentClassName).toContain("origin-[var(--radix-context-menu-content-transform-origin)]");
+    expect(contextMenuContentClassName).not.toContain("--radix-dropdown-menu-content-transform-origin");
+  });
+});
 
 describe.each(harnesses)("renderMenuItems ($name)", ({ renderItems, open }) => {
   it("renders an action row and fires onSelect on click", async () => {

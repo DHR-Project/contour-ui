@@ -1224,9 +1224,10 @@ function ListContextMenuDemo() {
 // Dropdown
 // ---------------------------------------------------------------------------
 
-// Long enough to overflow the menu's own max-height (contentClassName's
-// --radix-dropdown-menu-content-available-height cap) on most viewports, so
-// the content scrolls internally -- with the submenu row placed after it,
+// Long enough to overflow the menu's own max-height (dropdownContentClassName/
+// contextMenuContentClassName's own --radix-<family>-content-available-height
+// cap, menu-core.tsx) on most viewports, so the content scrolls internally --
+// with the submenu row placed after it,
 // reaching it at compact size requires scrolling to the bottom first. Shared
 // by both Dropdown's and ContextMenu's "Long list" demos below since they're
 // exercising the same compact-mode scroll-to-top-then-slide behavior

@@ -50,14 +50,36 @@ export type DropdownItemDef =
 // of escaping to whatever ancestor happens to be positioned -- `overflow-y-auto`
 // (rather than `hidden`) still clips the same way but additionally lets a
 // menu taller than the viewport scroll internally, capped to Radix's own
-// `--radix-dropdown-menu-content-available-height` (guideline: popovers must
-// fit on screen with their own scroll, not overflow it). `contour-material`
+// per-family `--radix-<family>-content-available-height` (guideline: popovers
+// must fit on screen with their own scroll, not overflow it). `contour-material`
 // (tokens.css SS2.3a) replaces the old solid `bg-bg-tertiary` -- floating
 // content should read as frosted glass, not a flat panel (guideline rule 1.2).
-export const contentClassName =
-  "relative z-[var(--z-dropdown)] min-w-48 max-h-(--radix-dropdown-menu-content-available-height) origin-[var(--radix-dropdown-menu-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-[var(--radius-lg)] border border-separator contour-material p-1.5 shadow-md " +
+//
+// Two separate exports, not one built by interpolating the Radix family name
+// in -- DropdownMenu.Content and ContextMenu.Content each set their *own*
+// `--radix-dropdown-menu-content-*`/`--radix-context-menu-content-*` CSS
+// vars (structurally parallel families, distinct var names, same as their
+// component APIs). This was a real bug: ContextMenu used to reuse Dropdown's
+// class verbatim, so `max-h-(--radix-dropdown-menu-content-available-height)`
+// resolved to nothing inside ContextMenu.Content -- no height cap, so
+// overflow-y-auto had nothing to scroll and a long menu just ran off the
+// screen uncapped. Kept as two full literal strings (not built by
+// concatenating a variable prefix into the utility name) because Tailwind's
+// static scanner needs the exact `max-h-(...)`/`origin-[...]` text present
+// in the source to generate CSS for it at all -- same constraint as
+// list-item.tsx's TRAILING_RESERVE_CLASS.
+const contentClassNameBase =
+  "relative z-[var(--z-dropdown)] min-w-48 overflow-x-hidden overflow-y-auto rounded-[var(--radius-lg)] border border-separator contour-material p-1.5 shadow-md " +
   "data-[state=open]:animate-[contour-scale-fade-in_var(--duration-fast)_var(--ease-spring-out)] " +
   "data-[state=closed]:animate-[contour-scale-fade-out_var(--duration-fast)_var(--ease-standard)]";
+
+export const dropdownContentClassName =
+  "max-h-(--radix-dropdown-menu-content-available-height) origin-[var(--radix-dropdown-menu-content-transform-origin)] " +
+  contentClassNameBase;
+
+export const contextMenuContentClassName =
+  "max-h-(--radix-context-menu-content-available-height) origin-[var(--radix-context-menu-content-transform-origin)] " +
+  contentClassNameBase;
 
 // --menu-item-padding-sides/-padding-y (SS4.8/4.9, contour-spec-dropdown-v2.md
 // SSA.2a) -- denser than List's --padding-row-y since a menu needs to stay
@@ -161,8 +183,11 @@ export type SubmenuRenderer = (
 // The plain flyout cascade (contour-spec-dropdown-v2.md SSA.4) -- correct
 // as-is for both Dropdown's regular+ size classes and ContextMenu, which
 // never overrides this. Nested flyout content is intentionally excluded
-// from drag-select (SSA.5 scope note below).
-export function createDefaultSubmenuRenderer(adapter: MenuAdapter): SubmenuRenderer {
+// from drag-select (SSA.5 scope note below). `contentClassName` is threaded
+// through (not read from a shared constant) so the nested SubContent gets
+// the *same* family-matched class as the top-level Content one level up --
+// see dropdownContentClassName/contextMenuContentClassName above.
+export function createDefaultSubmenuRenderer(adapter: MenuAdapter, contentClassName: string): SubmenuRenderer {
   const { Sub, SubTrigger, SubContent, Portal } = adapter;
   const renderDefaultSubmenu: SubmenuRenderer = (item, index, dragIndex, drag) => (
     <Sub key={index}>
@@ -174,7 +199,7 @@ export function createDefaultSubmenuRenderer(adapter: MenuAdapter): SubmenuRende
         <SubContent className={contentClassName} sideOffset={4}>
           {/* No `drag` passed through: drag-select only covers the currently
               visible screen (SSA.5 scope note, contour-spec-dropdown-v2.md). */}
-          {renderMenuItems(adapter, item.items)}
+          {renderMenuItems(adapter, contentClassName, item.items)}
         </SubContent>
       </Portal>
     </Sub>
@@ -186,12 +211,17 @@ export function createDefaultSubmenuRenderer(adapter: MenuAdapter): SubmenuRende
 // `renderSubmenu`, compact) and ContextMenu call this against their own
 // `MenuAdapter` instead of each keeping a hand-copied switch statement --
 // see the MenuAdapter comment above for how that's enforced, not just
-// convention.
+// convention. `contentClassName` is only actually used to build the default
+// (regular+) flyout's SubContent -- a custom `renderSubmenu` (Dropdown's
+// compact stack) ignores it, but it's still required from every caller so
+// nobody can accidentally pass the wrong family's class in from one call
+// site and not another.
 export function renderMenuItems(
   adapter: MenuAdapter,
+  contentClassName: string,
   items: DropdownItemDef[],
   drag?: DragRenderContext,
-  renderSubmenu: SubmenuRenderer = createDefaultSubmenuRenderer(adapter),
+  renderSubmenu: SubmenuRenderer = createDefaultSubmenuRenderer(adapter, contentClassName),
 ): ReactNode[] {
   const { Item, CheckboxItem, RadioGroup, RadioItem, Label, Separator } = adapter;
   return items.map((item, index) => {

@@ -8,12 +8,12 @@ import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { useDragSelect } from "./use-drag-select";
 import type { DragSelectTarget } from "./use-drag-select";
-import { contentClassName, renderMenuItems } from "./menu-core";
+import { dropdownContentClassName, renderMenuItems } from "./menu-core";
 import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "./menu-core";
 import { CompactMenuTransition, createBackRow, createCompactSubmenuRenderer, useMenuStack } from "./compact-menu";
 
 export type { DropdownItemDef, DropdownRole } from "./menu-core";
-export { contentClassName, itemClassName, sectionTitleClassName, separatorClassName } from "./menu-core";
+export { dropdownContentClassName as contentClassName, itemClassName, sectionTitleClassName, separatorClassName } from "./menu-core";
 
 export interface DropdownProps {
   trigger: ReactElement;
@@ -66,12 +66,12 @@ export function Dropdown({ trigger, items, side = "bottom", align = "start" }: D
   const compactScreen = (
     <>
       {currentFrame && createBackRow(dropdownMenuAdapter, currentFrame.label, popSubmenu)}
-      {renderMenuItems(dropdownMenuAdapter, currentItems, drag, compactSubmenuRenderer)}
+      {renderMenuItems(dropdownMenuAdapter, dropdownContentClassName, currentItems, drag, compactSubmenuRenderer)}
     </>
   );
 
   const content = !isCompact ? (
-    renderMenuItems(dropdownMenuAdapter, items, drag)
+    renderMenuItems(dropdownMenuAdapter, dropdownContentClassName, items, drag)
   ) : (
     <CompactMenuTransition stackKey={stackLength} direction={direction} reducedMotion={reducedMotion}>
       {compactScreen}
@@ -95,7 +95,7 @@ export function Dropdown({ trigger, items, side = "bottom", align = "start" }: D
         {trigger}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content ref={contentRef} className={contentClassName} side={side} align={align} sideOffset={4}>
+        <DropdownMenu.Content ref={contentRef} className={dropdownContentClassName} side={side} align={align} sideOffset={4}>
           {content}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

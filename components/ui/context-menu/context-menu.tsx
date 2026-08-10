@@ -9,7 +9,7 @@ import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 // Direct imports (not the "@/components/ui/dropdown" barrel) -- Rollup
 // flags a circular chunk dependency otherwise, since Dropdown's own barrel
 // re-exports from menu-core.tsx.
-import { contentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
+import { contextMenuContentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
 import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "@/components/ui/dropdown/menu-core";
 import {
   CompactMenuTransition,
@@ -88,12 +88,12 @@ export function ContextMenu({ items, children, disabled }: ContextMenuProps) {
   const compactScreen = (
     <>
       {currentFrame && createBackRow(contextMenuAdapter, currentFrame.label, popSubmenu)}
-      {renderMenuItems(contextMenuAdapter, currentItems, drag, compactSubmenuRenderer)}
+      {renderMenuItems(contextMenuAdapter, contextMenuContentClassName, currentItems, drag, compactSubmenuRenderer)}
     </>
   );
 
   const content = !isCompact ? (
-    renderMenuItems(contextMenuAdapter, items, drag)
+    renderMenuItems(contextMenuAdapter, contextMenuContentClassName, items, drag)
   ) : (
     <CompactMenuTransition stackKey={stackLength} direction={direction} reducedMotion={reducedMotion}>
       {compactScreen}
@@ -112,7 +112,7 @@ export function ContextMenu({ items, children, disabled }: ContextMenuProps) {
         {children}
       </RadixContextMenu.Trigger>
       <RadixContextMenu.Portal>
-        <RadixContextMenu.Content ref={contentRef} className={contentClassName}>
+        <RadixContextMenu.Content ref={contentRef} className={contextMenuContentClassName}>
           {content}
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>
