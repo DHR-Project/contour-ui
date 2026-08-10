@@ -1,12 +1,24 @@
 "use client";
 
+import { useId, useRef, useState } from "react";
 import { ContextMenu as RadixContextMenu } from "radix-ui";
 import type { ReactElement } from "react";
-// Direct import (not the "@/components/ui/dropdown" barrel) -- Rollup flags
-// a circular chunk dependency otherwise, since Dropdown's own barrel
-// re-exports from this same module.
+import { useSizeClass } from "@/lib/hooks/use-size-class";
+import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+// Direct imports (not the "@/components/ui/dropdown" barrel) -- Rollup
+// flags a circular chunk dependency otherwise, since Dropdown's own barrel
+// re-exports from menu-core.tsx.
 import { contentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
-import type { DropdownItemDef, MenuAdapter } from "@/components/ui/dropdown/menu-core";
+import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "@/components/ui/dropdown/menu-core";
+import {
+  CompactMenuTransition,
+  createBackRow,
+  createCompactSubmenuRenderer,
+  useMenuStack,
+} from "@/components/ui/dropdown/compact-menu";
+import { useDragSelect } from "@/components/ui/dropdown/use-drag-select";
+import type { DragSelectTarget } from "@/components/ui/dropdown/use-drag-select";
 
 export interface ContextMenuProps {
   /** Reuses Dropdown's item type verbatim (contour-spec-context-menu.md). */
@@ -21,10 +33,6 @@ export interface ContextMenuProps {
 // (see menu-core.tsx's MenuAdapter comment): if the shared renderMenuItems
 // ever needs a primitive or prop shape ContextMenu doesn't actually have,
 // this line fails to typecheck instead of the two menus silently drifting.
-// This is deliberately still the plain flyout submenu only -- no compact
-// push/pop stack, no drag-select -- out of scope for this minimal wrapper
-// (see contour-session-changelog-v2.md); renderMenuItems is only called
-// here without a `drag` context or a custom `renderSubmenu`.
 const contextMenuAdapter: MenuAdapter = RadixContextMenu;
 
 /**
@@ -36,16 +44,76 @@ const contextMenuAdapter: MenuAdapter = RadixContextMenu;
  * rather than relying on the browser's own touch-and-hold behavior, which
  * can't be disambiguated against a competing gesture (contour-spec-
  * context-menu.md SS3).
+ *
+ * Compact submenu-stack and drag-select (SSA.4/SSA.5) now match Dropdown --
+ * both go through the same shared `useMenuStack`/`useDragSelect` as
+ * Dropdown, just with `activation: "open"` on the latter: ContextMenu opens
+ * from a long-press dispatched by the consumer while the finger is already
+ * down, not from a trigger pointerdown Dropdown itself intercepts, so the
+ * drag session starts as soon as the menu opens instead of at a separate
+ * trigger-press moment (see use-drag-select.ts).
  */
 export function ContextMenu({ items, children, disabled }: ContextMenuProps) {
+  const sizeClass = useSizeClass();
+  const isCompact = sizeClass === "compact";
+  const isCoarsePointer = useIsCoarsePointer();
+  const reducedMotion = useReducedMotion();
+  const highlightLayoutId = `context-menu-drag-highlight-${useId()}`;
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const [open, setOpen] = useState(false);
+  const { currentFrame, currentItems, stackLength, direction, pushSubmenu, popSubmenu, reset } = useMenuStack({
+    items,
+    containerRef: contentRef,
+    reducedMotion,
+  });
+
+  const dragTargets: DragSelectTarget[] = [];
+  const { highlightedIndex } = useDragSelect({
+    activation: "open",
+    enabled: isCoarsePointer,
+    open,
+    targets: dragTargets,
+    containerRef: contentRef,
+  });
+
+  // Only built on coarse pointers -- fine-pointer (mouse) never renders the
+  // extra highlight nodes or index attributes (SSA.5 scope: touch-only).
+  const drag: DragRenderContext | undefined = isCoarsePointer
+    ? { targets: dragTargets, highlightedIndex, highlightLayoutId }
+    : undefined;
+
+  const compactSubmenuRenderer = createCompactSubmenuRenderer(contextMenuAdapter, pushSubmenu);
+
+  const compactScreen = (
+    <>
+      {currentFrame && createBackRow(contextMenuAdapter, currentFrame.label, popSubmenu)}
+      {renderMenuItems(contextMenuAdapter, currentItems, drag, compactSubmenuRenderer)}
+    </>
+  );
+
+  const content = !isCompact ? (
+    renderMenuItems(contextMenuAdapter, items, drag)
+  ) : (
+    <CompactMenuTransition stackKey={stackLength} direction={direction} reducedMotion={reducedMotion}>
+      {compactScreen}
+    </CompactMenuTransition>
+  );
+
   return (
-    <RadixContextMenu.Root>
+    <RadixContextMenu.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}
+    >
       <RadixContextMenu.Trigger asChild disabled={disabled}>
         {children}
       </RadixContextMenu.Trigger>
       <RadixContextMenu.Portal>
-        <RadixContextMenu.Content className={contentClassName}>
-          {renderMenuItems(contextMenuAdapter, items)}
+        <RadixContextMenu.Content ref={contentRef} className={contentClassName}>
+          {content}
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>
     </RadixContextMenu.Root>
