@@ -18,7 +18,7 @@ export function DocsSection({ id, title, children, className }: DocsSectionProps
     <section
       id={id}
       aria-labelledby={id ? `${id}-heading` : undefined}
-      // scroll-mt clears the sticky compact NavBar (docs-mobile-nav.tsx) so
+      // scroll-mt clears the sticky compact top bar (docs-mobile-nav.tsx) so
       // TOC/deep-link jumps -- both native #hash and DocsToc's
       // scrollIntoView -- don't land the heading underneath it.
       className={cn("flex flex-col gap-(--space-4) scroll-mt-20", className)}
