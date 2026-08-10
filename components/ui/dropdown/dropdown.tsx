@@ -236,6 +236,9 @@ interface StackFrame {
 // the motion.div: AnimatePresence forwards it to the exiting element (which
 // otherwise can't receive fresh props once removed from the tree), while
 // the entering element reads its own prop normally.
+// Exit always fades toward 0 opacity now (not just the push case's partial
+// 0.4 dim) so a screen leaving for good visibly dissolves instead of
+// sliding off fully opaque.
 const stackVariants = {
   enter: (direction: "push" | "pop") => ({
     x: direction === "push" ? "100%" : "-30%",
@@ -245,7 +248,7 @@ const stackVariants = {
   center: { x: 0, opacity: 1, filter: "blur(0px)" },
   exit: (direction: "push" | "pop") => ({
     x: direction === "push" ? "-30%" : "100%",
-    opacity: direction === "push" ? 0.4 : 1,
+    opacity: direction === "push" ? 0.4 : 0,
     filter: "blur(8px)",
   }),
 };
@@ -265,9 +268,43 @@ export function Dropdown({ trigger, items, side = "bottom", align = "start" }: D
   const currentFrame = stack[stack.length - 1];
   const currentItems = currentFrame ? currentFrame.items : items;
 
+  // If the tapped submenu row sits below the fold (the content scrolled
+  // down to reach it), snap the scroll position back to the top first --
+  // otherwise the incoming screen would slide in already scrolled, hiding
+  // its own top rows. The push only starts once the scroll settles.
   function pushSubmenu(label: string, subItems: DropdownItemDef[]) {
-    setDirection("push");
-    setStack((previous) => [...previous, { label, items: subItems }]);
+    const container = contentRef.current;
+    const openSubmenu = () => {
+      setDirection("push");
+      setStack((previous) => [...previous, { label, items: subItems }]);
+    };
+
+    if (!container || container.scrollTop <= 0) {
+      openSubmenu();
+      return;
+    }
+
+    if (reducedMotion) {
+      container.scrollTop = 0;
+      openSubmenu();
+      return;
+    }
+
+    container.scrollTo({ top: 0, behavior: "smooth" });
+    // Frame-counted safety net (not a wall-clock timer) so this never
+    // depends on an impure time read: ~500ms at 60fps in case the browser
+    // never actually settles scrollTop back to exactly 0.
+    const MAX_FRAMES = 30;
+    let frame = 0;
+    const waitForScrollTop = () => {
+      frame += 1;
+      if (container.scrollTop <= 0 || frame >= MAX_FRAMES) {
+        openSubmenu();
+        return;
+      }
+      requestAnimationFrame(waitForScrollTop);
+    };
+    requestAnimationFrame(waitForScrollTop);
   }
 
   function popSubmenu() {
