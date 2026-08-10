@@ -17,7 +17,8 @@ export function useWindowFocus(): boolean {
   const [focused, setFocused] = useState(true);
 
   useEffect(() => {
-    setFocused(document.hasFocus());
+    const syncFocus = () => setFocused(document.hasFocus());
+    syncFocus();
     const onFocus = () => setFocused(true);
     const onBlur = () => setFocused(false);
     window.addEventListener("focus", onFocus);

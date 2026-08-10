@@ -16,7 +16,6 @@ import type { IconName } from "@/components/icon";
 // "Divider"?) -- they indent instead of pretending to have one.
 const ICONS: Record<string, IconName> = {
   "/docs": "home",
-  "/docs/components": "layout-grid",
   "/docs/guidelines": "compass",
   "/docs/tokens": "sliders-horizontal",
   "/docs/scroll-mask": "layers",

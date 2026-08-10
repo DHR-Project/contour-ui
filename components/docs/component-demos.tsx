@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { getAvatarProgressRing } from "@/lib/utils/avatar-progress-ring";
 import { SearchField } from "@/components/ui/search-field";
 import type { SearchFieldResult } from "@/components/ui/search-field";
 import { NavBar } from "@/components/ui/nav-bar";

@@ -128,9 +128,13 @@ export function Avatar({
 
       {/* Fallback: initials (if name provided) or generic icon.
           delayMs=600 prevents a flash of fallback while the image loads
-          quickly (Radix built-in — spec SS3). */}
+          quickly (Radix built-in — spec SS3). Only set when there's a src to
+          wait on: Radix's own canRender starts false whenever `delayMs` is a
+          defined number (even 0), gated behind a setTimeout -- so `delayMs={0}`
+          still defers the very first paint by a tick instead of rendering
+          synchronously the way `undefined` does. */}
       <RadixAvatar.Fallback
-        delayMs={src ? 600 : 0}
+        delayMs={src ? 600 : undefined}
         className={cn(
           "flex h-full w-full items-center justify-center",
           // Solid opaque background — deterministic from name, safe on any bg (spec SS4 / badge tone="solid").

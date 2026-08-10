@@ -98,7 +98,10 @@ describe("Progress — linear", () => {
     const { container } = render(
       <Progress variant="linear" value={40} label="Progress" />,
     );
-    const fill = container.querySelector("div > div") as HTMLElement | null;
+    // "div > div" would also match the progressbar div itself (its parent,
+    // RTL's container, is a div too) -- [style] unambiguously reaches the
+    // inner fill, the only element with an inline style by default.
+    const fill = container.querySelector("[style]") as HTMLElement | null;
     expect(fill?.style.width).toBe("40%");
   });
 });

@@ -72,7 +72,10 @@ const TOP_LINKS = [
       "All CSS custom properties: colors, typography, spacing, radius, motion, and z-index.",
   },
   {
-    href: "/docs/components",
+    // In-page anchor, not a route -- the full component list already
+    // lives further down this same page (id="components-overview"), so
+    // there's no separate /docs/components browse page to link to.
+    href: "#components-overview",
     title: "Components",
     description: `${COMPONENTS.length} components across ${CATEGORIES.length} categories. Live demos for components with code; spec sheets for those still in progress.`,
   },
