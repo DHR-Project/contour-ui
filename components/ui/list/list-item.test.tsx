@@ -72,7 +72,8 @@ describe("ListItem", () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
-  it("collapses the 4th+ trailing action into a More button", () => {
+  it("shows at most 3 trailing actions -- extras beyond the 3rd are ignored", async () => {
+    const user = userEvent.setup();
     render(
       <List>
         <ListItem
@@ -87,11 +88,173 @@ describe("ListItem", () => {
         />
       </List>,
     );
+    // 3 visible actions collapse behind the "..." trigger (see the describe
+    // block below) -- open it to see which ones survived the slice(0, 3).
+    await user.click(screen.getByRole("button", { name: "Show actions" }));
     expect(screen.getByRole("button", { name: "Flag" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "More actions" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Share" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Share" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+  });
+
+  describe("desktop collapsed trailing actions (3 actions, contour-spec-list.md SS4.4)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows a single trigger instead of all 3 inline; clicking it reveals them, and picking one runs it, flashes, then closes", () => {
+      const onAction = vi.fn();
+      render(
+        <List>
+          <ListItem
+            key="1"
+            title="Row"
+            trailingActions={[
+              { icon: "star", label: "Flag", color: "warning", onAction: () => {} },
+              { icon: "download", label: "Archive", color: "default", onAction: () => {} },
+              { icon: "trash", label: "Delete", color: "destructive", onAction },
+            ]}
+          />
+        </List>,
+      );
+      expect(screen.getByRole("button", { name: "Show actions" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Show actions" }));
+      expect(screen.queryByRole("button", { name: "Show actions" })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+      // Runs immediately -- Delete has no `confirm`.
+      expect(onAction).toHaveBeenCalledTimes(1);
+      // But the trigger stays hidden behind the tap-feedback flash until it
+      // auto-reverts (FLASH_HOLD_MS), not immediately.
+      expect(screen.queryByRole("button", { name: "Show actions" })).not.toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(screen.getByRole("button", { name: "Show actions" })).toBeInTheDocument();
+    });
+  });
+
+  describe("confirm actions (contour-spec-list.md SS4.5)", () => {
+    it("arms on first tap instead of running immediately, then runs on the second tap", async () => {
+      const user = userEvent.setup();
+      const onAction = vi.fn();
+      render(
+        <List>
+          <ListItem
+            key="1"
+            title="Row"
+            trailingActions={[{ icon: "trash", label: "Delete", color: "destructive", onAction, confirm: true }]}
+          />
+        </List>,
+      );
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      expect(onAction).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      expect(onAction).toHaveBeenCalledTimes(1);
+    });
+
+    it("cancels back without running the action on an outside click", async () => {
+      const user = userEvent.setup();
+      const onAction = vi.fn();
+      render(
+        <div>
+          <List>
+            <ListItem
+              key="1"
+              title="Row"
+              trailingActions={[{ icon: "trash", label: "Delete", color: "destructive", onAction, confirm: true }]}
+            />
+          </List>
+          <button type="button">Outside</button>
+        </div>,
+      );
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      await user.click(screen.getByRole("button", { name: "Outside" }));
+      expect(onAction).not.toHaveBeenCalled();
+      // Armed overlay is gone -- the normal row is back, not stuck expanded.
+      expect(screen.getByText("Row")).toBeInTheDocument();
+    });
+
+    it("does not arm actions without confirm -- unchanged immediate-run behavior", async () => {
+      const user = userEvent.setup();
+      const onAction = vi.fn();
+      render(
+        <List>
+          <ListItem
+            key="1"
+            title="Row"
+            trailingActions={[{ icon: "download", label: "Archive", color: "default", onAction }]}
+          />
+        </List>,
+      );
+      await user.click(screen.getByRole("button", { name: "Archive" }));
+      expect(onAction).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("non-confirm tap feedback (contour-spec-list.md SS4.5)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("flashes the tapped action full-row, then auto-reverts without needing another tap", () => {
+      const onAction = vi.fn();
+      render(
+        <div>
+          <List>
+            <ListItem
+              key="1"
+              title="Row"
+              trailingActions={[{ icon: "download", label: "Archive", color: "default", onAction }]}
+            />
+          </List>
+        </div>,
+      );
+      const row = screen.getByText("Row");
+      fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+      // Runs immediately, unlike confirm.
+      expect(onAction).toHaveBeenCalledTimes(1);
+      // The row content is faded + inert behind the flash while it's up --
+      // no second click needed to trigger this, it happened on the same tap.
+      expect(row.closest("[inert]")).not.toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(row.closest("[inert]")).toBeNull();
+    });
+
+    it("does not let a second tap on the flashing overlay re-run the action", () => {
+      const onAction = vi.fn();
+      render(
+        <List>
+          <ListItem
+            key="1"
+            title="Row"
+            trailingActions={[{ icon: "download", label: "Archive", color: "default", onAction }]}
+          />
+        </List>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+      expect(onAction).toHaveBeenCalledTimes(1);
+
+      // Two "Archive" buttons exist while flashing: the (now inert, hidden)
+      // original and the full-row flash overlay -- the overlay one is last.
+      const buttons = screen.getAllByRole("button", { name: "Archive", hidden: true });
+      fireEvent.click(buttons[buttons.length - 1]);
+      expect(onAction).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("renders a leading action button", () => {
