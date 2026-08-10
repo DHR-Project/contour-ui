@@ -35,6 +35,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import type { SidebarItem } from "@/components/ui/sidebar";
 import { Toolbar } from "@/components/ui/toolbar";
 import { Dropdown } from "@/components/ui/dropdown";
+import type { DropdownItemDef } from "@/components/ui/dropdown";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Popover } from "radix-ui";
 import { Icon, iconNames } from "@/components/icon";
@@ -1223,6 +1224,32 @@ function ListContextMenuDemo() {
 // Dropdown
 // ---------------------------------------------------------------------------
 
+// Long enough to overflow the menu's own max-height (contentClassName's
+// --radix-dropdown-menu-content-available-height cap) on most viewports, so
+// the content scrolls internally -- with the submenu row placed after it,
+// reaching it at compact size requires scrolling to the bottom first. Shared
+// by both Dropdown's and ContextMenu's "Long list" demos below since they're
+// exercising the same compact-mode scroll-to-top-then-slide behavior
+// (compact-menu.tsx's useMenuStack, shared by both components).
+const LONG_LIST_ITEMS: DropdownItemDef[] = [
+  ...Array.from({ length: 24 }, (_, index) => ({
+    type: "action" as const,
+    label: `Row ${index + 1}`,
+    onSelect: () => {},
+  })),
+  { type: "separator" },
+  {
+    type: "submenu",
+    icon: "download",
+    label: "More options",
+    items: [
+      { type: "action", label: "Export as PDF", onSelect: () => {} },
+      { type: "action", label: "Export as CSV", onSelect: () => {} },
+      { type: "action", label: "Print", onSelect: () => {} },
+    ],
+  },
+];
+
 function DropdownActionsDemo() {
   return (
     <Dropdown
@@ -1295,6 +1322,19 @@ function DropdownCheckboxRadioSubmenuDemo() {
   );
 }
 
+function DropdownLongListDemo() {
+  return (
+    <Dropdown
+      trigger={
+        <Button variant="plain" trailingIcon="chevron-down">
+          Long list
+        </Button>
+      }
+      items={LONG_LIST_ITEMS}
+    />
+  );
+}
+
 // ---------------------------------------------------------------------------
 // ContextMenu
 // ---------------------------------------------------------------------------
@@ -1356,6 +1396,22 @@ function ContextMenuSubmenuDemo() {
         },
       ]}
     >
+      <Flex
+        align="center"
+        justify="center"
+        className="h-32 w-full rounded-md border border-dashed border-separator"
+      >
+        <Text textStyle="footnote" color="secondary">
+          Right-click this area
+        </Text>
+      </Flex>
+    </ContextMenu>
+  );
+}
+
+function ContextMenuLongListDemo() {
+  return (
+    <ContextMenu items={LONG_LIST_ITEMS}>
       <Flex
         align="center"
         justify="center"
@@ -2108,6 +2164,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       Component: DropdownCheckboxRadioSubmenuDemo,
       sizeClassPreview: true,
     },
+    {
+      title: "Long list (scroll)",
+      description:
+        "24 rows plus a submenu at the very bottom, past the menu's own max-height. Switch to Compact below, scroll to the bottom, then open the submenu -- it scrolls back to the top before sliding in, instead of the incoming screen starting pre-scrolled.",
+      code: `<Dropdown\n  trigger={<Button variant="plain" trailingIcon="chevron-down">Long list</Button>}\n  items={[\n    { type: "action", label: "Row 1", onSelect: onSelectRow },\n    { type: "action", label: "Row 2", onSelect: onSelectRow },\n    // ...\n    { type: "action", label: "Row 24", onSelect: onSelectRow },\n    { type: "separator" },\n    {\n      type: "submenu",\n      icon: "download",\n      label: "More options",\n      items: [\n        { type: "action", label: "Export as PDF", onSelect: onExportPdf },\n        { type: "action", label: "Export as CSV", onSelect: onExportCsv },\n        { type: "action", label: "Print", onSelect: onPrint },\n      ],\n    },\n  ]}\n/>`,
+      Component: DropdownLongListDemo,
+      sizeClassPreview: true,
+    },
   ],
 
   "context-menu": [
@@ -2120,6 +2184,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       title: "With submenu",
       code: `<ContextMenu\n  items={[\n    {\n      type: "submenu",\n      icon: "download",\n      label: "Export",\n      items: [\n        { type: "action", label: "PDF", onSelect: onExportPdf },\n        { type: "action", label: "CSV", onSelect: onExportCsv },\n      ],\n    },\n    { type: "separator" },\n    { type: "action", icon: "trash", label: "Delete", role: "destructive", onSelect: onDelete },\n  ]}\n>\n  <div>Right-click this area</div>\n</ContextMenu>`,
       Component: ContextMenuSubmenuDemo,
+    },
+    {
+      title: "Long list (scroll)",
+      description:
+        "Same 24 rows + trailing submenu as Dropdown's long-list demo, and the same shared scroll-to-top-then-slide behavior (compact-menu.tsx's useMenuStack). Switch to Compact below, right-click the area, scroll to the bottom, then open the submenu.",
+      code: `<ContextMenu\n  items={[\n    { type: "action", label: "Row 1", onSelect: onSelectRow },\n    { type: "action", label: "Row 2", onSelect: onSelectRow },\n    // ...\n    { type: "action", label: "Row 24", onSelect: onSelectRow },\n    { type: "separator" },\n    {\n      type: "submenu",\n      icon: "download",\n      label: "More options",\n      items: [\n        { type: "action", label: "Export as PDF", onSelect: onExportPdf },\n        { type: "action", label: "Export as CSV", onSelect: onExportCsv },\n        { type: "action", label: "Print", onSelect: onPrint },\n      ],\n    },\n  ]}\n>\n  <div>Right-click this area</div>\n</ContextMenu>`,
+      Component: ContextMenuLongListDemo,
+      sizeClassPreview: true,
     },
   ],
 
