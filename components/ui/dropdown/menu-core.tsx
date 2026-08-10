@@ -81,6 +81,15 @@ export const contextMenuContentClassName =
   "max-h-(--radix-context-menu-content-available-height) origin-[var(--radix-context-menu-content-transform-origin)] " +
   contentClassNameBase;
 
+// Matches SearchField's own popover margin (search-field.tsx) -- breathing
+// room so a tall Dropdown/ContextMenu never renders flush against the
+// screen edge. This is a Floating UI `padding` value read by Radix's Popper
+// positioning, not a CSS class, so it can't be a Tailwind token the way the
+// classes above are -- passed as a plain number to `collisionPadding` on
+// both the top-level Content (dropdown.tsx/context-menu.tsx) and the
+// regular+ flyout's SubContent below.
+export const CONTENT_COLLISION_PADDING = 16; // --space-4
+
 // --menu-item-padding-sides/-padding-y (SS4.8/4.9, contour-spec-dropdown-v2.md
 // SSA.2a) -- denser than List's --padding-row-y since a menu needs to stay
 // compact, and distinct from --padding-control-* which other controls use.
@@ -131,7 +140,12 @@ export interface MenuAdapter {
   Separator: ComponentType<{ className?: string }>;
   Sub: ComponentType<{ children?: ReactNode }>;
   SubTrigger: ComponentType<{ className?: string; children?: ReactNode }>;
-  SubContent: ComponentType<{ className?: string; sideOffset?: number; children?: ReactNode }>;
+  SubContent: ComponentType<{
+    className?: string;
+    sideOffset?: number;
+    collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
+    children?: ReactNode;
+  }>;
   Portal: ComponentType<{ children?: ReactNode }>;
   ItemIndicator: ComponentType<{ children?: ReactNode }>;
 }
@@ -196,7 +210,7 @@ export function createDefaultSubmenuRenderer(adapter: MenuAdapter, contentClassN
         <ListItemContent leadingIcon={item.icon} title={item.label} trailing={<Icon name="chevron-right" size="sm" />} />
       </SubTrigger>
       <Portal>
-        <SubContent className={contentClassName} sideOffset={4}>
+        <SubContent className={contentClassName} sideOffset={4} collisionPadding={CONTENT_COLLISION_PADDING}>
           {/* No `drag` passed through: drag-select only covers the currently
               visible screen (SSA.5 scope note, contour-spec-dropdown-v2.md). */}
           {renderMenuItems(adapter, contentClassName, item.items)}

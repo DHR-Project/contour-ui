@@ -8,7 +8,7 @@ import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { useDragSelect } from "./use-drag-select";
 import type { DragSelectTarget } from "./use-drag-select";
-import { dropdownContentClassName, renderMenuItems } from "./menu-core";
+import { CONTENT_COLLISION_PADDING, dropdownContentClassName, renderMenuItems } from "./menu-core";
 import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "./menu-core";
 import { CompactMenuTransition, createBackRow, createCompactSubmenuRenderer, useMenuStack } from "./compact-menu";
 
@@ -95,7 +95,14 @@ export function Dropdown({ trigger, items, side = "bottom", align = "start" }: D
         {trigger}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content ref={contentRef} className={dropdownContentClassName} side={side} align={align} sideOffset={4}>
+        <DropdownMenu.Content
+          ref={contentRef}
+          className={dropdownContentClassName}
+          side={side}
+          align={align}
+          sideOffset={4}
+          collisionPadding={CONTENT_COLLISION_PADDING}
+        >
           {content}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

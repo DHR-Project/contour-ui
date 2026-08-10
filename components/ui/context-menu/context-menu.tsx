@@ -9,7 +9,7 @@ import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 // Direct imports (not the "@/components/ui/dropdown" barrel) -- Rollup
 // flags a circular chunk dependency otherwise, since Dropdown's own barrel
 // re-exports from menu-core.tsx.
-import { contextMenuContentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
+import { CONTENT_COLLISION_PADDING, contextMenuContentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
 import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "@/components/ui/dropdown/menu-core";
 import {
   CompactMenuTransition,
@@ -112,7 +112,11 @@ export function ContextMenu({ items, children, disabled }: ContextMenuProps) {
         {children}
       </RadixContextMenu.Trigger>
       <RadixContextMenu.Portal>
-        <RadixContextMenu.Content ref={contentRef} className={contextMenuContentClassName}>
+        <RadixContextMenu.Content
+          ref={contentRef}
+          className={contextMenuContentClassName}
+          collisionPadding={CONTENT_COLLISION_PADDING}
+        >
           {content}
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>
