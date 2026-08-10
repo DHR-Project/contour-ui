@@ -155,8 +155,8 @@ const PROGRESSIVE_BLUR_TOKENS = [
 const ZINDEX_TOKENS = [
   { name: "--z-base", value: "0", description: "Default stacking layer" },
   { name: "--z-sidebar", value: "50", description: "SplitView's floating Sidebar overlay" },
-  { name: "--z-dropdown", value: "100", description: "Dropdown, ContextMenu" },
   { name: "--z-sticky", value: "200", description: "Sticky headers" },
+  { name: "--z-dropdown", value: "250", description: "Dropdown, ContextMenu — above sticky headers, so a floating popover is never clipped behind one" },
   { name: "--z-overlay", value: "300", description: "General overlay" },
   { name: "--z-sheet", value: "310", description: "Sheet (+ depth × 20 for nesting)" },
   { name: "--z-alert", value: "390", description: "Alert — below Toast, above any practical Sheet depth" },

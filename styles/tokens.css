@@ -708,8 +708,8 @@
 :root {
   --z-base: 0;
   --z-sidebar: 50; /* v2 -- SplitView's floating Sidebar overlay (contour-spec-splitview-v2.md SS2). Below Dropdown/Overlay/Sheet/Toast/Tooltip so those still float above it, same tier NavBar/TabBar/Toolbar already use via their own z-40. */
-  --z-dropdown: 100;
   --z-sticky: 200;
+  --z-dropdown: 250; /* Above --z-sticky (not the historical 100, which sat *below* it) -- a floating popover must be able to render over any sticky in-page header, never end up clipped behind one. Surfaced by a real device: a tall compact Dropdown/ContextMenu, flipped to open upward on a short mobile viewport, rendered its top rows directly behind a sticky nav bar. Still below --z-overlay (300) and everything above it. */
   --z-overlay: 300;
   --z-sheet: 310;
   --z-alert: 390; /* v2 -- below Toast, above every practical Sheet nesting depth */

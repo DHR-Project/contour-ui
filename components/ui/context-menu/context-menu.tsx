@@ -1,15 +1,24 @@
 "use client";
 
+import { useId, useRef, useState } from "react";
 import { ContextMenu as RadixContextMenu } from "radix-ui";
 import type { ReactElement } from "react";
-import { cn } from "@/lib/utils/cn";
-import { Icon } from "@/components/icon";
-import { ListItemContent } from "@/components/ui/list";
-// Direct import (not the "@/components/ui/dropdown" barrel) -- Rollup flags
-// a circular chunk dependency otherwise, since Dropdown's own barrel
-// re-exports from this same module.
-import { contentClassName, itemClassName, sectionTitleClassName, separatorClassName } from "@/components/ui/dropdown/dropdown";
-import type { DropdownItemDef } from "@/components/ui/dropdown/dropdown";
+import { useSizeClass } from "@/lib/hooks/use-size-class";
+import { useIsCoarsePointer } from "@/lib/hooks/use-coarse-pointer";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+// Direct imports (not the "@/components/ui/dropdown" barrel) -- Rollup
+// flags a circular chunk dependency otherwise, since Dropdown's own barrel
+// re-exports from menu-core.tsx.
+import { CONTENT_COLLISION_PADDING, contextMenuContentClassName, renderMenuItems } from "@/components/ui/dropdown/menu-core";
+import type { DragRenderContext, DropdownItemDef, MenuAdapter } from "@/components/ui/dropdown/menu-core";
+import {
+  CompactMenuTransition,
+  createBackRow,
+  createCompactSubmenuRenderer,
+  useMenuStack,
+} from "@/components/ui/dropdown/compact-menu";
+import { useDragSelect } from "@/components/ui/dropdown/use-drag-select";
+import type { DragSelectTarget } from "@/components/ui/dropdown/use-drag-select";
 
 export interface ContextMenuProps {
   /** Reuses Dropdown's item type verbatim (contour-spec-context-menu.md). */
@@ -19,94 +28,12 @@ export interface ContextMenuProps {
   disabled?: boolean;
 }
 
-function CheckIndicator() {
-  return (
-    <RadixContextMenu.ItemIndicator>
-      <Icon name="check" size="sm" color="tint" />
-    </RadixContextMenu.ItemIndicator>
-  );
-}
-
-// Mirrors Dropdown's renderItems (contour-spec-context-menu.md: don't
-// rewrite the render logic, reuse DropdownItemDef[] and the render logic
-// verbatim) using the same DropdownItemDef union and the same visual tokens
-// (contentClassName/itemClassName/etc., imported directly from dropdown.tsx).
-// Kept as its own small switch rather than a single unified function
-// because Radix's ContextMenu and
-// DropdownMenu sub-components are structurally parallel but distinct
-// component families with no common base type. This is deliberately the
-// plain flyout submenu only -- no compact push/pop stack, no drag-select --
-// out of scope for this minimal wrapper (see contour-session-changelog-v2.md).
-function renderContextMenuItems(items: DropdownItemDef[]) {
-  return items.map((item, index) => {
-    switch (item.type) {
-      case "separator":
-        return <RadixContextMenu.Separator key={index} className={separatorClassName} />;
-      case "label":
-        return (
-          <RadixContextMenu.Label key={index} className={sectionTitleClassName}>
-            {item.text}
-          </RadixContextMenu.Label>
-        );
-      case "action":
-        return (
-          <RadixContextMenu.Item
-            key={index}
-            className={cn(itemClassName, item.role === "destructive" && "text-[rgb(var(--color-destructive))]")}
-            onSelect={item.onSelect}
-          >
-            <ListItemContent leadingIcon={item.icon} title={item.label} />
-          </RadixContextMenu.Item>
-        );
-      case "checkbox":
-        return (
-          <RadixContextMenu.CheckboxItem
-            key={index}
-            className={itemClassName}
-            checked={item.checked}
-            onCheckedChange={item.onCheckedChange}
-            onSelect={(event) => event.preventDefault()}
-          >
-            <ListItemContent leadingIcon={item.icon} title={item.label} trailing={<CheckIndicator />} />
-          </RadixContextMenu.CheckboxItem>
-        );
-      case "radio-group":
-        return (
-          <RadixContextMenu.RadioGroup key={index} value={item.value} onValueChange={item.onValueChange}>
-            {item.options.map((option) => (
-              <RadixContextMenu.RadioItem
-                key={option.value}
-                value={option.value}
-                className={itemClassName}
-                onSelect={(event) => event.preventDefault()}
-              >
-                <ListItemContent title={option.label} trailing={<CheckIndicator />} />
-              </RadixContextMenu.RadioItem>
-            ))}
-          </RadixContextMenu.RadioGroup>
-        );
-      case "submenu":
-        return (
-          <RadixContextMenu.Sub key={index}>
-            <RadixContextMenu.SubTrigger className={itemClassName}>
-              <ListItemContent
-                leadingIcon={item.icon}
-                title={item.label}
-                trailing={<Icon name="chevron-right" size="sm" />}
-              />
-            </RadixContextMenu.SubTrigger>
-            <RadixContextMenu.Portal>
-              <RadixContextMenu.SubContent className={contentClassName} sideOffset={4}>
-                {renderContextMenuItems(item.items)}
-              </RadixContextMenu.SubContent>
-            </RadixContextMenu.Portal>
-          </RadixContextMenu.Sub>
-        );
-      default:
-        return null;
-    }
-  });
-}
+// Assigning the radix-ui `ContextMenu` namespace to a `MenuAdapter`-typed
+// variable is the compile-time half of the sync guarantee with Dropdown
+// (see menu-core.tsx's MenuAdapter comment): if the shared renderMenuItems
+// ever needs a primitive or prop shape ContextMenu doesn't actually have,
+// this line fails to typecheck instead of the two menus silently drifting.
+const contextMenuAdapter: MenuAdapter = RadixContextMenu;
 
 /**
  * Right-click on `pointer: fine` -- Radix handles this natively via the
@@ -117,16 +44,80 @@ function renderContextMenuItems(items: DropdownItemDef[]) {
  * rather than relying on the browser's own touch-and-hold behavior, which
  * can't be disambiguated against a competing gesture (contour-spec-
  * context-menu.md SS3).
+ *
+ * Compact submenu-stack and drag-select (SSA.4/SSA.5) now match Dropdown --
+ * both go through the same shared `useMenuStack`/`useDragSelect` as
+ * Dropdown, just with `activation: "open"` on the latter: ContextMenu opens
+ * from a long-press dispatched by the consumer while the finger is already
+ * down, not from a trigger pointerdown Dropdown itself intercepts, so the
+ * drag session starts as soon as the menu opens instead of at a separate
+ * trigger-press moment (see use-drag-select.ts).
  */
 export function ContextMenu({ items, children, disabled }: ContextMenuProps) {
+  const sizeClass = useSizeClass();
+  const isCompact = sizeClass === "compact";
+  const isCoarsePointer = useIsCoarsePointer();
+  const reducedMotion = useReducedMotion();
+  const highlightLayoutId = `context-menu-drag-highlight-${useId()}`;
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const [open, setOpen] = useState(false);
+  const { currentFrame, currentItems, stackLength, direction, pushSubmenu, popSubmenu, reset } = useMenuStack({
+    items,
+    containerRef: contentRef,
+    reducedMotion,
+  });
+
+  const dragTargets: DragSelectTarget[] = [];
+  const { highlightedIndex } = useDragSelect({
+    activation: "open",
+    enabled: isCoarsePointer,
+    open,
+    targets: dragTargets,
+    containerRef: contentRef,
+  });
+
+  // Only built on coarse pointers -- fine-pointer (mouse) never renders the
+  // extra highlight nodes or index attributes (SSA.5 scope: touch-only).
+  const drag: DragRenderContext | undefined = isCoarsePointer
+    ? { targets: dragTargets, highlightedIndex, highlightLayoutId }
+    : undefined;
+
+  const compactSubmenuRenderer = createCompactSubmenuRenderer(contextMenuAdapter, pushSubmenu);
+
+  const compactScreen = (
+    <>
+      {currentFrame && createBackRow(contextMenuAdapter, currentFrame.label, popSubmenu)}
+      {renderMenuItems(contextMenuAdapter, contextMenuContentClassName, currentItems, drag, compactSubmenuRenderer)}
+    </>
+  );
+
+  const content = !isCompact ? (
+    renderMenuItems(contextMenuAdapter, contextMenuContentClassName, items, drag)
+  ) : (
+    <CompactMenuTransition stackKey={stackLength} direction={direction} reducedMotion={reducedMotion}>
+      {compactScreen}
+    </CompactMenuTransition>
+  );
+
   return (
-    <RadixContextMenu.Root>
+    <RadixContextMenu.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}
+    >
       <RadixContextMenu.Trigger asChild disabled={disabled}>
         {children}
       </RadixContextMenu.Trigger>
       <RadixContextMenu.Portal>
-        <RadixContextMenu.Content className={contentClassName}>
-          {renderContextMenuItems(items)}
+        <RadixContextMenu.Content
+          ref={contentRef}
+          className={contextMenuContentClassName}
+          collisionPadding={CONTENT_COLLISION_PADDING}
+        >
+          {content}
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>
     </RadixContextMenu.Root>
