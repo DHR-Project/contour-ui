@@ -43,7 +43,7 @@ export function DocsMobileNav() {
       <div className="md:hidden">
         <NavBar
           title={detailComponent ? detailComponent.name : "Contour Docs"}
-          // Fixed compact bar, not the iOS large-title collapse -- this is
+          // Fixed compact bar, not the native large-title collapse -- this is
           // a persistent app-shell header across every /docs/* page, not a
           // single scrollable screen's own title.
           largeTitleMode={false}

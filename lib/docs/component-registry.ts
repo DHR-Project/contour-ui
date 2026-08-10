@@ -282,6 +282,14 @@ export const COMPONENTS: ComponentMeta[] = [
     importPath: "@/components/ui/dropdown",
   },
   {
+    slug: "tooltip",
+    name: "Tooltip",
+    description: "Hover/focus text hint on a separate Radix primitive from Dropdown — fade-only motion, no item list.",
+    category: "overlay",
+    status: "complete",
+    importPath: "@/components/ui/tooltip",
+  },
+  {
     slug: "context-menu",
     name: "ContextMenu",
     description: "Right-click / long-press menu reusing Dropdown's render and submenu-stack logic.",

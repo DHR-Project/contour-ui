@@ -147,7 +147,7 @@ export function SearchField({
   }, [value, debounceMs, onSearch]);
 
   // Caps the popover at the real available space instead of a flat 60vh:
-  // on iOS Safari, `vh` reflects the layout viewport, which does not shrink
+  // on mobile browsers, `vh` reflects the layout viewport, which does not shrink
   // when the on-screen keyboard covers part of the screen, so a field docked
   // near the bottom (resultsPlacement="above") would let the popover grow up
   // past the top of what's actually visible. `visualViewport` tracks the
@@ -348,7 +348,7 @@ export function SearchField({
             // rather than running off it when there are many results.
             // max-h-[60vh] is the design-intended soft cap; maxPopoverHeight
             // (once measured) further clamps it to the real available space,
-            // which matters on iOS Safari where the keyboard shrinks the
+            // which matters on mobile browsers where the keyboard shrinks the
             // visible area without shrinking `vh` -- see the effect above.
             // contour-material (tokens.css SS2.3a): frosted glass, not a
             // flat panel, matching every other floating surface.

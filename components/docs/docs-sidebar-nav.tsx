@@ -28,7 +28,7 @@ function componentHref(slug: string): string {
   return `/docs/components/${slug}`;
 }
 
-// Groups mirror Apple Notes: an unlabelled leading group for the
+// Groups mirror standard native patterns: an unlabelled leading group for the
 // reader-facing pages, then one collapsible folder per component category
 // (collapsed by default -- Sidebar auto-opens whichever one holds the
 // active page), then a labelled group for contributor-only content (see

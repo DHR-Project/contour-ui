@@ -21,13 +21,13 @@ export interface SidebarItem {
   badge?: number;
 }
 
-// A labelled run of items -- Apple Notes' "iCloud" / "On My Mac" folder
+// A labelled run of items -- standard native folder
 // groups. `label` is optional so a leading, unlabelled group (Notes' pinned
 // block) is expressible too.
 export interface SidebarGroup {
   label?: string;
   items: SidebarItem[];
-  /** Adds a disclosure toggle to the group header so its items can collapse -- Apple Notes' expandable folders. Ignored (no-op) when `label` is omitted, since there'd be nothing to click. */
+  /** Adds a disclosure toggle to the group header so its items can collapse -- standard native expandable folders. Ignored (no-op) when `label` is omitted, since there'd be nothing to click. */
   collapsible?: boolean;
   /** Initial expanded state for a collapsible group. Default true. Ignored if the group contains the active `value` at mount -- that group always starts open so the current page's row is never hidden. */
   defaultOpen?: boolean;

@@ -25,7 +25,7 @@ export const Default: Story = () => {
   );
 };
 
-// Apple Notes' sidebar: an unlabelled leading group ("Pinned") followed by
+// Standard native sidebar: an unlabelled leading group ("Pinned") followed by
 // labelled folder groups -- exercises SidebarGroup[] instead of a flat
 // SidebarItem[].
 const GROUPS: SidebarGroup[] = [
