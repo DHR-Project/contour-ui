@@ -79,6 +79,18 @@ const TOP_LINKS = [
     title: "Components",
     description: `${COMPONENTS.length} components across ${CATEGORIES.length} categories. Live demos for components with code; spec sheets for those still in progress.`,
   },
+  {
+    href: "/docs/hooks",
+    title: "Hooks",
+    description:
+      "Shared React hooks for responsive size-class, input modality, accessibility preferences, and scroll tracking.",
+  },
+  {
+    href: "/docs/providers",
+    title: "Providers",
+    description:
+      "ContourProvider and useContourPreferences — theme, tint, size mode, and accessibility state shared across the tree.",
+  },
 ];
 
 export default function DocsOverviewPage() {
