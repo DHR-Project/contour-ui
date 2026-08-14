@@ -18,7 +18,9 @@ export const Basic: Story = () => {
   );
 };
 
-const ALL_RESULTS: SearchFieldResult[] = [
+// Narrower than SearchFieldResult (label: string, not ReactNode) so
+// .toLowerCase() below stays a plain string op.
+const ALL_RESULTS: { id: string; label: string; icon: SearchFieldResult["icon"] }[] = [
   { id: "button", label: "Button", icon: "star" },
   { id: "checkbox", label: "Checkbox", icon: "check" },
   { id: "dropdown", label: "Dropdown", icon: "chevron-down" },

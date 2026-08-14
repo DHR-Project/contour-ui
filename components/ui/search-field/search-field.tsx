@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
@@ -15,10 +15,11 @@ import { Button } from "../button";
 
 export interface SearchFieldResult {
   id: string;
-  label: string;
+  /** Usually a string; accepts ReactNode too (e.g. a caller highlighting the matched substring). */
+  label: ReactNode;
   icon?: IconName;
   /** Forwarded to ListItemContent's own subtitle slot (e.g. a category label). */
-  subtitle?: string;
+  subtitle?: ReactNode;
 }
 
 export interface SearchFieldProps {

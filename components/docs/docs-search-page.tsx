@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { searchDocs } from "@/lib/docs/search-index";
+import { highlightMatch } from "@/components/docs/search-highlight";
 import { SearchField } from "@/components/ui/search-field";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/stack";
@@ -78,7 +79,7 @@ export function DocsSearchPage() {
               >
                 <div className="flex flex-wrap items-baseline gap-(--space-2)">
                   <Text textStyle="body" weight="medium">
-                    {result.title}
+                    {highlightMatch(result.title, trimmedQuery)}
                   </Text>
                   <Text textStyle="caption-1" color="tertiary">
                     {result.subtitle}
@@ -86,7 +87,7 @@ export function DocsSearchPage() {
                 </div>
                 {result.snippet && (
                   <Text textStyle="footnote" color="secondary" truncate={2}>
-                    {result.snippet}
+                    {highlightMatch(result.snippet, trimmedQuery)}
                   </Text>
                 )}
               </Link>

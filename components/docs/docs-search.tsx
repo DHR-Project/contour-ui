@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Dialog as RadixDialog, VisuallyHidden } from "radix-ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { searchDocs } from "@/lib/docs/search-index";
+import { highlightMatch } from "@/components/docs/search-highlight";
 import { cn } from "@/lib/utils/cn";
 import { springs } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
@@ -45,11 +46,15 @@ export function DocsSearch({
   // undefined => popover stays closed (SearchField contract); only switch to
   // a real (possibly empty) array once there's something to search for.
   const results: SearchFieldResult[] | undefined = useMemo(() => {
-    if (!query.trim()) return undefined;
-    return searchDocs(query).map((result) => ({
+    const normalized = query.trim();
+    if (!normalized) return undefined;
+    return searchDocs(normalized).map((result) => ({
       id: result.id,
-      label: result.title,
-      subtitle: result.kind === "content" ? (result.snippet ?? result.subtitle) : result.subtitle,
+      label: highlightMatch(result.title, normalized),
+      subtitle: highlightMatch(
+        result.kind === "content" ? (result.snippet ?? result.subtitle) : result.subtitle,
+        normalized,
+      ),
     }));
   }, [query]);
 
