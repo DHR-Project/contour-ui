@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
@@ -15,10 +15,11 @@ import { Button } from "../button";
 
 export interface SearchFieldResult {
   id: string;
-  label: string;
+  /** Usually a string; accepts ReactNode too (e.g. a caller highlighting the matched substring). */
+  label: ReactNode;
   icon?: IconName;
   /** Forwarded to ListItemContent's own subtitle slot (e.g. a category label). */
-  subtitle?: string;
+  subtitle?: ReactNode;
 }
 
 export interface SearchFieldProps {
@@ -28,6 +29,8 @@ export interface SearchFieldProps {
   onSearch?: (value: string) => void;
   /** Cancel = auto clear + blur, then this callback -- one combined gesture, not a plain click. */
   onCancel?: () => void;
+  /** Whether the Cancel button (field-adjacent when idle, popover-header when results are open) renders at all. Default true. Set false for standalone-page usage (e.g. a dedicated /search route) where leaving the field or navigating away is already the "cancel" affordance. */
+  showCancel?: boolean;
   placeholder?: string;
   debounceMs?: number;
   autoFocus?: boolean;
@@ -79,6 +82,7 @@ export function SearchField({
   onValueChange,
   onSearch,
   onCancel,
+  showCancel = true,
   placeholder = "Search",
   debounceMs = 300,
   autoFocus,
@@ -272,7 +276,7 @@ export function SearchField({
   // once results/loading/empty is showing, it moves into the popover's own
   // sticky header instead (see the popover render below) so it doesn't sit
   // apart from the content it's dismissing.
-  const showFieldCancel = focused && !showPopover;
+  const showFieldCancel = showCancel && focused && !showPopover;
 
   return (
     // `relative` here (not just around the field) so the popover below can
@@ -368,11 +372,13 @@ export function SearchField({
                 sticky so it stays reachable while the results list scrolls
                 underneath it; needs its own material background + z-index so
                 scrolled rows pass behind it instead of painting over it. */}
-            <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator contour-material px-(--space-3) py-(--space-2)">
-              <Button size="sm" variant="plain" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </div>
+            {showCancel && (
+              <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator contour-material px-(--space-3) py-(--space-2)">
+                <Button size="sm" variant="plain" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </div>
+            )}
 
             <AnimatePresence mode="wait" initial={false}>
               <motion.div

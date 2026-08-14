@@ -35,16 +35,6 @@ const SWIPE_ACTION_WIDTH = 80;
 // collapses back, not a half-open flicker.
 const FLASH_HOLD_MS = 450;
 
-function composeTouchHandlers(
-  first: ((event: ReactTouchEvent) => void) | undefined,
-  second: (event: ReactTouchEvent) => void,
-) {
-  return (event: ReactTouchEvent) => {
-    first?.(event);
-    second(event);
-  };
-}
-
 export type SwipeActionColor = "destructive" | "default" | SemanticColorToken;
 
 export interface SwipeAction {
@@ -351,8 +341,13 @@ export function ListItem({
   // `pointer: { touch: true }` makes @use-gesture bind via onTouchStart/
   // onTouchMove/onTouchEnd (same prop names React uses), so these can't be
   // spread and then re-declared below -- the later JSX prop wins and would
-  // silently drop the gesture's own handler. composeTouchHandlers below
-  // calls both instead of letting one clobber the other.
+  // silently drop the gesture's own handler. The inline onTouch* handlers
+  // below call both instead of letting one clobber the other -- composed as
+  // arrow functions written directly in the JSX (rather than a shared
+  // helper called during render) so refs read inside handleTouchStart/
+  // handleTouchMove/clearLongPressTimer are only ever touched from within an
+  // actual event handler, not from a function reference passed through
+  // another call while rendering (react-hooks/refs).
   const dragHandlers = bindDrag() as Record<string, ((event: ReactTouchEvent) => void) | undefined>;
 
   const trailingContent =
@@ -499,10 +494,22 @@ export function ListItem({
         <motion.div
           ref={rowRef}
           {...dragHandlers}
-          onTouchStart={composeTouchHandlers(dragHandlers.onTouchStart, handleTouchStart)}
-          onTouchMove={composeTouchHandlers(dragHandlers.onTouchMove, handleTouchMove)}
-          onTouchEnd={composeTouchHandlers(dragHandlers.onTouchEnd, clearLongPressTimer)}
-          onTouchCancel={composeTouchHandlers(dragHandlers.onTouchCancel, clearLongPressTimer)}
+          onTouchStart={(event) => {
+            dragHandlers.onTouchStart?.(event);
+            handleTouchStart(event);
+          }}
+          onTouchMove={(event) => {
+            dragHandlers.onTouchMove?.(event);
+            handleTouchMove(event);
+          }}
+          onTouchEnd={(event) => {
+            dragHandlers.onTouchEnd?.(event);
+            clearLongPressTimer();
+          }}
+          onTouchCancel={(event) => {
+            dragHandlers.onTouchCancel?.(event);
+            clearLongPressTimer();
+          }}
           animate={{ x, scale: isLongPressing ? 0.97 : 1 }}
           transition={{ x: springs.bouncy, scale: springs.snappy }}
           className="relative z-10 touch-pan-y bg-bg-primary"
