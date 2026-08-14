@@ -5,6 +5,8 @@ export const TOP_LINKS = [
   { href: "/docs", label: "Overview" },
   { href: "/docs/guidelines", label: "Guidelines" },
   { href: "/docs/tokens", label: "Tokens" },
+  { href: "/docs/hooks", label: "Hooks" },
+  { href: "/docs/providers", label: "Providers" },
   { href: "/docs/scroll-mask", label: "Scroll Mask" },
   { href: "/docs/settings", label: "Settings" },
 ];
