@@ -77,3 +77,14 @@ export const WithCancel: Story = () => {
     </div>
   );
 };
+
+// showCancel={false}: for standalone-page usage (e.g. a dedicated /search
+// route) where the page itself -- not a Cancel button -- is the way out.
+export const WithoutCancel: Story = () => {
+  const [value, setValue] = useState("but");
+  return (
+    <div className="w-96">
+      <SearchField value={value} onValueChange={setValue} showCancel={false} autoFocus />
+    </div>
+  );
+};

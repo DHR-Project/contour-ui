@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog as RadixDialog, VisuallyHidden } from "radix-ui";
 import { AnimatePresence, motion } from "framer-motion";
-import { COMPONENTS } from "@/lib/docs/component-registry";
-import { TOP_LINKS, CONTRIBUTOR_LINKS } from "@/lib/docs/nav-links";
+import { searchDocs } from "@/lib/docs/search-index";
 import { cn } from "@/lib/utils/cn";
 import { springs } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
@@ -16,27 +15,6 @@ import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/search-field";
 import type { SearchFieldResult } from "@/components/ui/search-field";
 import { ProgressiveBlur } from "../ui/progressive-blur";
-
-// Flat index across every link the sidebar renders -- pages plus the full
-// component registry -- so the search modal can jump to any of them, not
-// just components.
-const SEARCH_INDEX: { href: string; label: string; subtitle: string }[] = [
-  ...TOP_LINKS.map((link) => ({
-    href: link.href,
-    label: link.label,
-    subtitle: "Page",
-  })),
-  ...CONTRIBUTOR_LINKS.map((link) => ({
-    href: link.href,
-    label: link.label,
-    subtitle: "Page",
-  })),
-  ...COMPONENTS.map((c) => ({
-    href: `/docs/components/${c.slug}`,
-    label: c.name,
-    subtitle: "Component",
-  })),
-];
 
 export interface DocsSearchProps {
   className?: string;
@@ -67,14 +45,11 @@ export function DocsSearch({
   // undefined => popover stays closed (SearchField contract); only switch to
   // a real (possibly empty) array once there's something to search for.
   const results: SearchFieldResult[] | undefined = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return undefined;
-    return SEARCH_INDEX.filter((entry) =>
-      entry.label.toLowerCase().includes(normalized),
-    ).map((entry) => ({
-      id: entry.href,
-      label: entry.label,
-      subtitle: entry.subtitle,
+    if (!query.trim()) return undefined;
+    return searchDocs(query).map((result) => ({
+      id: result.id,
+      label: result.title,
+      subtitle: result.kind === "content" ? (result.snippet ?? result.subtitle) : result.subtitle,
     }));
   }, [query]);
 
@@ -89,6 +64,19 @@ export function DocsSearch({
     onNavigate?.();
   }
 
+  // Compact has no room for the popover results list, so the trigger jumps
+  // straight to the dedicated /docs/search page instead of opening this
+  // modal -- that page docks its own inline (non-popover) results below the
+  // field. Regular+ keeps the modal exactly as before.
+  function handleTriggerClick() {
+    if (isCompact) {
+      router.push("/docs/search");
+      onNavigate?.();
+      return;
+    }
+    setOpen(true);
+  }
+
   return (
     <>
       {variant === "icon" ? (
@@ -97,13 +85,13 @@ export function DocsSearch({
           size="sm"
           leadingIcon="search"
           aria-label="Search documentation"
-          onClick={() => setOpen(true)}
+          onClick={handleTriggerClick}
           className={className}
         />
       ) : (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={handleTriggerClick}
           aria-label="Search documentation"
           className={cn(
             "flex w-full items-center gap-(--gap-icon-text) rounded-full border border-separator bg-bg-primary px-(--padding-control-x) py-(--padding-control-y) text-left transition-colors duration-(--duration-fast) hover-fine:border-tint",

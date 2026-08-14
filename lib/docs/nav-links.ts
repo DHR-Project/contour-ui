@@ -1,6 +1,7 @@
 // Shared between docs-sidebar.tsx (renders these as nav links) and
-// docs-search.tsx (indexes them for search) -- kept in its own module so
-// neither component has to import the other, which would form a cycle.
+// lib/docs/search-index.ts (indexes them for search) -- kept in its own
+// module so neither component has to import the other, which would form a
+// cycle.
 export const TOP_LINKS = [
   { href: "/docs", label: "Overview" },
   { href: "/docs/guidelines", label: "Guidelines" },
