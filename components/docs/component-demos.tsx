@@ -931,7 +931,11 @@ function SearchFieldBasicDemo() {
   );
 }
 
-const SEARCH_FIELD_DEMO_ITEMS: SearchFieldResult[] = [
+// Narrower than SearchFieldResult (label: string, not ReactNode) so
+// .toLowerCase() below stays a plain string op -- this fixed list never
+// needs the ReactNode case (e.g. a highlighted-match <mark>), only real
+// callers building results from user input do.
+const SEARCH_FIELD_DEMO_ITEMS: { id: string; label: string; icon: SearchFieldResult["icon"] }[] = [
   { id: "button", label: "Button", icon: "star" },
   { id: "checkbox", label: "Checkbox", icon: "check" },
   { id: "dropdown", label: "Dropdown", icon: "chevron-down" },

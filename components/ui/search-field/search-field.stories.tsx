@@ -18,7 +18,9 @@ export const Basic: Story = () => {
   );
 };
 
-const ALL_RESULTS: SearchFieldResult[] = [
+// Narrower than SearchFieldResult (label: string, not ReactNode) so
+// .toLowerCase() below stays a plain string op.
+const ALL_RESULTS: { id: string; label: string; icon: SearchFieldResult["icon"] }[] = [
   { id: "button", label: "Button", icon: "star" },
   { id: "checkbox", label: "Checkbox", icon: "check" },
   { id: "dropdown", label: "Dropdown", icon: "chevron-down" },
@@ -74,6 +76,17 @@ export const WithCancel: Story = () => {
     <div className="flex w-96 flex-col gap-4">
       <SearchField value={value} onValueChange={setValue} onCancel={() => setCancelled((c) => c + 1)} />
       <p className="text-sm text-label-secondary">Cancelled {cancelled} time(s)</p>
+    </div>
+  );
+};
+
+// showCancel={false}: for standalone-page usage (e.g. a dedicated /search
+// route) where the page itself -- not a Cancel button -- is the way out.
+export const WithoutCancel: Story = () => {
+  const [value, setValue] = useState("but");
+  return (
+    <div className="w-96">
+      <SearchField value={value} onValueChange={setValue} showCancel={false} autoFocus />
     </div>
   );
 };

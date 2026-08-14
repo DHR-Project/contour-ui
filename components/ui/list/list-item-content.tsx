@@ -7,8 +7,9 @@ import type { IconName } from "@/components/icon";
 
 export interface ListItemContentProps {
   leadingIcon?: IconName;
-  title: string;
-  subtitle?: string;
+  /** Usually a string; accepts ReactNode too (e.g. search-result rows wrap matched substrings in a highlight <mark>). */
+  title: ReactNode;
+  subtitle?: ReactNode;
   trailing?: ReactNode;
 }
 
