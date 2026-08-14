@@ -755,6 +755,6 @@
   --sidebar-bg-inactive: 237 244 250;
 }
 .dark {
-  --sidebar-bg-active: 20 21 23;
-  --sidebar-bg-inactive: 19 20 20;
+  --sidebar-bg-active: 48 66 90;
+  --sidebar-bg-inactive: 46 46 48;
 }
