@@ -119,9 +119,9 @@ export function Sidebar({ items, value, onValueChange, className }: SidebarProps
       // horizontally (contour-spec-splitview-v2.md SS2a's full-bleed
       // content). Revisit once a real horizontal-scroll consumer
       // (Carousel, not yet in the roadmap) exists to adapt to.
-      className={cn("flex h-full flex-col overflow-y-auto no-scrollbar bg-(--material-thick)", className)}
+      className={cn("flex h-full flex-col material-thick", className)}
     >
-      <div role="tablist" aria-orientation="vertical" className="flex flex-col gap-(--space-4) p-(--space-2)">
+      <div role="tablist" aria-orientation="vertical" className="flex flex-col gap-(--space-4) p-(--space-2) overflow-y-auto no-scrollbar scroll-mask-y">
         {groups.map((group, groupIndex) => {
           const key = groupKey(group, groupIndex);
           const isOpen = !group.collapsible || openGroups.has(key);

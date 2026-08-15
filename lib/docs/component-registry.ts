@@ -78,6 +78,14 @@ export const COMPONENTS: ComponentMeta[] = [
     status: "complete",
     importPath: "@/components/ui/container",
   },
+  {
+    slug: "scroll-rail",
+    name: "ScrollRail",
+    description: "Bounded horizontal or vertical scroll track with edge-fade, overflow arrows, and scroll-to-index.",
+    category: "layout",
+    status: "complete",
+    importPath: "@/components/ui/scroll-rail",
+  },
 
   // Navigation
   {

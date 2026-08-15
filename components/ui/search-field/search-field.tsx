@@ -102,6 +102,15 @@ export function SearchField({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Option nodes keyed by index, populated via callback ref below -- lets the
+  // scroll-into-view effect (see handleKeyDown) reach the highlighted row's
+  // DOM node without a ref array sized to `results.length`.
+  const optionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Distinguishes a keyboard-driven highlight change (should scroll the row
+  // into view) from a mouse-hover one (shouldn't -- the row is already
+  // visible, that's how the pointer got there; auto-scrolling on hover would
+  // fight the user's own scroll position).
+  const highlightSourceRef = useRef<"keyboard" | "pointer">("keyboard");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -117,6 +126,9 @@ export function SearchField({
       setCancelWidth(cancelRef.current.getBoundingClientRect().width);
   }, []);
 
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(0);
+
   const generatedId = useId();
   const listboxId = `searchfield-listbox-${generatedId}`;
   const highlightLayoutId = `searchfield-highlight-${generatedId}`;
@@ -124,6 +136,19 @@ export function SearchField({
   const showPopover =
     focused && !dismissed && (loading || results !== undefined);
   const hasResults = results !== undefined && results.length > 0;
+
+  // Measures the popover's own sticky Cancel header (present only inside the
+  // popover, when showCancel) so option rows can reserve that much
+  // scroll-margin-top -- otherwise scrollIntoView would happily park a
+  // keyboard-highlighted row right under the sticky header instead of below
+  // it. Re-measures whenever the header (re)mounts, since it's conditionally
+  // rendered rather than always-present like the field-side Cancel button.
+  useLayoutEffect(() => {
+    if (stickyHeaderRef.current)
+      setStickyHeaderHeight(
+        stickyHeaderRef.current.getBoundingClientRect().height,
+      );
+  }, [showPopover, showCancel]);
   const contentKey = loading
     ? "loading"
     : !results
@@ -247,12 +272,14 @@ export function SearchField({
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
+        highlightSourceRef.current = "keyboard";
         setHighlightedIndex((prev) =>
           prev === null || prev === results!.length - 1 ? 0 : prev + 1,
         );
         break;
       case "ArrowUp":
         event.preventDefault();
+        highlightSourceRef.current = "keyboard";
         setHighlightedIndex((prev) =>
           prev === null || prev === 0 ? results!.length - 1 : prev - 1,
         );
@@ -267,6 +294,17 @@ export function SearchField({
         break;
     }
   }
+
+  // Keeps the highlighted row in view as ArrowUp/ArrowDown move it past the
+  // popover's own scroll boundary. Skipped for hover-driven changes (see
+  // highlightSourceRef) since the row is already visible in that case.
+  useLayoutEffect(() => {
+    if (highlightedIndex === null) return;
+    if (highlightSourceRef.current !== "keyboard") return;
+    optionRefs.current
+      .get(highlightedIndex)
+      ?.scrollIntoView({ block: "center" });
+  }, [highlightedIndex]);
 
   const containerTransition = reducedMotion ? { duration: 0 } : springs.snappy;
 
@@ -362,79 +400,96 @@ export function SearchField({
                 : undefined
             }
             className={cn(
-              "absolute left-0 right-0 z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg ring-1 ring-separator contour-material shadow-md",
+              "absolute left-0 right-0 z-(--z-dropdown) rounded-lg ring-1 ring-separator contour-material shadow-md",
               resultsPlacement === "above"
                 ? "bottom-[calc(100%+var(--space-2))]"
                 : "top-[calc(100%+var(--space-2))]",
             )}
           >
-            {/* Cancel's popover-open home (see showFieldCancel above) --
+            <div className="overflow-x-hidden overflow-y-auto max-h-[60vh] h-full scroll-mask-b">
+              {/* Cancel's popover-open home (see showFieldCancel above) --
                 sticky so it stays reachable while the results list scrolls
                 underneath it; needs its own material background + z-index so
                 scrolled rows pass behind it instead of painting over it. */}
-            {showCancel && (
-              <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator contour-material px-(--space-3) py-(--space-2)">
-                <Button size="sm" variant="plain" onClick={handleCancel}>
-                  Cancel
-                </Button>
-              </div>
-            )}
+              {showCancel && (
+                <div
+                  ref={stickyHeaderRef}
+                  className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator _contour-material px-(--space-3) py-(--space-2) backdrop-blur-2xl"
+                >
+                  <Button size="sm" variant="plain" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
 
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={contentKey}
-                variants={contentVariants}
-                initial={reducedMotion ? "center" : "enter"}
-                animate="center"
-                exit={reducedMotion ? "center" : "exit"}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center p-(--space-6)">
-                    {/* Progress isn't implemented yet (spec-only) -- same
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={contentKey}
+                  variants={contentVariants}
+                  initial={reducedMotion ? "center" : "enter"}
+                  animate="center"
+                  exit={reducedMotion ? "center" : "exit"}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center p-(--space-6)">
+                      {/* Progress isn't implemented yet (spec-only) -- same
                         spinner+animate-spin fallback Button uses for its
                         own loading state. */}
-                    <Icon
-                      name="spinner"
-                      size="md"
-                      className="animate-spin text-label-secondary"
-                    />
-                  </div>
-                ) : !results ? null : results.length === 0 ? (
-                  <div className="p-(--space-4)">
-                    <Text textStyle="footnote" color="secondary">
-                      {emptyMessage}
-                    </Text>
-                  </div>
-                ) : (
-                  <div role="listbox" id={listboxId} className="p-1.5">
-                    {results.map((result, index) => (
-                      <div
-                        key={result.id}
-                        id={`${listboxId}-option-${index}`}
-                        role="option"
-                        aria-selected={highlightedIndex === index}
-                        onMouseEnter={() => setHighlightedIndex(index)}
-                        onClick={() => selectResult(index)}
-                        className="relative flex cursor-default items-center rounded-sm px-(--menu-item-padding-sides) py-(--menu-item-padding-y)"
-                      >
-                        {highlightedIndex === index && (
-                          <motion.div
-                            layoutId={highlightLayoutId}
-                            transition={springs.smooth}
-                            className="absolute inset-0 rounded-sm bg-fill-quaternary"
+                      <Icon
+                        name="spinner"
+                        size="md"
+                        className="animate-spin text-label-secondary"
+                      />
+                    </div>
+                  ) : !results ? null : results.length === 0 ? (
+                    <div className="p-(--space-4)">
+                      <Text textStyle="footnote" color="secondary">
+                        {emptyMessage}
+                      </Text>
+                    </div>
+                  ) : (
+                    <div role="listbox" id={listboxId} className="p-1.5">
+                      {results.map((result, index) => (
+                        <div
+                          key={result.id}
+                          ref={(el) => {
+                            if (el) optionRefs.current.set(index, el);
+                            else optionRefs.current.delete(index);
+                          }}
+                          id={`${listboxId}-option-${index}`}
+                          role="option"
+                          aria-selected={highlightedIndex === index}
+                          onMouseEnter={() => {
+                            highlightSourceRef.current = "pointer";
+                            setHighlightedIndex(index);
+                          }}
+                          onClick={() => selectResult(index)}
+                          style={
+                            showCancel
+                              ? { scrollMarginTop: stickyHeaderHeight }
+                              : undefined
+                          }
+                          className="relative flex cursor-default items-center rounded-sm px-(--menu-item-padding-sides) py-(--menu-item-padding-y)"
+                        >
+                          {highlightedIndex === index && (
+                            <motion.div
+                              layoutId={highlightLayoutId}
+                              transition={springs.smooth}
+                              className="absolute inset-0 rounded-sm bg-fill-quaternary"
+                            />
+                          )}
+                          <ListItemContent
+                            leadingIcon={result.icon}
+                            title={result.label}
+                            subtitle={result.subtitle}
                           />
-                        )}
-                        <ListItemContent
-                          leadingIcon={result.icon}
-                          title={result.label}
-                          subtitle={result.subtitle}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

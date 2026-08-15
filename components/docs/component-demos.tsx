@@ -46,6 +46,7 @@ import { Alert } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/toast";
 import type { ToastInput, ToastPosition } from "@/components/ui/toast";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 
 // ---------------------------------------------------------------------------
 // Demo registry -- each component slug maps to a list of small, titled
@@ -238,6 +239,88 @@ function ContainerContentDemo() {
           column with responsive edge margin.
         </Text>
       </Container>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ScrollRail
+// ---------------------------------------------------------------------------
+
+function RailChip({ label, active }: { label: string; active?: boolean }) {
+  return (
+    <Flex
+      align="center"
+      justify="center"
+      container={false}
+      className={cn(
+        "h-10 shrink-0 rounded-full px-(--space-4)",
+        active ? "bg-tint" : "bg-fill-secondary",
+      )}
+    >
+      <Text
+        textStyle="footnote"
+        weight="medium"
+        className={cn("whitespace-nowrap", active ? "text-white" : "text-label-primary")}
+      >
+        {label}
+      </Text>
+    </Flex>
+  );
+}
+
+const RAIL_ITEMS = Array.from({ length: 12 }, (_, i) => `Item ${i + 1}`);
+
+function ScrollRailHorizontalDemo() {
+  return (
+    <div className="w-full max-w-80">
+      <ScrollRail className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item) => (
+          <RailChip key={item} label={item} />
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailVerticalDemo() {
+  return (
+    <div className="h-64 w-40">
+      <ScrollRail orientation="vertical" className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item) => (
+          <RailChip key={item} label={item} />
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailActiveIndexHorizontalDemo() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  return (
+    <div className="w-full max-w-80">
+      <ScrollRail activeIndex={activeIndex} className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item, index) => (
+          <button key={item} type="button" onClick={() => setActiveIndex(index)}>
+            <RailChip label={item} active={index === activeIndex} />
+          </button>
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailActiveIndexVerticalDemo() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  return (
+    <div className="h-64 w-40">
+      <ScrollRail activeIndex={activeIndex} orientation="vertical" className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item, index) => (
+          <button key={item} type="button" onClick={() => setActiveIndex(index)}>
+            <RailChip label={item} active={index === activeIndex} />
+          </button>
+        ))}
+      </ScrollRail>
     </div>
   );
 }
@@ -2033,6 +2116,33 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       title: 'variant="content"',
       code: `<Container variant="content">\n  <p>Centered in a 720px reading column with responsive edge margin.</p>\n</Container>`,
       Component: ContainerContentDemo,
+    },
+  ],
+
+  "scroll-rail": [
+    {
+      title: "Horizontal (default)",
+      description: "Arrows appear only once content actually overflows, and fade out again at the resting edge.",
+      code: `<ScrollRail>\n  {items.map((item) => (\n    <Chip key={item}>{item}</Chip>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailHorizontalDemo,
+    },
+    {
+      title: "Vertical",
+      description: 'orientation="vertical" flips the scroll axis, edge-fade, and arrow direction.',
+      code: `<ScrollRail orientation="vertical">\n  {items.map((item) => (\n    <Chip key={item}>{item}</Chip>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailVerticalDemo,
+    },
+    {
+      title: "Scroll an item into view (horizontal)",
+      description: "activeIndex centers the corresponding child -- e.g. keep the active tab or segment visible as the list scrolls.",
+      code: `<ScrollRail activeIndex={activeIndex}>\n  {items.map((item, index) => (\n    <button key={item} onClick={() => setActiveIndex(index)}>\n      <Chip active={index === activeIndex}>{item}</Chip>\n    </button>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailActiveIndexHorizontalDemo,
+    },
+    {
+      title: "Scroll an item into view (vertical)",
+      description: "Same activeIndex centering, on the vertical axis.",
+      code: `<ScrollRail activeIndex={activeIndex} orientation="vertical">\n  {items.map((item, index) => (\n    <button key={item} onClick={() => setActiveIndex(index)}>\n      <Chip active={index === activeIndex}>{item}</Chip>\n    </button>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailActiveIndexVerticalDemo,
     },
   ],
 

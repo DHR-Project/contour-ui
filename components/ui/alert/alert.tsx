@@ -95,7 +95,7 @@ export function Alert({
 
                 <div
                   className={cn(
-                    "flex gap-(--space-2) border-t border-separator p-(--space-3)",
+                    "flex gap-(--space-2) p-(--space-3)",
                     isRow ? "flex-row" : "flex-col",
                   )}
                 >
