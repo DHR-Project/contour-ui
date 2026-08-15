@@ -299,8 +299,8 @@
 /* SS2.8 Focus ring */
 :root {
   --focus-ring-color: var(--tint);
-  --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
+  --focus-ring-width: 1px;
+  --focus-ring-offset: 0px;
   --focus-ring-color-on-material: 0 0 0; /* placeholder light, verify contrast per material */
 }
 .dark {
@@ -330,7 +330,7 @@
    instead of 4. The tint keeps the faded edge from looking too see-through,
    since the mask only fades the blur's visibility, not its own opacity. */
 :root {
-  --progressive-blur-max: 20px;
+  --progressive-blur-max: 4px;
   --progressive-blur-tint-alpha: 0.5;
 }
 /* No position rule here on purpose: the component always pairs this class
@@ -708,8 +708,8 @@
 :root {
   --z-base: 0;
   --z-sidebar: 50; /* v2 -- SplitView's floating Sidebar overlay (contour-spec-splitview-v2.md SS2). Below Dropdown/Overlay/Sheet/Toast/Tooltip so those still float above it, same tier NavBar/TabBar/Toolbar already use via their own z-40. */
-  --z-dropdown: 100;
   --z-sticky: 200;
+  --z-dropdown: 250; /* Above --z-sticky (not the historical 100, which sat *below* it) -- a floating popover must be able to render over any sticky in-page header, never end up clipped behind one. Surfaced by a real device: a tall compact Dropdown/ContextMenu, flipped to open upward on a short mobile viewport, rendered its top rows directly behind a sticky nav bar. Still below --z-overlay (300) and everything above it. */
   --z-overlay: 300;
   --z-sheet: 310;
   --z-alert: 390; /* v2 -- below Toast, above every practical Sheet nesting depth */
@@ -755,6 +755,6 @@
   --sidebar-bg-inactive: 237 244 250;
 }
 .dark {
-  --sidebar-bg-active: 20 21 23;
-  --sidebar-bg-inactive: 19 20 20;
+  --sidebar-bg-active: 48 66 90;
+  --sidebar-bg-inactive: 46 46 48;
 }

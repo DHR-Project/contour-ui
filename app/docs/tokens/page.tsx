@@ -65,8 +65,8 @@ const SEMANTIC_COLORS = [
   { name: "--material-regular", description: "Frosted glass — default (80% opacity)", section: "SS2.3" },
   { name: "--material-thick", description: "Frosted glass — densest (90% opacity)", section: "SS2.3" },
   { name: "--focus-ring-color", description: "Focus ring color (= --tint by default)", section: "SS2.8" },
-  { name: "--focus-ring-width", description: "Focus ring width — 2px", section: "SS2.8" },
-  { name: "--focus-ring-offset", description: "Focus ring offset — 2px", section: "SS2.8" },
+  { name: "--focus-ring-width", description: "Focus ring width — 1px", section: "SS2.8" },
+  { name: "--focus-ring-offset", description: "Focus ring offset — 0px", section: "SS2.8" },
   { name: "--shadow-xs", description: "Minimal shadow — thumb, pill", section: "SS2.9" },
   { name: "--shadow-sm", description: "Small shadow — Card raised, Slider thumb", section: "SS2.9" },
   { name: "--shadow-md", description: "Medium shadow — elevated surfaces", section: "SS2.9" },
@@ -116,6 +116,13 @@ const SEMANTIC_SPACING = [
   { name: "--container-max-width", value: "720px", description: "Container variant='content' max-width" },
 ];
 
+const SAFE_AREA_TOKENS = [
+  { name: "--safe-area-top", value: "env(safe-area-inset-top, 0px)", description: "Notch / status bar inset" },
+  { name: "--safe-area-right", value: "env(safe-area-inset-right, 0px)", description: "Landscape notch inset" },
+  { name: "--safe-area-bottom", value: "env(safe-area-inset-bottom, 0px)", description: "Home indicator inset" },
+  { name: "--safe-area-left", value: "env(safe-area-inset-left, 0px)", description: "Landscape notch inset" },
+];
+
 const RADIUS_TOKENS = [
   { name: "--radius-xs", value: "4px", usage: "Checkbox, small badge" },
   { name: "--radius-sm", value: "8px", usage: "TextField, small card" },
@@ -140,11 +147,16 @@ const MOTION_TOKENS = [
   { name: "--duration-slower", value: "500ms", description: "Long animations — skeleton, persistent states" },
 ];
 
+const PROGRESSIVE_BLUR_TOKENS = [
+  { name: "--progressive-blur-max", value: "4px", description: "Peak blur radius at the band's sharpest edge" },
+  { name: "--progressive-blur-tint-alpha", value: "0.5", description: "Tint opacity backing the blur — 0.85 under Increase Contrast" },
+];
+
 const ZINDEX_TOKENS = [
   { name: "--z-base", value: "0", description: "Default stacking layer" },
   { name: "--z-sidebar", value: "50", description: "SplitView's floating Sidebar overlay" },
-  { name: "--z-dropdown", value: "100", description: "Dropdown, ContextMenu" },
   { name: "--z-sticky", value: "200", description: "Sticky headers" },
+  { name: "--z-dropdown", value: "250", description: "Dropdown, ContextMenu — above sticky headers, so a floating popover is never clipped behind one" },
   { name: "--z-overlay", value: "300", description: "General overlay" },
   { name: "--z-sheet", value: "310", description: "Sheet (+ depth × 20 for nesting)" },
   { name: "--z-alert", value: "390", description: "Alert — below Toast, above any practical Sheet depth" },
@@ -354,6 +366,26 @@ export default function TokensPage() {
             }))}
           />
         </div>
+
+        {/* Safe area insets */}
+        <div>
+          <Text as="h3" textStyle="subheadline" weight="semibold" className="mb-(--space-3)">
+            Safe area insets (SS4.4)
+          </Text>
+          <DocsTable
+            caption="Safe area inset tokens"
+            columns={[
+              { key: "name", label: "Token", width: "180px" },
+              { key: "value", label: "Value", width: "260px" },
+              { key: "description", label: "Description" },
+            ]}
+            rows={SAFE_AREA_TOKENS.map((t) => ({
+              name: <DocsCode>{t.name}</DocsCode>,
+              value: <span className="text-caption-1 font-mono text-label-secondary">{t.value}</span>,
+              description: <span className="text-label-secondary">{t.description}</span>,
+            }))}
+          />
+        </div>
       </DocsSection>
 
       {/* §5 Border Radius */}
@@ -401,6 +433,30 @@ export default function TokensPage() {
           rows={MOTION_TOKENS.map((t) => ({
             name: <DocsCode>{t.name}</DocsCode>,
             value: <span className="text-caption-1 font-mono text-label-secondary break-all">{t.value}</span>,
+            description: <span className="text-label-secondary">{t.description}</span>,
+          }))}
+        />
+      </DocsSection>
+
+      {/* §2.10 Progressive Blur */}
+      <DocsSection id="progressive-blur" title="Progressive Blur">
+        <Text textStyle="body" color="secondary" className="max-w-prose">
+          Drives the graduated blur band used behind NavBar, TabBar, and Toolbar (SS2.10) — a
+          single translucent surface that transitions from sharp to fully blurred, not a
+          uniform frosted panel. Disabled entirely under{" "}
+          <DocsCode>prefers-reduced-transparency: reduce</DocsCode> in favor of a flat{" "}
+          <DocsCode>--bg-primary</DocsCode> fill.
+        </Text>
+        <DocsTable
+          caption="Progressive blur tokens"
+          columns={[
+            { key: "name", label: "Token", width: "260px" },
+            { key: "value", label: "Value", width: "100px" },
+            { key: "description", label: "Description" },
+          ]}
+          rows={PROGRESSIVE_BLUR_TOKENS.map((t) => ({
+            name: <DocsCode>{t.name}</DocsCode>,
+            value: <span className="text-caption-1 font-mono text-label-secondary">{t.value}</span>,
             description: <span className="text-label-secondary">{t.description}</span>,
           }))}
         />

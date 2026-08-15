@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
+    "docs:index": "node scripts/build-docs-content-index.mjs",
     "ladle": "ladle serve",
     "ladle:build": "ladle build"
   },

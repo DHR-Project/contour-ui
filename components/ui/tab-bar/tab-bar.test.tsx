@@ -64,13 +64,23 @@ describe("TabBar (compact -> bottom)", () => {
 describe("TabBar (regular+ -> top/sidebar)", () => {
   beforeEach(() => setViewportWidth(1024));
 
-  it("defaults to top position with no saved preference", () => {
+  it("defaults to top position with no saved preference", async () => {
     render(<TabBar items={ITEMS} value="Home" onValueChange={() => {}} />);
-    expect(screen.getByRole("button", { name: "Switch to sidebar" })).toBeInTheDocument();
+    // sizeClass starts "compact" (SSR-safe default) and only corrects to
+    // "regular" in an effect after mount -- AnimatePresence's mode="wait"
+    // then holds the initial "bottom" position on screen until its exit
+    // animation finishes before the "top" position can mount, same
+    // accepted on-load flash the regularLayout comment above documents.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Switch to sidebar" })).toBeInTheDocument(),
+    );
   });
 
-  it("renders the top position as a pill nested inside a full-width blur band (SSB.2a)", () => {
+  it("renders the top position as a pill nested inside a full-width blur band (SSB.2a)", async () => {
     render(<TabBar items={ITEMS} value="Home" onValueChange={() => {}} />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Switch to sidebar" })).toBeInTheDocument(),
+    );
     const tablist = screen.getByRole("tablist");
     const pill = tablist.closest("nav")!;
     expect(pill).toHaveClass("rounded-full", "m-(--space-4)");
@@ -89,6 +99,9 @@ describe("TabBar (regular+ -> top/sidebar)", () => {
 
   it("toggles to sidebar and persists the preference to localStorage", async () => {
     render(<TabBar items={ITEMS} value="Home" onValueChange={() => {}} />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Switch to sidebar" })).toBeInTheDocument(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Switch to sidebar" }));
 
     await waitFor(() =>

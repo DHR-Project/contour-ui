@@ -78,6 +78,14 @@ export const COMPONENTS: ComponentMeta[] = [
     status: "complete",
     importPath: "@/components/ui/container",
   },
+  {
+    slug: "scroll-rail",
+    name: "ScrollRail",
+    description: "Bounded horizontal or vertical scroll track with edge-fade, overflow arrows, and scroll-to-index.",
+    category: "layout",
+    status: "complete",
+    importPath: "@/components/ui/scroll-rail",
+  },
 
   // Navigation
   {
@@ -109,8 +117,8 @@ export const COMPONENTS: ComponentMeta[] = [
     name: "Sidebar",
     description: "Navigation column for SplitView that mirrors TabBar items with row-level selection state.",
     category: "navigation",
-    status: "deferred",
-    deferredReason: "Not yet implemented",
+    status: "complete",
+    importPath: "@/components/ui/sidebar",
   },
 
   // Controls
@@ -280,6 +288,14 @@ export const COMPONENTS: ComponentMeta[] = [
     category: "overlay",
     status: "complete",
     importPath: "@/components/ui/dropdown",
+  },
+  {
+    slug: "tooltip",
+    name: "Tooltip",
+    description: "Hover/focus text hint on a separate Radix primitive from Dropdown — fade-only motion, no item list.",
+    category: "overlay",
+    status: "complete",
+    importPath: "@/components/ui/tooltip",
   },
   {
     slug: "context-menu",

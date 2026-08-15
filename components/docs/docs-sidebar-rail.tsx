@@ -1,4 +1,5 @@
-import { DocsSidebar } from "./docs-sidebar";
+import { DocsSidebarNav } from "./docs-sidebar-nav";
+import { DocsSearch } from "./docs-search";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/stack";
 
@@ -17,8 +18,11 @@ export function DocsSidebarRail() {
           Component Library
         </Text>
       </VStack>
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <DocsSidebar />
+      <div className="px-(--space-4) pb-(--space-4)">
+        <DocsSearch />
+      </div>
+      <div className="flex-1 min-h-0">
+        <DocsSidebarNav />
       </div>
     </div>
   );

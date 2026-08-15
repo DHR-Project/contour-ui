@@ -67,7 +67,7 @@ export function Badge(props: BadgeProps) {
     return (
       <span
         className={cn(
-          // Fixed red background, white text — iOS notification badge convention.
+          // Fixed red background, white text — standard notification badge convention.
           "inline-flex items-center justify-center bg-destructive text-white",
           dot
             ? "h-2 w-2 rounded-full"

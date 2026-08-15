@@ -82,6 +82,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: 'Use as="nav" for semantic navigation wrappers',
         dont: 'Use as="span" or as="button" — inline elements break flex context',
       },
+      {
+        do: "When a needed gap value has no matching semantic token, fall back to the token-gap process (guideline rule 2.3/2.4) and note the reason in a code comment or story description",
+        dont: "Invent a one-off gap value silently — undocumented drift from the token system is exactly what rule 2.3 exists to prevent",
+      },
     ],
     tokens: [
       { name: "--gap-icon-text", section: "§4.2", description: 'Maps to gap="icon-text"' },
@@ -100,12 +104,16 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "Grid container", description: "columns, gap, auto-fit/fill support" },
     ],
     props: [
-      { name: "columns", type: 'number | Partial<Record<SizeClass, number>> | "auto-fit" | "auto-fill"', default: "1", description: "Column count — fixed, responsive by size-class, or automatic" },
+      { name: "columns", type: 'number | Partial<Record<SizeClass, number>> | "auto-fit" | "auto-fill"', default: "1", description: "Column count — fixed, responsive by size-class, or automatic. In the responsive-object form, any size-class left unspecified inherits the value of the preceding size-class (compact-first, same rule as guideline 3.3)" },
       { name: "minItemWidth", type: '"xs" | "sm" | "md" | "lg" | "xl"', default: "—", description: "Required when columns is auto-fit/auto-fill. Maps to 120/160/200/280/360px tokens." },
       { name: "gap", type: "SpaceToken | SemanticGap", default: "—", description: "Gap on both axes" },
       { name: "gapX", type: "SpaceToken | SemanticGap", default: "—", description: "Column-gap override" },
       { name: "gapY", type: "SpaceToken | SemanticGap", default: "—", description: "Row-gap override" },
       { name: "container", type: "boolean", default: "true", description: "Container query context" },
+      { name: "as", type: '"div" | "section" | "ul" | "ol"', default: '"div"', description: "Semantic HTML element — a shorter allowed list than Flex.as" },
+    ],
+    states: [
+      { state: "container={false}", description: "Disables container-type: inline-size — same mechanism and rationale as Flex: needed for children with position: sticky/fixed" },
     ],
     doDont: [
       {
@@ -189,8 +197,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     description:
       "Fixed top navigation bar with a scroll-linked Large Title that collapses to a compact centered title, progressive blur backdrop, and leading/trailing action slots.",
     anatomy: [
-      { name: "Large Title area", description: "34px font, collapses on scroll" },
-      { name: "Compact title", description: "Centered inline title shown after collapse" },
+      { name: "Large Title area", description: "34px font, collapses on scroll — full height 96px (34px text + padding)" },
+      { name: "Compact title", description: "Centered inline title shown after collapse — collapsed bar height 44px" },
       { name: "Leading action", description: "Single icon button slot (max 1)" },
       { name: "Trailing actions", description: "Up to 2 icon button slots" },
       { name: "Progressive blur", description: "4-layer backdrop that ramps with scroll velocity" },
@@ -233,9 +241,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "Bottom bar (compact)", description: "Fixed bottom, icon + label per item, safe-area padding" },
       { name: "Top pill (regular+)", description: "Full-width blur band + floating pill with --material-thick background" },
       { name: "Sidebar (regular+, preference)", description: "Vertical navigation list, toggles from top pill" },
+      { name: "Toggle button (top only)", description: "Button variant='plain' leadingIcon='sidebar', rendered inside TabBar itself when position is top" },
     ],
     props: [
-      { name: "items", type: "{ icon, label, badge? }[]", default: "required", description: "Navigation items with optional badge count" },
+      { name: "items", type: "{ icon, label, badge? }[]", default: "required", description: "Navigation items — badge renders via Badge variant='counter' (--color-destructive background, white text)" },
       { name: "value", type: "string", default: "required", description: "Currently active item identifier" },
       { name: "onValueChange", type: "(value: string) => void", default: "required", description: "Selection change callback" },
     ],
@@ -244,6 +253,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { state: "Inactive item", description: "--label-secondary color" },
       { state: "compact", description: "Bottom fixed position, no toggle" },
       { state: "regular+ top", description: "Full-width blur band + pill, toggle to sidebar available" },
+      { state: "top ↔ sidebar transition", description: "Container morphs via layoutId + springs.smooth from a shared anchor (top-left, under NavBar); inner content stage-sequences fade-out → morph → fade-in (--duration-normal) instead of morphing itself; disabled under prefers-reduced-motion" },
     ],
     doDont: [
       {
@@ -254,12 +264,18 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Ensure the blur band is inset-inline: 0 (full-width), not scoped to the pill width",
         dont: "Clip Progressive Blur to pill bounds — content at margins would appear unblurred",
       },
+      {
+        do: "Persist the user's top/sidebar preference to localStorage under 'contour-tabbar-layout' and read it back on load at regular+, same pattern as the dark-mode override",
+        dont: "Always default regular+ to 'top' — a saved 'sidebar' preference must be honored on load, not just after a manual toggle",
+      },
     ],
     tokens: [
       { name: "--tabbar-selection", section: "§10.3", description: "Active tab color" },
       { name: "--material-thick", section: "§2.3", description: "Pill background" },
       { name: "--safe-area-bottom", section: "§4.4", description: "Compact bottom padding" },
       { name: "--radius-full", section: "§5.1", description: "Pill shape" },
+      { name: "springs.smooth", section: "§6.3", description: "top ↔ sidebar container morph" },
+      { name: "--duration-normal", section: "§6.2", description: "Content cross-fade during transition" },
     ],
   },
 
@@ -293,10 +309,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     slug: "sidebar",
     name: "Sidebar",
     description:
-      "Navigation column for SplitView with shared-element selection indicator. Renders as a floating overlay (Progressive Blur, position: fixed) with icon+label rows mirroring TabBar items.",
-    notes: "This component is deferred — awaiting SplitView and RouteTransition implementation first.",
+      "Navigation column for SplitView with shared-element selection indicator. Renders as a floating overlay with icon+label rows mirroring TabBar items -- SplitView owns the fixed positioning and column width.",
     anatomy: [
-      { name: "Sidebar root", description: "position: fixed, Progressive Blur backdrop" },
+      { name: "Sidebar root", description: "position: fixed floating overlay (SplitView owns width/positioning); Progressive Blur backdrop (§2.10), same mechanism as NavBar/TabBar, applied horizontally instead of vertically" },
       { name: "Navigation rows", description: "icon + label + badge via ListItemContent" },
       { name: "Selection background", description: "layoutId morph between rows (springs.smooth)" },
     ],
@@ -306,20 +321,26 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "onValueChange", type: "(value: string) => void", default: "required", description: "Selection handler — caller does router.push" },
     ],
     states: [
-      { state: "Selected, window focused", description: "--sidebar-bg-active background" },
+      { state: "Selected, window focused", description: "--sidebar-bg-active background — detected via document.hasFocus() plus window focus/blur listeners toggling a window-blurred class on <html>, the same class-toggle pattern used for dark-mode override. Not :focus-within, which tracks keyboard focus inside the page, a different concept from window/tab activity" },
       { state: "Selected, window blurred", description: "--sidebar-bg-inactive background (macOS Mail pattern)" },
       { state: "Unselected, hovered", description: "--fill-quaternary background" },
-      { state: "Focused (keyboard)", description: "--focus-ring-* around full row" },
+      { state: "Focused (keyboard)", description: "--focus-ring-* around the full row — same touch-target scope as the row itself" },
     ],
     doDont: [
       {
         do: "Use Sidebar as the sidebar prop value for SplitView — it is the canonical content for that slot",
         dont: "Put routing logic in Sidebar — call router.push in onValueChange at the SplitView level",
       },
+      {
+        do: "Let row height size naturally from --padding-row-y × 2 + Body line-height — a full-width row already clears 44px horizontally, and normal padding is enough vertically (rule 5.5a's stated exception)",
+        dont: "Add a pseudo-element to expand the row's touch target, like Checkbox/Radio do — Sidebar rows don't need it",
+      },
     ],
     tokens: [
       { name: "--sidebar-bg-active / --sidebar-bg-inactive", section: "§10.6" },
+      { name: "--material-thick", section: "§2.3", description: "Root backdrop" },
       { name: "--fill-quaternary", section: "§2.2", description: "Hover state" },
+      { name: "--z-sidebar", section: "§6.9" },
     ],
   },
 
@@ -341,7 +362,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     props: [
       { name: "variant", type: '"filled" | "tinted" | "plain"', default: '"filled"', description: "Visual style: filled = solid tint bg, tinted = alpha tint bg, plain = no bg" },
       { name: "role", type: '"default" | "destructive"', default: '"default"', description: "Orthogonal to variant — swaps tint to --color-destructive" },
-      { name: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Controls padding and icon size" },
+      { name: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Controls padding and icon size. sm still must reach a 44px touch target at compact via padding/pseudo-element expansion — its smaller visual size never shrinks the hit area" },
       { name: "leadingIcon", type: "IconName", default: "—", description: "Icon before label" },
       { name: "trailingIcon", type: "IconName", default: "—", description: "Icon after label" },
       { name: "loading", type: "boolean", default: "false", description: "Disables interaction, shows spinner, keeps layout stable" },
@@ -373,6 +394,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "--tint-fill / --tint-fill-pressed", section: "§2.7a" },
       { name: "--color-destructive", section: "§2.2" },
       { name: "--button-bg-destructive", section: "§10.1" },
+      { name: "variant='tinted' role='destructive' background", section: "§10.1", description: "rgb(var(--color-destructive) / 0.15) — same alpha mechanism as --tint-fill, just aliased to the destructive color" },
       { name: "--focus-ring-*", section: "§2.8" },
       { name: "--padding-control-x/y", section: "§4.2" },
       { name: "--duration-instant / --duration-fast", section: "§6.2" },
@@ -454,6 +476,14 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Let RadioGroup handle VStack/HStack internally",
         dont: "Add an extra layout wrapper outside RadioGroup when changing direction",
       },
+      {
+        do: "Wrap the hit-area pseudo-element around the whole circle+label cluster per option (rule 5.5a), same as Checkbox",
+        dont: "Leave the hit area scoped to just the circle when a label is present",
+      },
+      {
+        do: "In direction='horizontal', cap each option's hit-area inset at min((44 - actual cluster size) / 2, gap-to-next-option / 2), floor 24px — the recommended 44px target yields to the hard WCAG 24px floor when options sit close together",
+        dont: "Force every horizontal option to a full 44px hit area regardless of spacing — adjacent hit areas must never overlap (rule 5.5b)",
+      },
     ],
     tokens: [
       { name: "--separator-opaque", section: "§2.2" },
@@ -493,6 +523,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Use springs.snappy for thumb position (physical movement) and --duration-fast for track color",
         dont: "Apply spring animation to the track background-color change",
       },
+      {
+        do: "Wrap the hit-area pseudo-element around the whole track+label unit when a label is present (rule 5.5a), same as Checkbox/Radio",
+        dont: "Leave the hit area scoped to just the track when a label exists",
+      },
     ],
     tokens: [
       { name: "--fill-secondary", section: "§2.2", description: "Off-state track" },
@@ -509,7 +543,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     anatomy: [
       { name: "Track", description: "4px height, --fill-secondary background, --radius-full" },
       { name: "Range fill", description: "--tint background, filled from min to current value" },
-      { name: "Thumb", description: "28px circle, --bg-primary fill + --shadow-sm shadow" },
+      { name: "Thumb", description: "28px circle, fixed white fill (not dark-mode aware, same convention as Switch's thumb) + --shadow-sm shadow" },
     ],
     props: [
       { name: "value", type: "number | number[]", default: "required", description: "Controlled value(s) — number for single-thumb, number[] for multi-thumb range" },
@@ -538,8 +572,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     tokens: [
       { name: "--fill-secondary", section: "§2.2", description: "Track background" },
       { name: "--tint", section: "§2.7", description: "Range fill" },
-      { name: "--bg-primary", section: "§2.2", description: "Thumb background" },
-      { name: "--shadow-sm", section: "§2.9", description: "Thumb shadow" },
+      { name: "--shadow-sm", section: "§2.9", description: "Thumb shadow — one step darker than Switch's --shadow-xs, since the thumb needs to stand out more while dragging" },
     ],
   },
 
@@ -598,6 +631,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "value", type: "string", default: "required", description: "Controlled input value" },
       { name: "onValueChange", type: "(value: string) => void", default: "required", description: "Change handler" },
       { name: "placeholder", type: "string", default: "—", description: "Placeholder text" },
+      { name: "size", type: '"sm" | "md"', default: '"md"', description: "Control size — padding is fixed (Group 1, --padding-control-x/y), not responsive by size-class" },
       { name: "leadingIcon", type: "IconName", default: "—", description: "Decorative icon before input" },
       { name: "trailingIcon", type: "IconName", default: "—", description: "Icon after input (e.g. clear, show/hide password)" },
       { name: "error", type: "string", default: "—", description: "Error message; presence triggers error state" },
@@ -642,6 +676,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     props: [
       { name: "value", type: "string", default: "—", description: "Controlled value" },
       { name: "onValueChange", type: "(value: string) => void", default: "—", description: "Value handler" },
+      { name: "placeholder", type: "string", default: "—", description: "Placeholder text" },
+      { name: "disabled", type: "boolean", default: "false", description: "Opacity 0.4, non-interactive" },
       { name: "rows", type: "number", default: "3", description: "Initial visible line count" },
       { name: "autoResize", type: "boolean", default: "true", description: "JS auto-height on input" },
       { name: "maxRows", type: "number", default: "10", description: "Height cap; scrolls internally beyond" },
@@ -666,6 +702,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Let autoResize handle height — never give Textarea a fixed height alongside autoResize={true}",
         dont: "Override height manually when autoResize is active",
       },
+      {
+        do: "Remember that maxLength still hard-caps typing even when showCounter={false} — hiding the counter only removes the UI, not the limit",
+        dont: "Set showCounter={false} expecting users can type past maxLength",
+      },
     ],
     tokens: [
       { name: "--label-secondary", section: "§2.2", description: "Counter normal color" },
@@ -689,10 +729,14 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     props: [
       { name: "value", type: "string", default: "—", description: "Controlled value" },
       { name: "onValueChange", type: "(value: string) => void", default: "—", description: "Value change handler" },
-      { name: "onSearch", type: "(value: string) => void", default: "—", description: "Debounced search callback" },
+      { name: "placeholder", type: "string", default: '"Search"', description: "Placeholder text" },
+      { name: "autoFocus", type: "boolean", default: "—", description: "Focuses the field on mount" },
+      { name: "onSearch", type: "(value: string) => void", default: "—", description: "Debounced search callback; also fires immediately on Enter with no item highlighted" },
       { name: "onCancel", type: "() => void", default: "—", description: "Called after field clear+blur" },
       { name: "results", type: "{ id, label, icon? }[] | undefined", default: "undefined", description: "undefined = no popover; [] = empty state" },
+      { name: "onResultSelect", type: "(id: string) => void", default: "—", description: "Called on item selection; popover closes. Component does not set value itself — dev decides whether to keep, clear, or fill the field" },
       { name: "loading", type: "boolean", default: "—", description: "Shows spinner in popover" },
+      { name: "emptyMessage", type: "string", default: '"No results found"', description: "Shown in the popover when results is []" },
       { name: "debounceMs", type: "number", default: "300", description: "Debounce delay" },
     ],
     states: [
@@ -701,6 +745,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { state: "Loading", description: "Popover with Progress spinner" },
       { state: "Empty", description: "Popover with emptyMessage" },
       { state: "Results", description: "Popover list via ListItemContent" },
+      { state: "Focused, Cancel visible", description: "Cancel slides in from the right + fades (springs.smooth); field shrinks its own width to make room, it doesn't get covered" },
     ],
     doDont: [
       {
@@ -710,6 +755,14 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       {
         do: "Expect onResultSelect to auto-fill the field — component is fully controlled; dev decides what happens after selection",
         dont: "Assume clearing the field happens automatically on result select",
+      },
+      {
+        do: "Rely on the built-in ARIA combobox contract: role='combobox' on the input, role='listbox' on the popover, role='option' per item, aria-activedescendant tracking the highlighted item, aria-expanded reflecting popover state",
+        dont: "Rebuild combobox accessibility externally — it's why the results popover is a built-in behavior instead of composed from Dropdown",
+      },
+      {
+        do: "Support ↓/↑ to move the highlight with wrap-around, Enter to select the highlighted item (or fire onSearch immediately if nothing is highlighted), and Escape to close the popover only — keeping text and focus intact",
+        dont: "Let Escape also clear the field or blur it — that's the Clear button's and Cancel's job respectively, kept deliberately separate",
       },
     ],
     tokens: [
@@ -732,10 +785,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     props: [
       { name: "textStyle", type: '"large-title" | "title-1" | "title-2" | "title-3" | "headline" | "body" | "callout" | "subheadline" | "footnote" | "caption-1" | "caption-2"', default: '"body"', description: "Maps to a full type scale entry" },
-      { name: "as", type: "HTML element tag", default: "per-style default", description: "Override semantic element independently of visual style" },
+      { name: "as", type: "HTML element tag", default: "per-style default", description: "Override semantic element independently of visual style. Defaults: large-title/title-1 → h1, title-2 → h2, title-3 → h3, headline → h4, body/callout → p, subheadline/footnote/caption-1/caption-2 → span" },
       { name: "weight", type: '"regular" | "medium" | "semibold" | "bold"', default: "style's default", description: "Override font weight" },
       { name: "color", type: '"primary" | "secondary" | "tertiary" | "quaternary" | SemanticColorToken', default: '"primary"', description: "Semantic label color; no raw hex" },
-      { name: "density", type: '"tight" | "default" | "loose"', default: '"default"', description: "Per-instance line-spacing override" },
+      { name: "density", type: '"tight" | "default" | "loose"', default: '"default"', description: "Per-instance line-spacing override — each <Text> decides its own density independently, unlike sizeMode which always comes from ContourProvider context" },
       { name: "truncate", type: "boolean | number", default: "—", description: "true = single-line ellipsis; number = multi-line clamp" },
     ],
     states: [
@@ -771,7 +824,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     props: [
       { name: "name", type: "IconName", default: "required", description: "Union type from icon-registry.ts" },
-      { name: "size", type: '"xs" | "sm" | "md" | "lg" | "xl"', default: '"md"', description: "12/16/20/24/32px" },
+      { name: "size", type: '"xs" | "sm" | "md" | "lg" | "xl"', default: '"md"', description: "12/16/20/24/32px. Match the adjacent Text Style: xs → Caption 1/2 (metadata, badge/tag icons); sm → Footnote/Subheadline (secondary list row, TextField icons); md → Body/Callout/Headline (Button, primary list row, Toast/Alert); lg → Title 2/3 (icon-only buttons, TabBar); xl → Title 1/Large Title (empty states, large section headers). When the icon stands alone with no adjacent text (icon-only button, tab icon, empty state), pick lg or xl by visual importance instead — there's no Text Style to look up" },
       { name: "color", type: '"currentColor" | SemanticColorToken', default: '"currentColor"', description: "Inherits text color by default" },
       { name: "decorative", type: "boolean", default: "true", description: "true → aria-hidden; false → aria-label required" },
     ],
@@ -843,7 +896,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "ListItem — Leading zone", description: "Icon slot" },
       { name: "ListItem — Main zone", description: "Title + subtitle (never moves)" },
       { name: "ListItem — Trailing zone", description: "Icon or text" },
-      { name: "Swipe actions", description: "Revealed on swipe (touch) or hover/focus-within (desktop)" },
+      { name: "Swipe actions", description: "Revealed on swipe (touch); on desktop, hover/focus-within reveals 1-2 trailing actions in place, or a single \"...\" trigger at 3 -- click opens all 3 via the same padding-reserve treatment, title/subtitle stay anchored and visible" },
       { name: "ListItemContent", description: "Shared presentational sub-component reused by Dropdown" },
     ],
     props: [
@@ -852,18 +905,26 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "subtitle (ListItem)", type: "string", default: "—", description: "Secondary label" },
       { name: "leadingIcon (ListItem)", type: "IconName", default: "—", description: "Leading zone icon" },
       { name: "trailingIcon (ListItem)", type: "IconName", default: "—", description: "Trailing zone icon" },
+      { name: "trailingText (ListItem)", type: "string", default: "—", description: "Trailing zone text — e.g. a setting's current value" },
       { name: "onClick (ListItem)", type: "() => void", default: "—", description: "Makes the whole row interactive" },
-      { name: "leadingAction", type: "SwipeAction", default: "—", description: "Single swipe action on leading edge" },
-      { name: "trailingActions", type: "SwipeAction[]", default: "—", description: "Up to 3 trailing; 4+ collapse into 'More' dropdown" },
-      { name: "contextMenuItems", type: "DropdownItemDef[]", default: "—", description: "Long-press / right-click context menu" },
+      { name: "disabled (ListItem)", type: "boolean", default: "false", description: "Disables row interaction" },
+      { name: "separatorInset (ListItem)", type: "boolean", default: "true", description: "true = separator starts after the leading icon (native iOS pattern); false = full-bleed" },
+      { name: "leadingAction", type: "SwipeAction", default: "—", description: "Single swipe action on leading edge -- SwipeAction.confirm makes it arm-then-tap-again instead of running immediately" },
+      { name: "trailingActions", type: "SwipeAction[]", default: "—", description: "Max 3 -- extras beyond the 3rd are ignored. Each action's SwipeAction.confirm makes it arm-then-tap-again instead of running immediately" },
+      { name: "contextMenuItems", type: "DropdownItemDef[]", default: "—", description: "Long-press (touch) / right-click (desktop) context menu — additive, existing touch/swipe behavior is unchanged when omitted" },
     ],
     states: [
       { state: "Default", description: "Static row" },
-      { state: "Hover (pointer: fine)", description: "Trailing actions cross-fade in" },
+      { state: "Hover (pointer: fine), 1-2 trailing actions", description: "Actions cross-fade in, in place" },
+      { state: "Hover (pointer: fine), 3 trailing actions", description: "Single \"...\" trigger cross-fades in instead; click opens all 3 via the row's own padding-right (same treatment as the 1-2 case) -- title/subtitle stay anchored, truncating further rather than being pushed off-canvas -- picking an action runs it and closes, as does clicking outside the row or pressing Escape" },
       { state: "Pressed", description: "--fill-quaternary background; no scale on full-width row" },
       { state: "Swipe (touch)", description: "Actions reveal at --swipe-action-width threshold" },
-      { state: "Add animation", description: "opacity + scale + blur + height via springs.smooth" },
-      { state: "Remove animation", description: "Same properties exit to 0; siblings re-flow" },
+      { state: "Touch with contextMenuItems", description: "One handler disambiguates 3 gestures during the ~500ms long-press window: |ΔX|>10px and >|ΔY| → swipe (unchanged); |ΔY|>10px and >|ΔX| → page scroll (cancels the long-press timer, no preventDefault); no threshold crossed after ~500ms → opens ContextMenu" },
+      { state: "Right-click with contextMenuItems", description: "Opens ContextMenu — reverses an earlier decision that banned right-click menus entirely; without contextMenuItems, the browser's native menu is left alone" },
+      { state: "Armed (SwipeAction.confirm)", description: "First tap on a confirm-flagged action expands it to fill the row (width: 100%, scale+fade via springs.snappy, growing from the tapped edge) while everything else -- row content, other actions -- fades out and goes inert (not clickable/tabbable/announced); tapping the armed action again runs its onAction, tapping outside or Escape cancels back. Opt-in per action, not automatic for destructive; doesn't intercept touch's full-swipe-commit, which still runs immediately" },
+      { state: "Tap feedback (non-confirm actions)", description: "A tap still runs onAction immediately, same as always, but now also flashes the same full-row expand as tap feedback before auto-reverting on its own (~450ms hold) -- no confirm step, not tappable while showing, and its exit animation sets pointerEvents: none immediately so a slow-to-unmount overlay can never block the real buttons underneath" },
+      { state: "Add animation", description: "opacity + scale + blur + height via springs.smooth — scoped to only the item actually added; siblings get layout repositioning without blur, to avoid stacking multiple blur layers on bulk changes" },
+      { state: "Remove animation", description: "Same properties exit to 0; siblings re-flow via the layout prop, not blurred themselves" },
     ],
     doDont: [
       {
@@ -873,6 +934,18 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       {
         do: "Place destructive action last in trailingActions array — full-swipe commit triggers the last item",
         dont: "Put a destructive action first where users might accidentally full-swipe it",
+      },
+      {
+        do: "Key the hover-reveal CSS off :focus-within as well as :hover, so keyboard users can discover actions (rule 5.2)",
+        dont: "Reveal actions on :hover alone — a keyboard-only user would never know they exist",
+      },
+      {
+        do: "Give action buttons a higher z-index and stopPropagation when the row also has onClick, so hovering/clicking an action never triggers the row's own hover/press state",
+        dont: "Let a trailing action's click event bubble into the row's onClick handler",
+      },
+      {
+        do: "Let height/layout animation auto-disable under prefers-reduced-motion, falling back to fade only",
+        dont: "Keep full scale+blur+height animation running when prefers-reduced-motion is active",
       },
     ],
     tokens: [
@@ -897,12 +970,13 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "variant", type: '"counter" | "status"', default: '"counter"', description: "Discriminated union" },
       { name: "count", type: "number", default: "—", description: "(counter) Displayed number; >99 shows '99+'" },
       { name: "dot", type: "boolean", default: "false", description: "(counter) Show dot only, no number" },
+      { name: "showZero", type: "boolean", default: "false", description: "(counter) When false (default), count === 0 renders nothing at all — 'nothing to notify about'" },
       { name: "label", type: "string", default: "—", description: "(status) Required label text" },
       { name: "color", type: '"tint" | "destructive" | "success" | "warning"', default: '"tint"', description: "(status) Semantic color" },
       { name: "tone", type: '"solid" | "tinted"', default: '"solid"', description: "solid = safe on any bg; tinted = alpha bg, only safe on controlled backgrounds" },
     ],
     states: [
-      { state: "counter, count > 0", description: "Renders pill/circle with number" },
+      { state: "counter, count > 0", description: "Renders pill/circle with number — min-height/min-width 16px (square for 1 digit, widens for more)" },
       { state: "counter, dot", description: "Renders 8px circle" },
       { state: "status, solid", description: "Opaque background, white text — always safe" },
       { state: "status, tinted", description: "Alpha background — safe only on bg-primary/secondary" },
@@ -975,8 +1049,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     props: [
       { name: "variant", type: '"circular" | "linear"', default: '"circular"', description: "Discriminated union" },
       { name: "value", type: "number (0-100)", default: "undefined", description: "undefined = indeterminate (circular only); required for linear" },
-      { name: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "(circular) 16/24/32px" },
-      { name: "diameter", type: "number", default: "—", description: "Escape hatch for custom diameter (e.g. ring around Avatar)" },
+      { name: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "(circular) diameter/stroke: sm 16px/2px (inline next to text, e.g. Button loading), md 24px/2.5px (default, standalone), lg 32px/3px (full-page loading)" },
+      { name: "diameter", type: "number", default: "—", description: "Escape hatch for custom diameter, paired with strokeWidth — for wrapping a ring around an arbitrary element (e.g. Avatar upload progress) where the 3 presets can't match exactly" },
+      { name: "strokeWidth", type: "number", default: "—", description: "Escape hatch paired with diameter; presets derive it automatically, custom diameter must set it explicitly" },
       { name: "color", type: '"tint" | "destructive" | "success" | "warning"', default: '"tint"', description: "Fill color" },
       { name: "label", type: "string", default: "—", description: "aria-label; required if no adjacent visible text" },
     ],
@@ -994,6 +1069,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       {
         do: "Use springs for value transitions — no, use CSS transition for linear bar (no spring overshoot at 100%)",
         dont: "Use spring transitions for determinate progress — it would visually overshoot 100%",
+      },
+      {
+        do: "Compose your own backdrop/overlay (e.g. --overlay-default) around Progress when you need full-page blocking loading",
+        dont: "Expect Progress to render its own backdrop — same principle as Badge not self-positioning, it stays a pure indicator",
       },
     ],
     tokens: [
@@ -1016,7 +1095,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "Alert container", description: "min(320px, 100% − 2×space-4), --material-thick + blur(20px)" },
       { name: "Title", description: 'Text style="headline" centered' },
       { name: "Description", description: 'Text style="footnote" color="secondary" centered' },
-      { name: "Action buttons", description: "2 → horizontal 50/50; 1 or ≥3 → vertical full-width with separators" },
+      { name: "Action buttons", description: "2 actions → horizontal 50/50; 1 or ≥3 → vertical full-width. Rendered via Button, separated by gap (not a divider) inside a padded block; only a border-top divides the action block from title/description" },
     ],
     props: [
       { name: "open", type: "boolean", default: "—", description: "Controlled open state" },
@@ -1040,7 +1119,11 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       },
       {
         do: "Set emphasized={true} on the safest/preferred action to guide the user",
-        dont: "Use Button component inside Alert actions — Alert actions have their own distinct styling",
+        dont: "Skip role='cancel' on the dismissive action — it controls placement (always last: bottom when stacked, right when side-by-side), not just color",
+      },
+      {
+        do: "Let Alert render every action through Button (variant='plain' by default, 'filled' when emphasized; role='destructive' maps to Button's destructive role) — this is the current, decided rendering path",
+        dont: "Build a custom action row that bypasses Button — an earlier draft avoided Button for a full-bleed separator look, but that was superseded",
       },
     ],
     tokens: [
@@ -1048,6 +1131,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "--material-thick", section: "§2.3" },
       { name: "--z-alert", section: "§6.9", description: "390 — below Toast (400), above Sheet" },
       { name: "--radius-lg", section: "§5.1" },
+      { name: "--space-3", section: "§4.1", description: "Action block padding" },
+      { name: "--space-2", section: "§4.1", description: "Gap between actions" },
+      { name: "--space-1", section: "§4.1", description: "Title → description gap" },
     ],
   },
 
@@ -1058,17 +1144,20 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       "Transient notification displayed via a global provider system. Stacks and collapses/expands based on input modality, and anchors to any of six screen positions. Always use the toast() function or the useToast() hook, never render Toast JSX directly.",
     anatomy: [
       { name: "Toaster viewport", description: "One per app, mounted at the root; anchored by the position prop (adaptive by default: top-center on compact, bottom-right on regular+)" },
-      { name: "Icon", description: "Auto-assigned by variant" },
+      { name: "Icon", description: "Auto-assigned by variant when not overridden: default → none, success → check-circle, warning → alert-triangle, destructive → x-circle" },
       { name: "Title + Description", description: "Required / optional text" },
       { name: "Action button", description: "Max 1 optional action" },
-      { name: "Stack layer", description: "Collapsed peek (up to 3 visible), expanded on hover/tap" },
+      { name: "Close (X) button", description: "Desktop only — manual dismiss alongside auto-duration and touch swipe-dismiss" },
+      { name: "Progress bar", description: "Optional thin bar at the toast's bottom edge showing remaining duration" },
+      { name: "Stack layer", description: "Collapsed peek (up to 3 visible — a 4th forces the oldest toast to auto-dismiss early), expanded on hover/tap" },
       { name: "Action row", description: "Show Less + Clear, visible whenever the list is open. Sits at the anchored edge outside the scroll box, so it never scrolls away or dims under the scroll mask, and its room is reserved with animated padding so the stack never jumps" },
       { name: "Clear button", description: "Dismisses every toast. One click with a mouse (labelled by a tooltip); on touch the first tap widens it into the word \"Clear\" and the second one clears" },
     ],
     props: [
       { name: "title", type: "string", default: "required", description: "Notification title" },
       { name: "description", type: "string", default: "—", description: "Optional subtitle" },
-      { name: "variant", type: '"default" | "success" | "warning" | "destructive"', default: '"default"', description: "Controls icon + color; warning/destructive announce assertively" },
+      { name: "icon", type: "IconName", default: "—", description: "Overrides the variant's default icon" },
+      { name: "variant", type: '"default" | "success" | "warning" | "destructive"', default: '"default"', description: "Controls default icon + color; warning/destructive announce assertively" },
       { name: "action", type: "{ label: string; onPress: () => void }", default: "—", description: "Single optional action" },
       { name: "duration", type: "number (ms)", default: "4000", description: "Auto-dismiss delay; undefined = persistent" },
       { name: "position", type: '"top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right" | { compact?, regular? }', default: '{ compact: "top-center", regular: "bottom-right" }', description: "<Toaster> prop. Drives stacking direction, expand direction, enter animation and swipe axis" },
@@ -1078,12 +1167,12 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     states: [
       { state: "Collapsed stack", description: "Layered peek (scale -0.05, 8px per layer, offset away from the anchored edge)" },
-      { state: "Hover preview", description: "Fine pointer only — hovering the stack expands the list (Show Less included), and it re-collapses ~300ms after the pointer leaves" },
+      { state: "Hover preview", description: "Fine pointer only, and only when ≥2 toasts are stacked — hovering the stack expands the list (Show Less included), and it re-collapses ~300ms after the pointer leaves" },
       { state: "Pinned list", description: "Click or tap the stack to keep the list open; it stays until Show Less is pressed, mouse or not" },
       { state: "Armed clear", description: "Touch only — the first tap on the clear button expands it and cross-fades the X into its label; a tap elsewhere reverts it" },
       { state: "Scrolling list", description: "A pinned list taller than expandedMaxHeight scrolls, anchored so the newest toast stays in view, with the clipped edge faded by scroll-mask-y" },
-      { state: "Enter", description: "Slide+fade along the vertical axis — down from above for top anchors, up from below for bottom anchors; never sideways" },
-      { state: "Exit", description: "Auto (duration elapsed) or swipe-dismiss toward the anchored edge" },
+      { state: "Enter", description: "Slide+fade along the vertical axis — down from above for top anchors, up from below for bottom anchors; never sideways, even for a left/right-aligned position" },
+      { state: "Exit", description: "Auto (duration elapsed), the desktop close (X) button, or swipe-dismiss (touch). Swipe axis follows the position's horizontal align, not the top/bottom anchor: left/right-aligned swipes toward that side, center-aligned swipes vertically" },
     ],
     doDont: [
       {
@@ -1099,6 +1188,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "--color-success / --color-warning / --color-destructive", section: "§2.2" },
       { name: "--z-toast", section: "§6.9", description: "400 — highest in the z-index stack" },
       { name: "--duration-normal", section: "§6.2", description: "Enter/exit" },
+      { name: "--space-3", section: "§4.1", description: "Gap between toasts in the expanded list (12px — 8px reads as one merged block on dark surfaces)" },
     ],
   },
 
@@ -1112,7 +1202,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       "Adaptive overlay — Bottom Sheet on touch, Centered Modal with a mouse/trackpad (input modality, not size-class). Built on Radix Dialog + Framer Motion drag with snap points, nested stacking, and conditional dismiss.",
     anatomy: [
       { name: "Sheet root", description: "Manages open state" },
-      { name: "SheetContent", description: "Main surface with safe-area padding" },
+      { name: "SheetContent", description: "Main surface — defaults padding-bottom to --safe-area-bottom and horizontal padding to --inset-grouped-margin-x (same convention as Card). Does not auto-apply Stack/Flex to children — compose layout yourself, same as Card/Container" },
       { name: "SheetHeader", description: "Title area" },
       { name: "Grabber bar", description: "58×4px, touch only" },
       { name: "Backdrop overlay", description: "Per nesting depth" },
@@ -1120,14 +1210,15 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     props: [
       { name: "open", type: "boolean", default: "—", description: "Controlled open state" },
       { name: "onOpenChange", type: "(open: boolean) => void", default: "—", description: "State change handler" },
-      { name: "snapPoints", type: "number[]", default: "[1]", description: "Snap positions (§6.8 token)" },
+      { name: "snapPoints", type: "number[]", default: "[1]", description: "Viewport-height fractions, e.g. [0.4, 0.9] (§6.8) — omit for the default single-snap-point behavior" },
       { name: "title", type: "string", default: "—", description: "Optional header title" },
-      { name: "dismissible", type: "boolean | (() => boolean | Promise<boolean>)", default: "true", description: "Static or dynamic dismiss gate" },
+      { name: "dismissible", type: "boolean | (() => boolean | Promise<boolean>)", default: "true", description: "Static or dynamic dismiss gate — an async validator returning a Promise puts Sheet in a pending state while it resolves" },
     ],
     states: [
       { state: "Closed", description: "Not rendered" },
       { state: "Open (touch)", description: "Bottom Sheet, drag-enabled -- pointer: coarse, at every size-class" },
-      { state: "Open (mouse/trackpad)", description: "Centered Modal, no drag, dismiss via Close/Escape/click-outside" },
+      { state: "Open (mouse/trackpad)", description: "Centered Modal, no drag, dismiss via Close/Escape/click-outside — corners are uniform 38px on all 4 sides, not just the top" },
+      { state: "Pending", description: "dismissible returned a Promise that hasn't resolved yet — input is locked to prevent double-triggering the close" },
       { state: "Blocked dismiss", description: "Bounce-back via springs.bouncy; shake animation on button press" },
       { state: "Receded", description: "Sheet below active nested Sheet: scale 0.94, y -16px" },
     ],
@@ -1140,12 +1231,22 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Let Sheet handle motion-only feedback on blocked dismiss; show a toast to explain why",
         dont: "Nest 3+ Sheets — console warning is emitted at ≥3 depth",
       },
+      {
+        do: "Gate drag/snap on input modality via matchMedia('(pointer: coarse)') — touch gets drag at every size-class, including regular-xl",
+        dont: "Infer input type from viewport width — an iPad Pro at regular-xl is still a touchscreen and must keep drag-to-dismiss",
+      },
+      {
+        do: "Read both velocity.y and offset.y on drag end — a fast swipe snaps by direction regardless of distance, a slow drag snaps to the nearest point",
+        dont: "Snap purely by nearest-point distance — ignoring velocity breaks the flick-to-dismiss feel",
+      },
     ],
     tokens: [
-      { name: "--sheet-radius-top / --sheet-radius-bottom", section: "§4.8", description: "34px/58px on compact" },
+      { name: "--sheet-radius-top / --sheet-radius-bottom", section: "§4.8", description: "34px/58px on compact — both converge to a uniform 38px on all 4 corners at regular+" },
       { name: "--grabber-width / --grabber-height", section: "§4.8" },
       { name: "--z-sheet", section: "§6.9", description: "310 + depth×20" },
     ],
+    notes:
+      "Snap points are viewport-height fractions (e.g. [0.4, 0.9]); dragging is constrained between the lowest and highest snap point and animates between them with springs.smooth. Dragging below the lowest snap point dismisses the Sheet entirely — there is no negative snap point to catch it. On regular+ with a mouse or trackpad, Sheet renders as a fixed Centered Modal instead: no drag, dismiss via the close button, Escape, or clicking outside.",
   },
 
   {
@@ -1170,8 +1271,10 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { state: "Closed", description: "Not rendered" },
       { state: "Open", description: "Scale 0.95→1 + fade via springs.snappy" },
       { state: "Item hover/focus", description: "Highlighted background (Radix handles)" },
-      { state: "Submenu compact", description: "Stack push/pop — full content swap with Back button" },
+      { state: "Submenu compact", description: "Real push/pop navigation, not a content-swap pattern: submenu slides in from x: 100%, the parent list recedes to x: -30%/opacity 0.4 rather than disappearing (signals 'still there'), via springs.snappy — smaller/snappier than RouteTransition's springs.smooth since a popover doesn't need full-page weight. Back reverses both. A Back row (chevron-left + parent label, Text style='footnote' weight='semibold', --tint color to read as navigation rather than a selectable item) sits at the top; each nested level pushes one more layer, Back always steps back exactly one" },
       { state: "Submenu regular+", description: "Flyout cascade — both parent and sub visible" },
+      { state: "Drag-select (touch)", description: "Menu opens immediately on touchstart while still held; touchmove hit-tests the finger position against items and highlights whichever is underneath; touchend selects that item, or closes with no selection if the finger isn't over one. Scoped to Dropdown/ContextMenu/SegmentedControl/RadioGroup only — not List/Sidebar/SearchField, which need the gesture for page scroll instead. A submenu item never auto-opens mid-drag; the user must release and reopen it" },
+      { state: "Drag-select auto-scroll", description: "When the finger is within 24px of the scroll area's top/bottom edge, auto-scrolls continuously via requestAnimationFrame until the finger leaves the zone, is released, or the list is fully scrolled" },
     ],
     doDont: [
       {
@@ -1182,11 +1285,54 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Keep Tooltip and Dropdown as separate components — they use different Radix primitives",
         dont: "Share the same Radix primitive for Tooltip and Dropdown",
       },
+      {
+        do: "Let item title font size alias --text-body-size at every size-class, including regular+",
+        dont: "Hardcode a fixed regular+ item title size — that breaks Dynamic Type for users who need larger text on iPad-class layouts",
+      },
+      {
+        do: "Decide the compact-submenu push/pop vs. regular+ flyout split by size-class — the real constraint here is horizontal space for a flyout, not touch vs. pointer",
+        dont: "Gate this particular behavior on pointer: coarse/fine like other gesture decisions in this system — that would misapply the 'iPad regular is still touch' lesson to a case where it doesn't hold",
+      },
     ],
     tokens: [
       { name: "--popover-radius", section: "§4.8" },
-      { name: "--menu-item-padding-sides/y", section: "§4.9" },
+      { name: "--menu-section-title-size", section: "§4.9", description: "0.8125rem / 13px compact — 0.75rem / 12px regular+" },
+      { name: "--menu-section-title-padding-top", section: "§4.9", description: "4px compact — 5px regular+" },
+      { name: "--menu-section-title-padding-bottom", section: "§4.9", description: "10px compact — 7px regular+" },
+      { name: "--menu-item-padding-sides", section: "§4.9", description: "16px compact — 8px regular+" },
+      { name: "--menu-item-padding-y", section: "§4.9", description: "10px compact — 11px regular+" },
+      { name: "--menu-item-separator-padding", section: "§4.9", description: "10px compact — 8px regular+" },
       { name: "--z-dropdown", section: "§6.9" },
+    ],
+  },
+
+  {
+    slug: "tooltip",
+    name: "Tooltip",
+    description:
+      "Hover/focus text hint built on a separate Radix Tooltip primitive — not a Dropdown variant, despite living in the same source spec. Shows plain text only, no item list.",
+    anatomy: [
+      { name: "Trigger", description: "Any element via Radix asChild pattern, hover/focus activated" },
+      { name: "Content", description: "Plain text only — no ListItemContent, no items" },
+    ],
+    props: [
+      { name: "content", type: "string", default: "required", description: "Text shown in the tooltip" },
+      { name: "children", type: "React.ReactElement", default: "required", description: "Trigger element (asChild)" },
+      { name: "openDelay", type: "number", default: "700", description: "Hover delay in ms before the tooltip appears" },
+    ],
+    states: [
+      { state: "Closed", description: "Not rendered" },
+      { state: "Open", description: "Fade only via --duration-fast — no scale, unlike Dropdown's open animation" },
+    ],
+    doDont: [
+      {
+        do: "Keep Tooltip and Dropdown as separate components — they use different Radix primitives (Tooltip vs DropdownMenu)",
+        dont: "Trigger Tooltip on click — it is hover/focus only; use Dropdown or a Button for click-triggered content",
+      },
+    ],
+    tokens: [
+      { name: "--duration-fast", section: "§6.2", description: "Fade in/out — faster than Dropdown since hover isn't a deliberate click" },
+      { name: "--z-tooltip", section: "§6.9", description: "Highest in the z-index scale — always floats above everything else" },
     ],
   },
 
@@ -1194,7 +1340,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     slug: "context-menu",
     name: "ContextMenu",
     description:
-      "Contextual action menu triggered by right-click (pointer) or long-press (touch). Reuses all render/item/submenu logic from Dropdown with only the trigger mechanism differing.",
+      "Contextual action menu triggered by right-click (pointer) or long-press (touch). Reuses all render/item/submenu logic from Dropdown with only the trigger mechanism differing. Built on Radix's ContextMenu primitive — a sibling of DropdownMenu, not a reuse of it, since right-click/long-press trigger semantics differ from an explicit click.",
     anatomy: [
       { name: "Trigger wrapper", description: "asChild — wraps any element" },
       { name: "Menu container", description: "Positioned at cursor/tap coordinates, not element bounds" },
@@ -1206,7 +1352,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "disabled", type: "boolean", default: "—", description: "Disables context menu" },
     ],
     states: [
-      { state: "Long-press in progress (touch)", description: "Row scale 0.97 + dim bg (springs.snappy)" },
+      { state: "Long-press in progress (touch)", description: "Activates at ~500ms, cancelled if the pointer moves >10px before the timer elapses. On success: row scale 0.97 + dim bg (springs.snappy) confirms the gesture landed, iOS Peek-style, right before the menu opens" },
       { state: "Open", description: "Menu at cursor/touch position" },
     ],
     doDont: [
@@ -1232,11 +1378,12 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     ],
     props: [
       { name: "children", type: "React.ReactNode", default: "required", description: "Current route's page content" },
-      { name: "cacheDepth", type: "number", default: "1", description: "LRU route cache depth (hard cap: 10)" },
+      { name: "cacheDepth", type: "number", default: "1", description: "LRU route cache depth (hard cap: 10) — only meaningful at compact; regular+ already shows list + detail simultaneously via SplitView, so there is nothing to cache" },
     ],
     states: [
-      { state: "Default", description: "Cross-fade only, no slide or blur (--duration-fast)" },
-      { state: "prefers-reduced-motion", description: "Same cross-fade, shorter (--duration-instant)" },
+      { state: "compact", description: "Full push/pop slide with light parallax via springs.gentle — this is the default, size-class-aware transition" },
+      { state: "regular+", description: "Checks size-class via useSizeClass() and skips the push/pop slide — full-screen transitions don't suit a SplitView/static layout; falls back to a light cross-fade (--duration-fast) if any transition is needed at all" },
+      { state: "prefers-reduced-motion", description: "Cross-fade only, shorter (--duration-instant), regardless of size-class" },
     ],
     doDont: [
       {
@@ -1251,11 +1398,26 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
         do: "Make all data-fetching effects idempotent when using cacheDepth > 0",
         dont: "Use View Transitions API as the default — it is opt-in only for specific shared-element cross-route cases",
       },
+      {
+        do: "Navigate forward with router.push() — every call creates a new history entry, matching how push navigation is expected to behave",
+        dont: "Call router.push() to a parent route from an in-page Back control — it adds an extra history entry and throws off how many times the user needs to press back",
+      },
+      {
+        do: "Call router.back() for any in-page Back control, including from inside a custom onNavigate handler — one history source for both browser back and in-page back",
+        dont: "Let onNavigate reimplement back navigation with router.push() to a computed parent URL",
+      },
+      {
+        do: "On a view that can be entered via direct URL (deep link, refresh, new tab), detect the missing app-created parent entry and derive the parent route from the URL structure instead",
+        dont: "Assume router.back() is always safe on an in-page Back control — a deep-linked view has no app-created parent entry to go back to",
+      },
     ],
     tokens: [
-      { name: "--duration-fast", section: "§6.2", description: "Default cross-fade" },
+      { name: "springs.gentle", section: "§6.3", description: "Push/pop slide transition at compact" },
+      { name: "--duration-fast", section: "§6.2", description: "regular+ cross-fade, or reduced-motion base" },
       { name: "--duration-instant", section: "§6.2", description: "Reduced-motion cross-fade" },
     ],
+    notes:
+      "The URL is the single source of truth for navigation state — route structure is nested segments (/items → /items/[id]), never query params, and deep links must render the correct state from the initial SSR pass, not a client-side effect. Browser back is native popstate handling; RouteTransition never maintains its own stack. Motion is contextual, not uniform: pushing or popping a view on compact slides with a light parallax under springs.gentle; navigating to a preview of content already on screen (e.g. a list item opening its own detail) uses a shared layoutId morph instead of a slide; resizing across size-classes while inside a detail view uses layout-based FLIP to hold relative position rather than cutting to the new layout. <Activity>-based caching (cacheDepth) is a separate, independent layer from this motion system — it only controls whether a route's state/DOM survives being hidden, not how it animates — and requires React 19.2+; it's optional and only relevant when cacheDepth is actually used.",
   },
 
   {
@@ -1264,7 +1426,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     description:
       "Top-level layout for multi-column adaptive interfaces (sidebar + list + detail). URL-driven column count, floating overlay sidebar with drag-resize, and RouteTransition as navigation engine.",
     anatomy: [
-      { name: "Sidebar slot", description: "position: fixed, --sidebar-current-width CSS var" },
+      { name: "Sidebar slot", description: "position: fixed, --sidebar-current-width CSS var; shares the Progressive Blur mechanism with NavBar/TabBar" },
       { name: "Content area", description: "padding-left: --sidebar-current-width" },
       { name: "Drag-resize border", description: "~8px hit area, cursor: col-resize, pointer: fine only" },
       { name: "RouteTransition layer", description: "Navigation within content area" },
@@ -1277,8 +1439,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       { name: "collapsible", type: "boolean", default: "true", description: "Icon-only collapse — declared but not implemented in v1" },
     ],
     states: [
-      { state: "compact", description: "Single-view push/pop via RouteTransition" },
-      { state: "regular+", description: "Floating sidebar visible, content padded" },
+      { state: "compact", description: "1 route segment wins at a time — push/pop via RouteTransition, same mechanism as a single-view app" },
+      { state: "regular+", description: "Floating sidebar visible; list + detail render simultaneously from nested parent/child segments — URL stays /items/[id], not a push replace" },
       { state: "Sidebar drag (pointer: fine)", description: "Direct manipulation, snaps at min/max via springs.snappy" },
       { state: "Width persisted", description: "localStorage key: 'contour-splitview-sidebar-width'" },
     ],
@@ -1290,6 +1452,18 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
       {
         do: "Let SplitView own width/resize logic — Sidebar knows nothing about its own width",
         dont: "Use CSS Grid/Flex to place Sidebar as a physical column — it is position: fixed overlay",
+      },
+      {
+        do: "Derive visible columns from usePathname()/useSelectedLayoutSegment() combined with the current size-class — one source of state",
+        dont: "Track the selected item in separate component state that can drift out of sync with the URL",
+      },
+      {
+        do: "When going from 2 to 3 columns (regular → regular-xl), slide only the new column in from the right and keep existing columns in place, under springs.smooth",
+        dont: "Reflow or resize the existing columns when a new column appears — only the incoming column should animate",
+      },
+      {
+        do: "Let only genuinely horizontal-scrolling content (a carousel, a horizontal image row) escape the Sidebar's padding-left via the internal .sv-bleed-left utility — it slides beneath the Sidebar's blur, not blocked by it, and --z-sidebar must stay above it",
+        dont: "Expose full-bleed as a public prop on arbitrary content — it's an internal utility only genuinely horizontal-scrolling components should opt into, not a general layout escape hatch",
       },
     ],
     tokens: [

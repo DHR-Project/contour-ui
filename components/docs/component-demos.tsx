@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
@@ -15,6 +15,7 @@ import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { List } from "@/components/ui/list";
 import { ListItem } from "@/components/ui/list";
+import { ListItemContent } from "@/components/ui/list";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio";
@@ -26,14 +27,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { getAvatarProgressRing } from "@/lib/utils/avatar-progress-ring";
 import { SearchField } from "@/components/ui/search-field";
 import type { SearchFieldResult } from "@/components/ui/search-field";
 import { NavBar } from "@/components/ui/nav-bar";
 import { TabBar } from "@/components/ui/tab-bar";
 import type { TabBarItem } from "@/components/ui/tab-bar";
+import { Sidebar } from "@/components/ui/sidebar";
+import type { SidebarItem } from "@/components/ui/sidebar";
 import { Toolbar } from "@/components/ui/toolbar";
 import { Dropdown } from "@/components/ui/dropdown";
+import type { DropdownItemDef } from "@/components/ui/dropdown";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Popover } from "radix-ui";
 import { Icon, iconNames } from "@/components/icon";
@@ -43,6 +46,7 @@ import { Alert } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/toast";
 import type { ToastInput, ToastPosition } from "@/components/ui/toast";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 
 // ---------------------------------------------------------------------------
 // Demo registry -- each component slug maps to a list of small, titled
@@ -240,6 +244,88 @@ function ContainerContentDemo() {
 }
 
 // ---------------------------------------------------------------------------
+// ScrollRail
+// ---------------------------------------------------------------------------
+
+function RailChip({ label, active }: { label: string; active?: boolean }) {
+  return (
+    <Flex
+      align="center"
+      justify="center"
+      container={false}
+      className={cn(
+        "h-10 shrink-0 rounded-full px-(--space-4)",
+        active ? "bg-tint" : "bg-fill-secondary",
+      )}
+    >
+      <Text
+        textStyle="footnote"
+        weight="medium"
+        className={cn("whitespace-nowrap", active ? "text-white" : "text-label-primary")}
+      >
+        {label}
+      </Text>
+    </Flex>
+  );
+}
+
+const RAIL_ITEMS = Array.from({ length: 12 }, (_, i) => `Item ${i + 1}`);
+
+function ScrollRailHorizontalDemo() {
+  return (
+    <div className="w-full max-w-80">
+      <ScrollRail className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item) => (
+          <RailChip key={item} label={item} />
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailVerticalDemo() {
+  return (
+    <div className="h-64 w-40">
+      <ScrollRail orientation="vertical" className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item) => (
+          <RailChip key={item} label={item} />
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailActiveIndexHorizontalDemo() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  return (
+    <div className="w-full max-w-80">
+      <ScrollRail activeIndex={activeIndex} className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item, index) => (
+          <button key={item} type="button" onClick={() => setActiveIndex(index)}>
+            <RailChip label={item} active={index === activeIndex} />
+          </button>
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+function ScrollRailActiveIndexVerticalDemo() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  return (
+    <div className="h-64 w-40">
+      <ScrollRail activeIndex={activeIndex} orientation="vertical" className="gap-(--space-2)">
+        {RAIL_ITEMS.map((item, index) => (
+          <button key={item} type="button" onClick={() => setActiveIndex(index)}>
+            <RailChip label={item} active={index === activeIndex} />
+          </button>
+        ))}
+      </ScrollRail>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // NavBar
 // ---------------------------------------------------------------------------
 
@@ -306,6 +392,25 @@ function TabBarDemo() {
         <TabBar items={items} value={value} onValueChange={setValue} />
       </Flex>
     </ScrollBox>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
+
+function SidebarDemo() {
+  const items: SidebarItem[] = [
+    { value: "home", icon: "home", label: "Home" },
+    { value: "search", icon: "search", label: "Search" },
+    { value: "alerts", icon: "bell", label: "Alerts", badge: 3 },
+    { value: "profile", icon: "user", label: "Profile" },
+  ];
+  const [value, setValue] = useState("home");
+  return (
+    <div className="h-80 w-64 overflow-hidden rounded-md border border-separator">
+      <Sidebar items={items} value={value} onValueChange={setValue} />
+    </div>
   );
 }
 
@@ -909,7 +1014,11 @@ function SearchFieldBasicDemo() {
   );
 }
 
-const SEARCH_FIELD_DEMO_ITEMS: SearchFieldResult[] = [
+// Narrower than SearchFieldResult (label: string, not ReactNode) so
+// .toLowerCase() below stays a plain string op -- this fixed list never
+// needs the ReactNode case (e.g. a highlighted-match <mark>), only real
+// callers building results from user input do.
+const SEARCH_FIELD_DEMO_ITEMS: { id: string; label: string; icon: SearchFieldResult["icon"] }[] = [
   { id: "button", label: "Button", icon: "star" },
   { id: "checkbox", label: "Checkbox", icon: "check" },
   { id: "dropdown", label: "Dropdown", icon: "chevron-down" },
@@ -1136,26 +1245,55 @@ function ListPlainDemo() {
   );
 }
 
-function ListSwipeActionsDemo() {
+function ListGroupedDemo() {
   return (
-    <List style="grouped">
+    <div className="w-80 bg-fill-quaternary p-(--space-4)">
+      <List style="grouped">
+        <ListItem key="1" title="Wi-Fi" trailingText="Home" onClick={() => {}} />
+        <ListItem key="2" title="Bluetooth" trailingText="On" onClick={() => {}} />
+        <ListItem key="3" title="Cellular" onClick={() => {}} separatorInset={false} />
+      </List>
+    </div>
+  );
+}
+
+function ListNonInteractiveDemo() {
+  return (
+    <List>
+      <ListItem key="1" leadingIcon="info" title="Version" trailingText="1.0.0" />
+      <ListItem key="2" leadingIcon="info" title="Build" trailingText="42" />
+    </List>
+  );
+}
+
+function ListDisabledDemo() {
+  return (
+    <List>
+      <ListItem key="1" leadingIcon="bell" title="Available" onClick={() => {}} />
       <ListItem
-        key="a"
-        leadingIcon="calendar"
-        title="Team sync"
-        subtitle="Swipe (touch) or hover (desktop) to reveal actions"
+        key="2"
+        leadingIcon="bell"
+        title="Unavailable (disabled)"
         onClick={() => {}}
-        leadingAction={{
-          icon: "check",
-          label: "Done",
-          color: "tint",
-          onAction: () => {},
-        }}
+        disabled
+      />
+    </List>
+  );
+}
+
+function ListTrailingActionsDemo() {
+  return (
+    <List>
+      <ListItem
+        key="1"
+        leadingIcon="bell"
+        title="Swipe or hover this row"
+        subtitle="Reveals Archive + Delete"
         trailingActions={[
           {
-            icon: "circle-alert",
-            label: "Flag",
-            color: "warning",
+            icon: "download",
+            label: "Archive",
+            color: "default",
             onAction: () => {},
           },
           {
@@ -1170,14 +1308,85 @@ function ListSwipeActionsDemo() {
   );
 }
 
-function ListContextMenuDemo() {
+function ListLeadingActionDemo() {
   return (
-    <List style="grouped">
+    <List>
       <ListItem
-        key="b"
-        leadingIcon="user"
-        title="Contact"
-        subtitle="Long-press or right-click for options"
+        key="1"
+        leadingIcon="bell"
+        title="Swipe right to mark read"
+        leadingAction={{
+          icon: "check",
+          label: "Read",
+          color: "tint",
+          onAction: () => {},
+        }}
+      />
+    </List>
+  );
+}
+
+function ListCollapsedTrailingActionsDemo() {
+  return (
+    <List>
+      <ListItem
+        key="1"
+        title="Hover, then click the ... trigger"
+        subtitle="Reveals Flag + Archive + Delete"
+        trailingActions={[
+          { icon: "star", label: "Flag", color: "warning", onAction: () => {} },
+          {
+            icon: "download",
+            label: "Archive",
+            color: "default",
+            onAction: () => {},
+          },
+          {
+            icon: "trash",
+            label: "Delete",
+            color: "destructive",
+            onAction: () => {},
+          },
+        ]}
+      />
+    </List>
+  );
+}
+
+function ListConfirmActionDemo() {
+  return (
+    <List>
+      <ListItem
+        key="1"
+        title="Tap Delete, then tap it again"
+        subtitle="Tapping outside cancels instead"
+        trailingActions={[
+          {
+            icon: "download",
+            label: "Archive",
+            color: "default",
+            onAction: () => {},
+          },
+          {
+            icon: "trash",
+            label: "Delete",
+            color: "destructive",
+            onAction: () => {},
+            confirm: true,
+          },
+        ]}
+      />
+    </List>
+  );
+}
+
+function ListWithContextMenuDemo() {
+  return (
+    <List>
+      <ListItem
+        key="1"
+        leadingIcon="bell"
+        title="Right-click me (or long-press on touch)"
         contextMenuItems={[
           {
             type: "action",
@@ -1185,6 +1394,7 @@ function ListContextMenuDemo() {
             label: "Duplicate",
             onSelect: () => {},
           },
+          { type: "action", icon: "share", label: "Share", onSelect: () => {} },
           { type: "separator" },
           {
             type: "action",
@@ -1195,13 +1405,173 @@ function ListContextMenuDemo() {
           },
         ]}
       />
+      <ListItem key="2" leadingIcon="user" title="No context menu on this row" />
     </List>
+  );
+}
+
+function ListAddRemoveDemo() {
+  const [items, setItems] = useState([
+    { id: 1, title: "First item" },
+    { id: 2, title: "Second item" },
+    { id: 3, title: "Third item" },
+  ]);
+  const nextId = useRef(4);
+  return (
+    <div className="w-80">
+      <Button
+        variant="tinted"
+        size="sm"
+        className="mb-(--space-3)"
+        onClick={() =>
+          setItems((prev) => [
+            ...prev,
+            { id: nextId.current, title: `Item ${nextId.current++}` },
+          ])
+        }
+      >
+        Add item
+      </Button>
+      <List>
+        {items.map((item) => (
+          <ListItem
+            key={item.id}
+            title={item.title}
+            trailingActions={[
+              {
+                icon: "trash",
+                label: "Delete",
+                color: "destructive",
+                onAction: () =>
+                  setItems((prev) => prev.filter((i) => i.id !== item.id)),
+                confirm: true,
+              },
+              {
+                icon: "share",
+                label: "Share",
+                color: "tint",
+                onAction() {},
+              },
+              {
+                icon: "star",
+                label: "Flag",
+                color: "warning",
+                onAction() {},
+              },
+            ]}
+          />
+        ))}
+      </List>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ListItemContent
+// ---------------------------------------------------------------------------
+
+function ListItemContentDefaultDemo() {
+  return (
+    <div className="w-72">
+      <ListItemContent
+        leadingIcon="bell"
+        title="Notifications"
+        subtitle="On for messages and calls"
+      />
+    </div>
+  );
+}
+
+function ListItemContentTrailingIconDemo() {
+  return (
+    <div className="w-72">
+      <ListItemContent
+        leadingIcon="settings"
+        title="Settings"
+        trailing={<Icon name="chevron-right" size="sm" />}
+      />
+    </div>
+  );
+}
+
+function ListItemContentTrailingTextDemo() {
+  return (
+    <div className="w-72">
+      <ListItemContent
+        leadingIcon="user"
+        title="Account"
+        trailing={
+          <Text textStyle="body" color="secondary">
+            Personal
+          </Text>
+        }
+      />
+    </div>
+  );
+}
+
+function ListItemContentSelectedDemo() {
+  return (
+    <div className="w-72">
+      <ListItemContent
+        title="Newest first"
+        trailing={<Icon name="check" size="sm" color="tint" />}
+      />
+    </div>
+  );
+}
+
+function ListItemContentNoLeadingIconDemo() {
+  return (
+    <div className="w-72">
+      <ListItemContent title="Plain title" subtitle="No leading icon" />
+    </div>
+  );
+}
+
+function ListItemContentTruncationDemo() {
+  return (
+    <div className="w-48">
+      <ListItemContent
+        leadingIcon="bell"
+        title="A very long title that should truncate with an ellipsis"
+        subtitle="A very long subtitle that should also truncate with an ellipsis"
+        trailing={<Icon name="chevron-right" size="sm" />}
+      />
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
 // Dropdown
 // ---------------------------------------------------------------------------
+
+// Long enough to overflow the menu's own max-height (dropdownContentClassName/
+// contextMenuContentClassName's own --radix-<family>-content-available-height
+// cap, menu-core.tsx) on most viewports, so the content scrolls internally --
+// with the submenu row placed after it,
+// reaching it at compact size requires scrolling to the bottom first. Shared
+// by both Dropdown's and ContextMenu's "Long list" demos below since they're
+// exercising the same compact-mode scroll-to-top-then-slide behavior
+// (compact-menu.tsx's useMenuStack, shared by both components).
+const LONG_LIST_ITEMS: DropdownItemDef[] = [
+  ...Array.from({ length: 24 }, (_, index) => ({
+    type: "action" as const,
+    label: `Row ${index + 1}`,
+    onSelect: () => {},
+  })),
+  { type: "separator" },
+  {
+    type: "submenu",
+    icon: "download",
+    label: "More options",
+    items: [
+      { type: "action", label: "Export as PDF", onSelect: () => {} },
+      { type: "action", label: "Export as CSV", onSelect: () => {} },
+      { type: "action", label: "Print", onSelect: () => {} },
+    ],
+  },
+];
 
 function DropdownActionsDemo() {
   return (
@@ -1271,6 +1641,19 @@ function DropdownCheckboxRadioSubmenuDemo() {
           ],
         },
       ]}
+    />
+  );
+}
+
+function DropdownLongListDemo() {
+  return (
+    <Dropdown
+      trigger={
+        <Button variant="plain" trailingIcon="chevron-down">
+          Long list
+        </Button>
+      }
+      items={LONG_LIST_ITEMS}
     />
   );
 }
@@ -1349,6 +1732,22 @@ function ContextMenuSubmenuDemo() {
   );
 }
 
+function ContextMenuLongListDemo() {
+  return (
+    <ContextMenu items={LONG_LIST_ITEMS}>
+      <Flex
+        align="center"
+        justify="center"
+        className="h-32 w-full rounded-md border border-dashed border-separator"
+      >
+        <Text textStyle="footnote" color="secondary">
+          Right-click this area
+        </Text>
+      </Flex>
+    </ContextMenu>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Registry -- keyed by component-registry slug. Kept module-private -- a
 // Server Component that imports and indexes a plain object exported from a
@@ -1357,7 +1756,23 @@ function ContextMenuSubmenuDemo() {
 // inside a client component instead. See ComponentDemo below.
 // ---------------------------------------------------------------------------
 
-function AlertDemoBasic() {
+function AlertDemoSingleAction() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Check for Updates</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="You're up to date"
+        description="Contour 2.4 is currently the newest version available."
+        actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoTwoActions() {
   const [open, setOpen] = useState(false);
   return (
     <div className="p-4 flex justify-center">
@@ -1371,6 +1786,41 @@ function AlertDemoBasic() {
           { label: "Cancel", role: "cancel", onClick: () => {} },
           { label: "Delete", role: "destructive", emphasized: true, onClick: () => {} }
         ]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoThreeActions() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Save Changes</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="Save changes before closing?"
+        description="Your edits will be lost if you don't save them."
+        actions={[
+          { label: "Discard Changes", role: "destructive", onClick: () => {} },
+          { label: "Save", emphasized: true, onClick: () => {} },
+          { label: "Cancel", role: "cancel", onClick: () => {} },
+        ]}
+      />
+    </div>
+  );
+}
+
+function AlertDemoTitleOnly() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="p-4 flex justify-center">
+      <Button onClick={() => setOpen(true)}>Copy Link</Button>
+      <Alert
+        open={open}
+        onOpenChange={setOpen}
+        title="Link copied to clipboard"
+        actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}
       />
     </div>
   );
@@ -1551,11 +2001,32 @@ function SheetDemoSnapPoints() {
 const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
   alert: [
     {
-      title: "Basic Alert",
-      description: "A two-action alert with a destructive action.",
+      title: "Single action",
+      description:
+        "1 action stacks full-width -- no row layout with just one button.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="You're up to date"\n  description="Contour 2.4 is currently the newest version available."\n  actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}\n/>`,
+      Component: AlertDemoSingleAction,
+    },
+    {
+      title: "Two actions",
+      description:
+        "2 actions lay out side by side, split 50/50 with a vertical separator. The cancel action always sits on the right.",
       code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Delete this item?"\n  description="This action cannot be undone."\n  actions={[\n    { label: "Cancel", role: "cancel", onClick: () => {} },\n    { label: "Delete", role: "destructive", emphasized: true, onClick: () => {} }\n  ]}\n/>`,
-      Component: AlertDemoBasic,
-    }
+      Component: AlertDemoTwoActions,
+    },
+    {
+      title: "Three actions",
+      description:
+        "3+ actions stack in a column instead of a row. The cancel action always sits at the bottom regardless of its position in the actions array.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Save changes before closing?"\n  description="Your edits will be lost if you don't save them."\n  actions={[\n    { label: "Discard Changes", role: "destructive", onClick: () => {} },\n    { label: "Save", emphasized: true, onClick: () => {} },\n    { label: "Cancel", role: "cancel", onClick: () => {} },\n  ]}\n/>`,
+      Component: AlertDemoThreeActions,
+    },
+    {
+      title: "Title only",
+      description: "description is optional -- omit it for a title-only alert.",
+      code: `<Alert\n  open={open}\n  onOpenChange={setOpen}\n  title="Link copied to clipboard"\n  actions={[{ label: "OK", role: "cancel", onClick: () => {} }]}\n/>`,
+      Component: AlertDemoTitleOnly,
+    },
   ],
   toast: [
     {
@@ -1648,6 +2119,33 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
     },
   ],
 
+  "scroll-rail": [
+    {
+      title: "Horizontal (default)",
+      description: "Arrows appear only once content actually overflows, and fade out again at the resting edge.",
+      code: `<ScrollRail>\n  {items.map((item) => (\n    <Chip key={item}>{item}</Chip>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailHorizontalDemo,
+    },
+    {
+      title: "Vertical",
+      description: 'orientation="vertical" flips the scroll axis, edge-fade, and arrow direction.',
+      code: `<ScrollRail orientation="vertical">\n  {items.map((item) => (\n    <Chip key={item}>{item}</Chip>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailVerticalDemo,
+    },
+    {
+      title: "Scroll an item into view (horizontal)",
+      description: "activeIndex centers the corresponding child -- e.g. keep the active tab or segment visible as the list scrolls.",
+      code: `<ScrollRail activeIndex={activeIndex}>\n  {items.map((item, index) => (\n    <button key={item} onClick={() => setActiveIndex(index)}>\n      <Chip active={index === activeIndex}>{item}</Chip>\n    </button>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailActiveIndexHorizontalDemo,
+    },
+    {
+      title: "Scroll an item into view (vertical)",
+      description: "Same activeIndex centering, on the vertical axis.",
+      code: `<ScrollRail activeIndex={activeIndex} orientation="vertical">\n  {items.map((item, index) => (\n    <button key={item} onClick={() => setActiveIndex(index)}>\n      <Chip active={index === activeIndex}>{item}</Chip>\n    </button>\n  ))}\n</ScrollRail>`,
+      Component: ScrollRailActiveIndexVerticalDemo,
+    },
+  ],
+
   "nav-bar": [
     {
       title: "Compact, with actions",
@@ -1677,6 +2175,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       code: `<TabBar\n  items={[\n    { icon: "home", label: "Home" },\n    { icon: "search", label: "Search" },\n    { icon: "bell", label: "Alerts", badge: 3 },\n    { icon: "user", label: "Profile" },\n  ]}\n  value={value}\n  onValueChange={setValue}\n/>`,
       Component: TabBarDemo,
       sizeClassPreview: true,
+    },
+  ],
+
+  sidebar: [
+    {
+      title: "Navigation column",
+      code: `<Sidebar\n  items={[\n    { value: "home", icon: "home", label: "Home" },\n    { value: "search", icon: "search", label: "Search" },\n    { value: "alerts", icon: "bell", label: "Alerts", badge: 3 },\n    { value: "profile", icon: "user", label: "Profile" },\n  ]}\n  value={value}\n  onValueChange={setValue}\n/>`,
+      Component: SidebarDemo,
     },
   ],
 
@@ -1975,22 +2481,101 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
   list: [
     {
       title: "Plain",
+      description:
+        'style="plain" (default): full-width rows, fixed row padding. Separators are inset by default -- they start after the leading icon.',
       code: `<List>\n  <ListItem leadingIcon="bell" title="Notifications" subtitle="On for messages and calls" onClick={onOpen} />\n  <ListItem leadingIcon="user" title="Account" trailingIcon="chevron-right" onClick={onOpen} />\n  <ListItem leadingIcon="settings" title="Settings" trailingText="3 updates" onClick={onOpen} />\n</List>`,
       Component: ListPlainDemo,
     },
     {
-      title: "Grouped, with swipe actions",
+      title: "Grouped",
       description:
-        "Swipe (touch) or hover the row (desktop) to reveal leadingAction/trailingActions.",
-      code: `<List style="grouped">\n  <ListItem\n    leadingIcon="calendar"\n    title="Team sync"\n    onClick={onOpen}\n    leadingAction={{ icon: "check", label: "Done", color: "tint", onAction: onDone }}\n    trailingActions={[\n      { icon: "circle-alert", label: "Flag", color: "warning", onAction: onFlag },\n      { icon: "trash", label: "Delete", color: "destructive", onAction: onDelete },\n    ]}\n  />\n</List>`,
-      Component: ListSwipeActionsDemo,
+        'style="grouped": rounded card boundary with responsive edge margin. separatorInset={false} on the last row removes its inset separator.',
+      code: `<List style="grouped">\n  <ListItem title="Wi-Fi" trailingText="Home" onClick={onOpen} />\n  <ListItem title="Bluetooth" trailingText="On" onClick={onOpen} />\n  <ListItem title="Cellular" onClick={onOpen} separatorInset={false} />\n</List>`,
+      Component: ListGroupedDemo,
     },
     {
-      title: "Context menu",
+      title: "Non-interactive",
+      description: "Omit onClick for a display-only row -- no hover/active states or button semantics.",
+      code: `<List>\n  <ListItem leadingIcon="info" title="Version" trailingText="1.0.0" />\n  <ListItem leadingIcon="info" title="Build" trailingText="42" />\n</List>`,
+      Component: ListNonInteractiveDemo,
+    },
+    {
+      title: "Disabled",
+      code: `<List>\n  <ListItem leadingIcon="bell" title="Available" onClick={onOpen} />\n  <ListItem leadingIcon="bell" title="Unavailable" onClick={onOpen} disabled />\n</List>`,
+      Component: ListDisabledDemo,
+    },
+    {
+      title: "Trailing actions",
       description:
-        "Long-press (touch) or right-click (desktop) a row with contextMenuItems set.",
-      code: `<List style="grouped">\n  <ListItem\n    leadingIcon="user"\n    title="Contact"\n    contextMenuItems={[\n      { type: "action", icon: "copy", label: "Duplicate", onSelect: onDuplicate },\n      { type: "separator" },\n      { type: "action", icon: "trash", label: "Delete", role: "destructive", onSelect: onDelete },\n    ]}\n  />\n</List>`,
-      Component: ListContextMenuDemo,
+        "Touch: swipe to reveal. Desktop: hover/focus-within reveals. Max 3 -- extras beyond the 3rd are ignored. The destructive action is last so a full-swipe commit triggers it, not a lighter action.",
+      code: `<List>\n  <ListItem\n    leadingIcon="bell"\n    title="Swipe or hover this row"\n    subtitle="Reveals Archive + Delete"\n    trailingActions={[\n      { icon: "download", label: "Archive", color: "default", onAction: onArchive },\n      { icon: "trash", label: "Delete", color: "destructive", onAction: onDelete },\n    ]}\n  />\n</List>`,
+      Component: ListTrailingActionsDemo,
+    },
+    {
+      title: "Leading action",
+      description: "leadingAction reveals on swipe right (touch) or hover (desktop) -- for a single quick action like mark-as-read.",
+      code: `<List>\n  <ListItem\n    leadingIcon="bell"\n    title="Swipe right to mark read"\n    leadingAction={{ icon: "check", label: "Read", color: "tint", onAction: onRead }}\n  />\n</List>`,
+      Component: ListLeadingActionDemo,
+    },
+    {
+      title: "Collapsed trailing actions",
+      description:
+        'At exactly 3 trailing actions, desktop hover reveals a single "..." trigger instead of all 3 in place -- clicking it reveals all 3 the same way the 1-2 action case does. Touch still swipe-reveals all 3 directly, unaffected.',
+      code: `<List>\n  <ListItem\n    title="Hover, then click the ... trigger"\n    subtitle="Reveals Flag + Archive + Delete"\n    trailingActions={[\n      { icon: "star", label: "Flag", color: "warning", onAction: onFlag },\n      { icon: "download", label: "Archive", color: "default", onAction: onArchive },\n      { icon: "trash", label: "Delete", color: "destructive", onAction: onDelete },\n    ]}\n  />\n</List>`,
+      Component: ListCollapsedTrailingActionsDemo,
+    },
+    {
+      title: "Confirm action",
+      description:
+        "confirm: true on a SwipeAction arms instead of running immediately: the tapped action expands to fill the row and everything else fades out. Tapping it again runs onAction; tapping outside or Escape cancels back to the normal row.",
+      code: `<List>\n  <ListItem\n    title="Tap Delete, then tap it again"\n    subtitle="Tapping outside cancels instead"\n    trailingActions={[\n      { icon: "download", label: "Archive", color: "default", onAction: onArchive },\n      { icon: "trash", label: "Delete", color: "destructive", onAction: onDelete, confirm: true },\n    ]}\n  />\n</List>`,
+      Component: ListConfirmActionDemo,
+    },
+    {
+      title: "With context menu",
+      description:
+        "Right-click on desktop; long-press (~500ms) on touch. Separate from trailingActions -- swipe is for 1-2 quick actions, this is the full menu.",
+      code: `<List>\n  <ListItem\n    leadingIcon="bell"\n    title="Right-click me (or long-press on touch)"\n    contextMenuItems={[\n      { type: "action", icon: "copy", label: "Duplicate", onSelect: onDuplicate },\n      { type: "action", icon: "share", label: "Share", onSelect: onShare },\n      { type: "separator" },\n      { type: "action", icon: "trash", label: "Delete", role: "destructive", onSelect: onDelete },\n    ]}\n  />\n  <ListItem leadingIcon="user" title="No context menu on this row" />\n</List>`,
+      Component: ListWithContextMenuDemo,
+    },
+    {
+      title: "Add / remove",
+      description: "Rows animate in and out on add/remove via AnimatePresence + layout.",
+      code: `<List>\n  {items.map((item) => (\n    <ListItem\n      key={item.id}\n      title={item.title}\n      trailingActions={[\n        { icon: "trash", label: "Delete", color: "destructive", onAction: () => removeItem(item.id), confirm: true },\n        { icon: "share", label: "Share", color: "tint", onAction: onShare },\n        { icon: "star", label: "Flag", color: "warning", onAction: onFlag },\n      ]}\n    />\n  ))}\n</List>`,
+      Component: ListAddRemoveDemo,
+    },
+    {
+      title: "ListItemContent: Default",
+      description:
+        "ListItemContent is presentational only -- shared by ListItem's interactive shell and Dropdown's DropdownMenu.Item so neither stacks a second layer of interactivity.",
+      code: `<ListItemContent leadingIcon="bell" title="Notifications" subtitle="On for messages and calls" />`,
+      Component: ListItemContentDefaultDemo,
+    },
+    {
+      title: "ListItemContent: With trailing icon",
+      code: `<ListItemContent leadingIcon="settings" title="Settings" trailing={<Icon name="chevron-right" size="sm" />} />`,
+      Component: ListItemContentTrailingIconDemo,
+    },
+    {
+      title: "ListItemContent: With trailing text",
+      code: `<ListItemContent\n  leadingIcon="user"\n  title="Account"\n  trailing={<Text textStyle="body" color="secondary">Personal</Text>}\n/>`,
+      Component: ListItemContentTrailingTextDemo,
+    },
+    {
+      title: "ListItemContent: Selected",
+      description: "Used for a selected Dropdown item -- trailing is a check mark.",
+      code: `<ListItemContent title="Newest first" trailing={<Icon name="check" size="sm" color="tint" />} />`,
+      Component: ListItemContentSelectedDemo,
+    },
+    {
+      title: "ListItemContent: No leading icon",
+      code: `<ListItemContent title="Plain title" subtitle="No leading icon" />`,
+      Component: ListItemContentNoLeadingIconDemo,
+    },
+    {
+      title: "ListItemContent: Truncation",
+      code: `<ListItemContent\n  leadingIcon="bell"\n  title="A very long title that should truncate with an ellipsis"\n  subtitle="A very long subtitle that should also truncate with an ellipsis"\n  trailing={<Icon name="chevron-right" size="sm" />}\n/>`,
+      Component: ListItemContentTruncationDemo,
     },
   ],
 
@@ -2008,6 +2593,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       Component: DropdownCheckboxRadioSubmenuDemo,
       sizeClassPreview: true,
     },
+    {
+      title: "Long list (scroll)",
+      description:
+        "24 rows plus a submenu at the very bottom, past the menu's own max-height. Switch to Compact below, scroll to the bottom, then open the submenu -- it scrolls back to the top before sliding in, instead of the incoming screen starting pre-scrolled.",
+      code: `<Dropdown\n  trigger={<Button variant="plain" trailingIcon="chevron-down">Long list</Button>}\n  items={[\n    { type: "action", label: "Row 1", onSelect: onSelectRow },\n    { type: "action", label: "Row 2", onSelect: onSelectRow },\n    // ...\n    { type: "action", label: "Row 24", onSelect: onSelectRow },\n    { type: "separator" },\n    {\n      type: "submenu",\n      icon: "download",\n      label: "More options",\n      items: [\n        { type: "action", label: "Export as PDF", onSelect: onExportPdf },\n        { type: "action", label: "Export as CSV", onSelect: onExportCsv },\n        { type: "action", label: "Print", onSelect: onPrint },\n      ],\n    },\n  ]}\n/>`,
+      Component: DropdownLongListDemo,
+      sizeClassPreview: true,
+    },
   ],
 
   "context-menu": [
@@ -2020,6 +2613,14 @@ const COMPONENT_DEMOS: Record<string, DemoExample[]> = {
       title: "With submenu",
       code: `<ContextMenu\n  items={[\n    {\n      type: "submenu",\n      icon: "download",\n      label: "Export",\n      items: [\n        { type: "action", label: "PDF", onSelect: onExportPdf },\n        { type: "action", label: "CSV", onSelect: onExportCsv },\n      ],\n    },\n    { type: "separator" },\n    { type: "action", icon: "trash", label: "Delete", role: "destructive", onSelect: onDelete },\n  ]}\n>\n  <div>Right-click this area</div>\n</ContextMenu>`,
       Component: ContextMenuSubmenuDemo,
+    },
+    {
+      title: "Long list (scroll)",
+      description:
+        "Same 24 rows + trailing submenu as Dropdown's long-list demo, and the same shared scroll-to-top-then-slide behavior (compact-menu.tsx's useMenuStack). Switch to Compact below, right-click the area, scroll to the bottom, then open the submenu.",
+      code: `<ContextMenu\n  items={[\n    { type: "action", label: "Row 1", onSelect: onSelectRow },\n    { type: "action", label: "Row 2", onSelect: onSelectRow },\n    // ...\n    { type: "action", label: "Row 24", onSelect: onSelectRow },\n    { type: "separator" },\n    {\n      type: "submenu",\n      icon: "download",\n      label: "More options",\n      items: [\n        { type: "action", label: "Export as PDF", onSelect: onExportPdf },\n        { type: "action", label: "Export as CSV", onSelect: onExportCsv },\n        { type: "action", label: "Print", onSelect: onPrint },\n      ],\n    },\n  ]}\n>\n  <div>Right-click this area</div>\n</ContextMenu>`,
+      Component: ContextMenuLongListDemo,
+      sizeClassPreview: true,
     },
   ],
 

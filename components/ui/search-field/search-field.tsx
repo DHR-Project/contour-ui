@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
@@ -11,13 +11,15 @@ import { ListItemContent } from "@/components/ui/list";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { Text } from "@/components/ui/text";
+import { Button } from "../button";
 
 export interface SearchFieldResult {
   id: string;
-  label: string;
+  /** Usually a string; accepts ReactNode too (e.g. a caller highlighting the matched substring). */
+  label: ReactNode;
   icon?: IconName;
   /** Forwarded to ListItemContent's own subtitle slot (e.g. a category label). */
-  subtitle?: string;
+  subtitle?: ReactNode;
 }
 
 export interface SearchFieldProps {
@@ -27,6 +29,8 @@ export interface SearchFieldProps {
   onSearch?: (value: string) => void;
   /** Cancel = auto clear + blur, then this callback -- one combined gesture, not a plain click. */
   onCancel?: () => void;
+  /** Whether the Cancel button (field-adjacent when idle, popover-header when results are open) renders at all. Default true. Set false for standalone-page usage (e.g. a dedicated /search route) where leaving the field or navigating away is already the "cancel" affordance. */
+  showCancel?: boolean;
   placeholder?: string;
   debounceMs?: number;
   autoFocus?: boolean;
@@ -59,9 +63,18 @@ const containerVariants = {
 // content doesn't bounce, entering content does; per-variant `transition`
 // lets AnimatePresence apply each independently.
 const contentVariants = {
-  exit: { opacity: 0, filter: "blur(4px)", transition: { duration: durations.fast } },
+  exit: {
+    opacity: 0,
+    filter: "blur(4px)",
+    transition: { duration: durations.fast },
+  },
   enter: { opacity: 0, filter: "blur(4px)", scale: 0.96 },
-  center: { opacity: 1, filter: "blur(0px)", scale: 1, transition: springs.bouncy },
+  center: {
+    opacity: 1,
+    filter: "blur(0px)",
+    scale: 1,
+    transition: springs.bouncy,
+  },
 };
 
 export function SearchField({
@@ -69,6 +82,7 @@ export function SearchField({
   onValueChange,
   onSearch,
   onCancel,
+  showCancel = true,
   placeholder = "Search",
   debounceMs = 300,
   autoFocus,
@@ -87,7 +101,19 @@ export function SearchField({
   const [dismissed, setDismissed] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Option nodes keyed by index, populated via callback ref below -- lets the
+  // scroll-into-view effect (see handleKeyDown) reach the highlighted row's
+  // DOM node without a ref array sized to `results.length`.
+  const optionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Distinguishes a keyboard-driven highlight change (should scroll the row
+  // into view) from a mouse-hover one (shouldn't -- the row is already
+  // visible, that's how the pointer got there; auto-scrolling on hover would
+  // fight the user's own scroll position).
+  const highlightSourceRef = useRef<"keyboard" | "pointer">("keyboard");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const reducedMotion = useReducedMotion();
 
   // Measures the Cancel button's own (static) rendered width once, so its
@@ -96,15 +122,33 @@ export function SearchField({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [cancelWidth, setCancelWidth] = useState(0);
   useLayoutEffect(() => {
-    if (cancelRef.current) setCancelWidth(cancelRef.current.getBoundingClientRect().width);
+    if (cancelRef.current)
+      setCancelWidth(cancelRef.current.getBoundingClientRect().width);
   }, []);
+
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(0);
 
   const generatedId = useId();
   const listboxId = `searchfield-listbox-${generatedId}`;
   const highlightLayoutId = `searchfield-highlight-${generatedId}`;
 
-  const showPopover = focused && !dismissed && (loading || results !== undefined);
+  const showPopover =
+    focused && !dismissed && (loading || results !== undefined);
   const hasResults = results !== undefined && results.length > 0;
+
+  // Measures the popover's own sticky Cancel header (present only inside the
+  // popover, when showCancel) so option rows can reserve that much
+  // scroll-margin-top -- otherwise scrollIntoView would happily park a
+  // keyboard-highlighted row right under the sticky header instead of below
+  // it. Re-measures whenever the header (re)mounts, since it's conditionally
+  // rendered rather than always-present like the field-side Cancel button.
+  useLayoutEffect(() => {
+    if (stickyHeaderRef.current)
+      setStickyHeaderHeight(
+        stickyHeaderRef.current.getBoundingClientRect().height,
+      );
+  }, [showPopover, showCancel]);
   const contentKey = loading
     ? "loading"
     : !results
@@ -130,6 +174,49 @@ export function SearchField({
     debounceRef.current = setTimeout(() => onSearch(value), debounceMs);
     return () => clearTimeout(debounceRef.current);
   }, [value, debounceMs, onSearch]);
+
+  // Caps the popover at the real available space instead of a flat 60vh:
+  // on mobile browsers, `vh` reflects the layout viewport, which does not shrink
+  // when the on-screen keyboard covers part of the screen, so a field docked
+  // near the bottom (resultsPlacement="above") would let the popover grow up
+  // past the top of what's actually visible. `visualViewport` tracks the
+  // keyboard-shrunk area, and getBoundingClientRect() is visual-viewport-
+  // relative in modern browsers, so this stays correct as the keyboard
+  // opens/closes.
+  const [maxPopoverHeight, setMaxPopoverHeight] = useState<number | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    if (!showPopover) return;
+
+    const gap = 8; // matches the --space-2 gap between the field and popover
+    const margin = 16; // breathing room so the popover never touches the screen edge
+
+    function recompute() {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const viewportHeight =
+        window.visualViewport?.height ?? window.innerHeight;
+      const available =
+        resultsPlacement === "above"
+          ? rect.top - gap - margin
+          : viewportHeight - rect.bottom - gap - margin;
+      setMaxPopoverHeight(
+        Math.max(0, Math.min(available, viewportHeight * 0.6)),
+      );
+    }
+
+    recompute();
+    window.visualViewport?.addEventListener("resize", recompute);
+    window.visualViewport?.addEventListener("scroll", recompute);
+    window.addEventListener("resize", recompute);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", recompute);
+      window.visualViewport?.removeEventListener("scroll", recompute);
+      window.removeEventListener("resize", recompute);
+    };
+  }, [showPopover, resultsPlacement]);
 
   function handleValueChange(next: string) {
     setDismissed(false);
@@ -185,11 +272,17 @@ export function SearchField({
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
-        setHighlightedIndex((prev) => (prev === null || prev === results!.length - 1 ? 0 : prev + 1));
+        highlightSourceRef.current = "keyboard";
+        setHighlightedIndex((prev) =>
+          prev === null || prev === results!.length - 1 ? 0 : prev + 1,
+        );
         break;
       case "ArrowUp":
         event.preventDefault();
-        setHighlightedIndex((prev) => (prev === null || prev === 0 ? results!.length - 1 : prev - 1));
+        highlightSourceRef.current = "keyboard";
+        setHighlightedIndex((prev) =>
+          prev === null || prev === 0 ? results!.length - 1 : prev - 1,
+        );
         break;
       case "Enter":
         if (highlightedIndex === null) {
@@ -202,15 +295,35 @@ export function SearchField({
     }
   }
 
+  // Keeps the highlighted row in view as ArrowUp/ArrowDown move it past the
+  // popover's own scroll boundary. Skipped for hover-driven changes (see
+  // highlightSourceRef) since the row is already visible in that case.
+  useLayoutEffect(() => {
+    if (highlightedIndex === null) return;
+    if (highlightSourceRef.current !== "keyboard") return;
+    optionRefs.current
+      .get(highlightedIndex)
+      ?.scrollIntoView({ block: "center" });
+  }, [highlightedIndex]);
+
   const containerTransition = reducedMotion ? { duration: 0 } : springs.snappy;
 
   const cancelTransition = reducedMotion ? { duration: 0 } : springs.smooth;
+
+  // Cancel lives beside the field only while there's no popover to hold it --
+  // once results/loading/empty is showing, it moves into the popover's own
+  // sticky header instead (see the popover render below) so it doesn't sit
+  // apart from the content it's dismissing.
+  const showFieldCancel = showCancel && focused && !showPopover;
 
   return (
     // `relative` here (not just around the field) so the popover below can
     // span the full row -- field + gap + Cancel -- instead of just the
     // field's own (shrunk-when-focused) width.
-    <div className={cn("relative flex items-center gap-(--space-2)", className)}>
+    <div
+      ref={containerRef}
+      className={cn("relative flex items-center gap-(--space-2)", className)}
+    >
       <div className="min-w-0 flex-1">
         <TextField
           ref={inputRef}
@@ -233,7 +346,9 @@ export function SearchField({
           aria-expanded={showPopover}
           aria-controls={listboxId}
           aria-activedescendant={
-            highlightedIndex !== null ? `${listboxId}-option-${highlightedIndex}` : undefined
+            highlightedIndex !== null
+              ? `${listboxId}-option-${highlightedIndex}`
+              : undefined
           }
         />
       </div>
@@ -244,7 +359,7 @@ export function SearchField({
           in step with it instead of snapping the instant Cancel mounts. */}
       <motion.div
         initial={{ width: 0 }}
-        animate={{ width: focused ? cancelWidth : 0 }}
+        animate={{ width: showFieldCancel ? cancelWidth : 0 }}
         transition={cancelTransition}
         className="shrink-0 overflow-hidden"
       >
@@ -252,10 +367,10 @@ export function SearchField({
           ref={cancelRef}
           type="button"
           onClick={handleCancel}
-          tabIndex={focused ? 0 : -1}
-          aria-hidden={!focused}
+          tabIndex={showFieldCancel ? 0 : -1}
+          aria-hidden={!showFieldCancel}
           initial={{ opacity: 0 }}
-          animate={{ opacity: focused ? 1 : 0 }}
+          animate={{ opacity: showFieldCancel ? 1 : 0 }}
           transition={cancelTransition}
           className="whitespace-nowrap text-subheadline font-medium text-tint"
         >
@@ -273,66 +388,108 @@ export function SearchField({
             transition={containerTransition}
             // max-h + overflow-y-auto: fits on screen with its own scroll
             // rather than running off it when there are many results.
+            // max-h-[60vh] is the design-intended soft cap; maxPopoverHeight
+            // (once measured) further clamps it to the real available space,
+            // which matters on mobile browsers where the keyboard shrinks the
+            // visible area without shrinking `vh` -- see the effect above.
             // contour-material (tokens.css SS2.3a): frosted glass, not a
             // flat panel, matching every other floating surface.
+            style={
+              maxPopoverHeight !== undefined
+                ? { maxHeight: maxPopoverHeight }
+                : undefined
+            }
             className={cn(
-              "absolute left-0 right-0 z-(--z-dropdown) max-h-[60vh] overflow-x-hidden overflow-y-auto rounded-lg border border-separator contour-material shadow-md",
+              "absolute left-0 right-0 z-(--z-dropdown) rounded-lg ring-1 ring-separator contour-material shadow-md",
               resultsPlacement === "above"
                 ? "bottom-[calc(100%+var(--space-2))]"
                 : "top-[calc(100%+var(--space-2))]",
             )}
           >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={contentKey}
-                variants={contentVariants}
-                initial={reducedMotion ? "center" : "enter"}
-                animate="center"
-                exit={reducedMotion ? "center" : "exit"}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center p-(--space-6)">
-                    {/* Progress isn't implemented yet (spec-only) -- same
+            <div className="overflow-x-hidden overflow-y-auto max-h-[60vh] h-full scroll-mask-b">
+              {/* Cancel's popover-open home (see showFieldCancel above) --
+                sticky so it stays reachable while the results list scrolls
+                underneath it; needs its own material background + z-index so
+                scrolled rows pass behind it instead of painting over it. */}
+              {showCancel && (
+                <div
+                  ref={stickyHeaderRef}
+                  className="sticky top-0 z-10 flex items-center justify-end rounded-t-lg border-b border-separator _contour-material px-(--space-3) py-(--space-2) backdrop-blur-2xl"
+                >
+                  <Button size="sm" variant="plain" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={contentKey}
+                  variants={contentVariants}
+                  initial={reducedMotion ? "center" : "enter"}
+                  animate="center"
+                  exit={reducedMotion ? "center" : "exit"}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center p-(--space-6)">
+                      {/* Progress isn't implemented yet (spec-only) -- same
                         spinner+animate-spin fallback Button uses for its
                         own loading state. */}
-                    <Icon name="spinner" size="md" className="animate-spin text-label-secondary" />
-                  </div>
-                ) : !results ? null : results.length === 0 ? (
-                  <div className="p-(--space-4)">
-                    <Text textStyle="footnote" color="secondary">
-                      {emptyMessage}
-                    </Text>
-                  </div>
-                ) : (
-                  <div role="listbox" id={listboxId} className="p-1.5">
-                    {results.map((result, index) => (
-                      <div
-                        key={result.id}
-                        id={`${listboxId}-option-${index}`}
-                        role="option"
-                        aria-selected={highlightedIndex === index}
-                        onMouseEnter={() => setHighlightedIndex(index)}
-                        onClick={() => selectResult(index)}
-                        className="relative flex cursor-default items-center rounded-sm px-(--menu-item-padding-sides) py-(--menu-item-padding-y)"
-                      >
-                        {highlightedIndex === index && (
-                          <motion.div
-                            layoutId={highlightLayoutId}
-                            transition={springs.smooth}
-                            className="absolute inset-0 rounded-sm bg-fill-quaternary"
+                      <Icon
+                        name="spinner"
+                        size="md"
+                        className="animate-spin text-label-secondary"
+                      />
+                    </div>
+                  ) : !results ? null : results.length === 0 ? (
+                    <div className="p-(--space-4)">
+                      <Text textStyle="footnote" color="secondary">
+                        {emptyMessage}
+                      </Text>
+                    </div>
+                  ) : (
+                    <div role="listbox" id={listboxId} className="p-1.5">
+                      {results.map((result, index) => (
+                        <div
+                          key={result.id}
+                          ref={(el) => {
+                            if (el) optionRefs.current.set(index, el);
+                            else optionRefs.current.delete(index);
+                          }}
+                          id={`${listboxId}-option-${index}`}
+                          role="option"
+                          aria-selected={highlightedIndex === index}
+                          onMouseEnter={() => {
+                            highlightSourceRef.current = "pointer";
+                            setHighlightedIndex(index);
+                          }}
+                          onClick={() => selectResult(index)}
+                          style={
+                            showCancel
+                              ? { scrollMarginTop: stickyHeaderHeight }
+                              : undefined
+                          }
+                          className="relative flex cursor-default items-center rounded-sm px-(--menu-item-padding-sides) py-(--menu-item-padding-y)"
+                        >
+                          {highlightedIndex === index && (
+                            <motion.div
+                              layoutId={highlightLayoutId}
+                              transition={springs.smooth}
+                              className="absolute inset-0 rounded-sm bg-fill-quaternary"
+                            />
+                          )}
+                          <ListItemContent
+                            leadingIcon={result.icon}
+                            title={result.label}
+                            subtitle={result.subtitle}
                           />
-                        )}
-                        <ListItemContent
-                          leadingIcon={result.icon}
-                          title={result.label}
-                          subtitle={result.subtitle}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

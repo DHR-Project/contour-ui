@@ -22,7 +22,7 @@ export interface ProgressiveBlurProps {
 // ones: CSS can't vary blur radius across a gradient, so this relies on the
 // mask's alpha fade to read as "progressive" instead of banding discrete
 // blur amounts together (see tokens.css for the accessibility overrides).
-const MAX_BLUR_PX = 20;
+const MAX_BLUR_PX = "var(--progressive-blur-max, 4px)";
 // Solid for the inner half of the band, fading over the outer half -- mirrors
 // the reference recipe (mask-image: linear-gradient(color 50%, transparent)).
 const FADE_STOP = "50%";
@@ -45,7 +45,7 @@ export function ProgressiveBlur({
     clampedIntensity * (reducedMotion ? 1 : velocityFactor);
   // Opaque toward the bar's own screen edge, fading toward the content side.
   const gradientDirection = position === "top" ? "to bottom" : "to top";
-  const blur = `blur(${MAX_BLUR_PX}px)`;
+  const blur = `blur(${MAX_BLUR_PX})`;
   const mask = `linear-gradient(${gradientDirection}, black ${FADE_STOP}, transparent)`;
   // Rides the same fade as the mask -- the masked blur alone reads as too
   // see-through right where it's weakest, since the mask only fades the

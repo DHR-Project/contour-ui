@@ -4,6 +4,7 @@ import {
   DocsSubsection,
   DocsCallout,
   DocsCode,
+  DocsTable,
 } from "@/components/docs/docs-ui";
 import { Text } from "@/components/ui/text";
 
@@ -138,6 +139,47 @@ export default function GuidelinesPage() {
 
       {/* §3 Responsive & Size-Class */}
       <DocsSection id="responsive" title="3. Responsive & Size-Class Behavior">
+        <Text textStyle="body" color="secondary" className="max-w-prose">
+          Every layout decision resolves to one of four size-classes — never an arbitrary
+          viewport width. Values are defined as <DocsCode>--bp-*</DocsCode> tokens (see{" "}
+          <DocsCode>/docs/tokens</DocsCode>).
+        </Text>
+        <DocsTable
+          caption="Size-class breakpoints"
+          columns={[
+            { key: "name", label: "Size-class", width: "120px" },
+            { key: "range", label: "Range", width: "140px" },
+            { key: "devices", label: "Typical devices", width: "220px" },
+            { key: "layout", label: "Layout mode" },
+          ]}
+          rows={[
+            {
+              name: <DocsCode>compact</DocsCode>,
+              range: <span className="text-caption-1 font-mono text-label-secondary">&lt; 768px</span>,
+              devices: <span className="text-label-secondary">Phone, any orientation</span>,
+              layout: <span className="text-label-secondary">1 column — push/pop navigation</span>,
+            },
+            {
+              name: <DocsCode>regular</DocsCode>,
+              range: <span className="text-caption-1 font-mono text-label-secondary">768–1023px</span>,
+              devices: <span className="text-label-secondary">Small tablet, portrait</span>,
+              layout: <span className="text-label-secondary">2 columns — sidebar can overlay</span>,
+            },
+            {
+              name: <DocsCode>regular-lg</DocsCode>,
+              range: <span className="text-caption-1 font-mono text-label-secondary">1024–1279px</span>,
+              devices: <span className="text-label-secondary">Tablet landscape</span>,
+              layout: <span className="text-label-secondary">2 fixed columns — sidebar + detail</span>,
+            },
+            {
+              name: <DocsCode>regular-xl</DocsCode>,
+              range: <span className="text-caption-1 font-mono text-label-secondary">&ge; 1280px</span>,
+              devices: <span className="text-label-secondary">Tablet Pro landscape, desktop</span>,
+              layout: <span className="text-label-secondary">3 columns — sidebar + list + detail</span>,
+            },
+          ]}
+        />
+
         <DocsSubsection id="rule-3-1" title="3.1 Media query vs container query vs useSizeClass hook">
           <ul className="flex flex-col gap-(--space-2) text-body text-label-secondary max-w-prose list-none">
             <li>
