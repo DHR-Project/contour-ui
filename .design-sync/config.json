@@ -1,0 +1,29 @@
+{
+  "projectId": "58a5d199-4e01-476b-bee4-ba7ef3b1169d",
+  "shape": "package",
+  "pkg": "contour-ui",
+  "globalName": "Contour",
+  "entry": "./components/ui/__ds_entry__.ts",
+  "srcDir": ".design-sync/.cache/srcDir",
+  "tsconfig": "tsconfig.json",
+  "extraEntries": ["./components/icon"],
+  "buildCmd": "pnpm build && npx tsc -p .design-sync/tsconfig.dts.json && node .design-sync/stage-assets.mjs",
+  "cssEntry": ".design-sync/.cache/tailwind-build/chunks/compiled.css",
+  "docsDir": ".design-sync/.cache/docs",
+  "guidelinesGlob": [".design-sync/.cache/guidelines/*.md"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "dtsPropsFor": {
+    "Button": "/** Visual style: filled = solid tint bg, tinted = alpha tint bg, plain = no bg */\n  variant?: \"filled\" | \"tinted\" | \"plain\";\n  /** Orthogonal to variant -- swaps tint to --color-destructive */\n  role?: \"default\" | \"destructive\";\n  /** Controls padding and icon size. sm still reaches a 44px touch target at compact via padding/pseudo-element expansion. */\n  size?: \"sm\" | \"md\" | \"lg\";\n  /** Icon before the label */\n  leadingIcon?: IconName;\n  /** Icon after the label */\n  trailingIcon?: IconName;\n  /** Disables interaction, shows a spinner, keeps layout stable */\n  loading?: boolean;\n  /** Disables interaction */\n  disabled?: boolean;\n  /** Stretches the button to fill its container */\n  fullWidth?: boolean;\n  /** Border-radius style */\n  corner?: \"standard\" | \"squircle\";\n  /** Required (TypeScript-enforced) when there are no children (icon-only button) */\n  \"aria-label\"?: string;\n  children?: React.ReactNode;\n  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;\n  className?: string;",
+    "Icon": "/** Icon identifier from the icon registry */\n  name: IconName;\n  size?: \"xs\" | \"sm\" | \"md\" | \"lg\" | \"xl\";\n  /** \"currentColor\" inherits the surrounding text color; otherwise a semantic color token */\n  color?: \"currentColor\" | string;\n  /** Marks the icon as purely decorative, skipped by screen readers. Mutually exclusive with aria-label -- set exactly one. */\n  decorative?: boolean;\n  /** Required when decorative is not set -- accessible label for a meaningful icon */\n  \"aria-label\"?: string;\n  className?: string;",
+    "HStack": "justify?: \"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\";\n  align?: \"start\" | \"center\" | \"end\" | \"stretch\" | \"baseline\";\n  wrap?: \"nowrap\" | \"wrap\" | \"wrap-reverse\";\n  gap?: GapToken;\n  /** Marks this element as a container-query root (`container-type: inline-size`). Default true. */\n  container?: boolean;\n  as?: \"div\" | \"article\" | \"section\" | \"header\" | \"footer\" | \"nav\" | \"ul\" | \"li\" | \"form\";\n  children?: React.ReactNode;\n  className?: string;\n  id?: string;\n  style?: React.CSSProperties;",
+    "VStack": "justify?: \"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\";\n  align?: \"start\" | \"center\" | \"end\" | \"stretch\" | \"baseline\";\n  wrap?: \"nowrap\" | \"wrap\" | \"wrap-reverse\";\n  gap?: GapToken;\n  /** Marks this element as a container-query root (`container-type: inline-size`). Default true. */\n  container?: boolean;\n  as?: \"div\" | \"article\" | \"section\" | \"header\" | \"footer\" | \"nav\" | \"ul\" | \"li\" | \"form\";\n  children?: React.ReactNode;\n  className?: string;\n  id?: string;\n  style?: React.CSSProperties;",
+    "Badge": "/** \"counter\" (default) shows a numeric count or dot; \"status\" shows a colored label pill. The two modes take different props (see below). */\n  variant?: \"counter\" | \"status\";\n  /** counter mode only -- numeric count to display. count > 99 shows \"99+\". */\n  count?: number;\n  /** counter mode only -- show just a dot, no number. Default: false. */\n  dot?: boolean;\n  /** counter mode only -- render when count === 0. Default: false (hidden). */\n  showZero?: boolean;\n  /** status mode only, required for that mode -- label text */\n  label?: string;\n  /** status mode only */\n  color?: \"tint\" | \"destructive\" | \"success\" | \"warning\";\n  /** status mode only -- solid = opaque bg (default), tinted = alpha bg */\n  tone?: \"solid\" | \"tinted\";\n  className?: string;",
+    "Progress": "/** \"circular\" (default) is a ring/spinner; \"linear\" is a bar. linear requires value (always determinate); circular's value is optional (undefined = indeterminate spinner). */\n  variant?: \"circular\" | \"linear\";\n  /** 0-100. Required for linear; optional for circular (undefined = indeterminate). */\n  value?: number;\n  /** circular mode only -- size preset. */\n  size?: \"sm\" | \"md\" | \"lg\";\n  /** circular mode only -- escape hatch: exact pixel diameter, bypasses the size preset. */\n  diameter?: number;\n  /** circular mode only -- stroke width in px, required when using diameter. */\n  strokeWidth?: number;\n  color?: \"tint\" | \"destructive\" | \"success\" | \"warning\";\n  /** aria-label for accessibility. Required when no surrounding text describes it. */\n  label?: string;\n  className?: string;"
+  },
+  "overrides": {
+    "Sheet": { "cardMode": "single", "viewport": "480x640" },
+    "SheetContent": { "cardMode": "single", "viewport": "480x640" },
+    "SheetHeader": { "cardMode": "single", "viewport": "480x640" },
+    "SplitView": { "cardMode": "single", "primaryStory": "WithSidebar" }
+  }
+}

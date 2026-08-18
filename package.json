@@ -2,6 +2,7 @@
   "name": "contour-ui",
   "version": "0.1.0",
   "private": true,
+  "types": ".design-sync/.cache/dts-types/_root.d.ts",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
