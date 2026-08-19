@@ -316,8 +316,8 @@ body {
     mask-image:
       var(--scroll-mask-t), var(--scroll-mask-b), var(--scroll-mask-l),
       var(--scroll-mask-r);
-    mask-composite: intersect;
-    -webkit-mask-composite: source-in;
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
     animation:
       scroll-mask-y-scroll linear,
       scroll-mask-x-scroll linear;

@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs, durations } from "@/lib/motion";
 import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
 
 export interface AlertAction {
   label: string;
@@ -74,18 +73,16 @@ export function Alert({
                   "flex flex-col outline-none",
                 )}
               >
-                <div className="flex flex-col items-center px-4 pt-5 pb-4">
+                <div className="flex flex-col px-4 pt-5 pb-4">
                   <RadixAlertDialog.Title asChild>
-                    <Text textStyle="headline" className="text-center">
-                      {title}
-                    </Text>
+                    <Text textStyle="headline">{title}</Text>
                   </RadixAlertDialog.Title>
                   {description && (
                     <RadixAlertDialog.Description asChild>
                       <Text
                         textStyle="footnote"
                         color="secondary"
-                        className="mt-1 text-center"
+                        className="mt-1"
                       >
                         {description}
                       </Text>
@@ -109,7 +106,9 @@ export function Alert({
                     const isFirstSafeAction =
                       cancelActionIndex === -1 &&
                       action.role !== "destructive" &&
-                      sortedActions.findIndex((a) => a.role !== "destructive") === i;
+                      sortedActions.findIndex(
+                        (a) => a.role !== "destructive",
+                      ) === i;
 
                     return (
                       <Component
@@ -121,15 +120,28 @@ export function Alert({
                           onOpenChange(false);
                         }}
                       >
-                        <Button
+                        <motion.button
+                          type="button"
                           autoFocus={isFirstSafeAction}
-                          variant={action.emphasized ? "filled" : "plain"}
-                          role={action.role === "destructive" ? "destructive" : "default"}
-                          fullWidth={!isRow}
-                          className={isRow ? "flex-1" : undefined}
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ duration: durations.instant }}
+                          className={cn(
+                            "flex flex-1 min-h-11 items-center justify-center px-(--space-3) py-(--space-2) bg-fill-tertiary hover-fine:bg-fill-quaternary focus-visible:outline-solid focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:-outline-offset-(--focus-ring-width) focus-visible:outline-[rgb(var(--focus-ring-color))] rounded-md",
+                            action.emphasized && action.role !== "destructive" && "bg-tint hover-fine:bg-tint",
+                          )}
                         >
-                          {action.label}
-                        </Button>
+                          <Text
+                            textStyle="body"
+                            weight={action.emphasized ? "semibold" : "regular"}
+                            color={
+                              action.role === "destructive"
+                                ? "destructive"
+                                : action.emphasized ? "primary" : "tint"
+                            }
+                          >
+                            {action.label}
+                          </Text>
+                        </motion.button>
                       </Component>
                     );
                   })}

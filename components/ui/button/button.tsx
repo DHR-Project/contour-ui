@@ -15,7 +15,7 @@ import { Text } from "@/components/ui/text";
 export type ButtonVariant = "filled" | "tinted" | "plain";
 export type ButtonRole = "default" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
-export type ButtonCorner = "standard" | "squircle";
+export type ButtonCorner = "standard" | "pill" | "squircle";
 
 // Background/text color per variant x role (contour-spec-button.md SS1).
 // Known gap: filled always uses white text -- correct for 8/9 system
@@ -24,7 +24,7 @@ export type ButtonCorner = "standard" | "squircle";
 const buttonStyles = cva(
   // min-h-[44px] guarantees the compact touch target (guideline rule 5.5);
   // dropped at regular+ where pointer-driven input doesn't need it.
-  "inline-flex items-center justify-center min-h-[44px] md:min-h-0 transition-[background-color,filter] duration-[var(--duration-fast)] disabled:pointer-events-none disabled:opacity-40 focus-visible:[outline-style:solid] focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:[outline-offset:var(--focus-ring-offset)] focus-visible:[outline-color:rgb(var(--focus-ring-color))]",
+  "inline-flex items-center justify-center min-h-[44px] md:min-h-0 transition-[background-color,filter] duration-[var(--duration-fast)] disabled:pointer-events-none disabled:opacity-40 focus-visible:[outline-style:solid] focus-visible:[outline-width:var(--focus-ring-width)] focus-visible:[outline-offset:var(--focus-ring-offset)] focus-visible:[outline-color:rgb(var(--focus-ring-color))] active:scale-[0.97]",
   {
     variants: {
       variant: {
@@ -50,9 +50,10 @@ const buttonStyles = cva(
         false: "",
       },
       corner: {
+        standard: "rounded-md",
+        pill: "rounded-full",
         // True continuous-corner squircle (figma-squircle clip-path) isn't
         // implemented yet -- falls back to a larger standard radius.
-        standard: "rounded-md",
         squircle: "rounded-xl",
       },
     },

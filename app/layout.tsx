@@ -1,8 +1,9 @@
+import "./globals.css";
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
-import { ContourProvider } from "@/components/contour-provider";
-import "./globals.css";
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,14 +54,18 @@ export default function RootLayout({
     // tint, and the three accessibility overrides), which would otherwise
     // be flagged as a mismatch against the server-rendered markup on every
     // load where any of those differ from the defaults.
-    <html lang="en" className={`${inter.variable} antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <body>
         <Script
           id="contour-theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
-        <ContourProvider>{children}</ContourProvider>
+        {children}
       </body>
     </html>
   );

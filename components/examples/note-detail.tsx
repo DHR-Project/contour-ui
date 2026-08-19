@@ -45,6 +45,7 @@ export function NoteDetail({ noteId }: { noteId: string }) {
     addChecklistItem,
     sortCheckedToBottom,
     textScale,
+    viewMode
   } = useNotes();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -131,7 +132,7 @@ export function NoteDetail({ noteId }: { noteId: string }) {
       <div className={cn(!isCompact && "flex-1 min-h-0 overflow-y-auto scroll-mask-y")}>
         <div className="sticky top-0 z-10 border-b border-separator bg-bg-primary px-(--space-4) py-(--space-3)">
           <HStack align="center" gap="2" container={false}>
-            {isCompact && (
+            {(isCompact || viewMode === "grid") && (
               <Button
                 variant="plain"
                 leadingIcon="chevron-left"

@@ -195,8 +195,8 @@ export const INITIAL_NOTES: Note[] = [
   },
 ];
 
-export function formatRelativeTime(timestamp: number): string {
-  const diffMs = Date.now() - timestamp;
+export function formatRelativeTime(timestamp: number, now: number): string {
+  const diffMs = now - timestamp;
   const minutes = Math.round(diffMs / 60_000);
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes}m ago`;

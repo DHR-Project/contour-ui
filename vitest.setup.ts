@@ -36,6 +36,17 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
+// jsdom doesn't implement document.scrollingElement -- framer-motion's
+// scroll() (useScrollProgress) defaults its container to that when no
+// scrollable ancestor is found, and silently no-ops if it's null/undefined,
+// so window-driven scroll tests would otherwise never fire.
+if (typeof document !== "undefined" && !document.scrollingElement) {
+  Object.defineProperty(document, "scrollingElement", {
+    value: document.documentElement,
+    configurable: true,
+  });
+}
+
 // Node's own experimental `localStorage` global (gated behind
 // --localstorage-file) shadows jsdom's window.localStorage in this setup,
 // leaving it as a plain object with none of the Storage methods (getItem/

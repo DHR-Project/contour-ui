@@ -55,16 +55,23 @@ export function NavBar({
   const headerRef = useRef<HTMLElement>(null);
 
   // 0 at the top of the page, 1 once scrolled past the large-title collapse
-  // range -- drives the title/height/blur interpolation together (SS A.3).
-  const scrollProgress = useScrollProgress(COLLAPSE_RANGE, resolvedLargeTitle, headerRef);
+  // range -- drives the title/blur interpolation together (SS A.3).
+  const scrollProgress = useScrollProgress(
+    COLLAPSE_RANGE,
+    resolvedLargeTitle,
+    headerRef,
+  );
   // The Large Title finishes its own collapse within [0, STAGE_THRESHOLD]
   // and the compact title only reveals across [STAGE_THRESHOLD, 1] --
   // sequential, not a simultaneous cross-fade.
   const largeTitleProgress = Math.min(1, scrollProgress / STAGE_THRESHOLD);
-  const revealProgress = Math.max(0, Math.min(1, (scrollProgress - STAGE_THRESHOLD) / (1 - STAGE_THRESHOLD)));
+  const revealProgress = Math.max(
+    0,
+    Math.min(1, (scrollProgress - STAGE_THRESHOLD) / (1 - STAGE_THRESHOLD)),
+  );
   const blurIntensity = resolvedLargeTitle ? scrollProgress : 1;
-  const largeTitleRowHeight = resolvedLargeTitle ? COLLAPSE_RANGE * (1 - largeTitleProgress) : 0;
   const largeTitleScale = 1 - largeTitleProgress * (1 - LARGE_TITLE_MIN_SCALE);
+  const largeTitleBlurPx = 4 * scrollProgress;
 
   return (
     <header
@@ -75,7 +82,9 @@ export function NavBar({
         className,
       )}
     >
-      {progressiveBlur && <ProgressiveBlur position="top" intensity={blurIntensity} />}
+      {progressiveBlur && (
+        <ProgressiveBlur position="top" intensity={blurIntensity} />
+      )}
 
       {/* Known simplification: leading/trailing groups aren't width-matched,
           so the title only sits exactly centered when both sides are
@@ -122,14 +131,25 @@ export function NavBar({
 
       {resolvedLargeTitle && (
         <div
+          // Height is constant (COLLAPSE_RANGE), never scroll-derived: this
+          // row sits inside the sticky, in-flow header, so animating its
+          // height would shrink the scroll container's own scrollHeight in
+          // lockstep with scrollTop -- the browser then clamps scrollTop to
+          // the shrinking max, which drops scrollProgress, which re-expands
+          // the header, which raises the max again, oscillating. Only the
+          // title's own transform/opacity animate; the box stays put.
           className="relative z-10 overflow-hidden px-(--padding-control-x)"
-          style={{ height: largeTitleRowHeight, opacity: 1 - largeTitleProgress }}
+          style={{ height: COLLAPSE_RANGE, opacity: 1 - largeTitleProgress }}
         >
           <Text
             as="h1"
             textStyle="large-title"
             truncate
-            style={{ transform: `scale(${largeTitleScale})`, transformOrigin: "left center" }}
+            style={{
+              transform: `scale(${largeTitleScale})`,
+              transformOrigin: "left center",
+              filter: `blur(${largeTitleBlurPx}px)`
+            }}
           >
             {title}
           </Text>

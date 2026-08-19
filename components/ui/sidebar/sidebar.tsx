@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { springs } from "@/lib/motion";
@@ -42,12 +43,16 @@ function groupKey(group: SidebarGroup, index: number): string {
 }
 
 export interface SidebarProps {
+  /** Pinned above the scrollable item list -- a title, search field, etc. Does not scroll with items. */
+  header?: ReactNode;
   /** A flat list for a single-level sidebar, or an array of labelled groups for a sectioned one (contour-spec-sidebar.md SS1a). Both share one selection pill and one keyboard/tab sequence. */
   items: SidebarItem[] | SidebarGroup[];
   /** Currently active segment -- controlled, comes from SplitView. */
   value: string;
   /** Navigation itself (router.push) happens at the SplitView level, not here. */
   onValueChange: (value: string) => void;
+  /** Pinned below the scrollable item list -- an account row, etc. Does not scroll with items. */
+  footer?: ReactNode;
   className?: string;
 }
 
@@ -55,7 +60,7 @@ export interface SidebarProps {
 // (contour-spec-sidebar.md SS1). Which *groups* are expanded is the one bit
 // of state this component does own (SS1a): it's pure disclosure UI, not
 // navigation, so lifting it to the caller would just be ceremony.
-export function Sidebar({ items, value, onValueChange, className }: SidebarProps) {
+export function Sidebar({ header, items, value, onValueChange, footer, className }: SidebarProps) {
   // Scopes the shared-element layoutId to this instance, same reasoning
   // as SegmentedControl's pill -- a literal id would morph the selection
   // background between unrelated Sidebars on the same page.
@@ -119,9 +124,10 @@ export function Sidebar({ items, value, onValueChange, className }: SidebarProps
       // horizontally (contour-spec-splitview-v2.md SS2a's full-bleed
       // content). Revisit once a real horizontal-scroll consumer
       // (Carousel, not yet in the roadmap) exists to adapt to.
-      className={cn("flex h-full flex-col material-thick", className)}
+      className={cn("flex h-full flex-col material-thick border-r border-separator", className)}
     >
-      <div role="tablist" aria-orientation="vertical" className="flex flex-col gap-(--space-4) p-(--space-2) overflow-y-auto no-scrollbar scroll-mask-y">
+      {header && <div className="shrink-0">{header}</div>}
+      <div role="tablist" aria-orientation="vertical" className="flex min-h-0 flex-1 flex-col gap-(--space-4) p-(--space-2) overflow-y-auto no-scrollbar scroll-mask-y">
         {groups.map((group, groupIndex) => {
           const key = groupKey(group, groupIndex);
           const isOpen = !group.collapsible || openGroups.has(key);
@@ -198,8 +204,8 @@ export function Sidebar({ items, value, onValueChange, className }: SidebarProps
                               transition={selectionTransition}
                               aria-hidden
                               // Row-selection state (contour-spec-sidebar.md SS3,
-                              // phuong an A): active background dims when the
-                              // window/tab loses focus, macOS Mail/Finder convention.
+                              // active background dims when the
+                              // window/tab loses focus.
                               className={cn(
                                 "absolute inset-0 rounded-md",
                                 windowFocused
@@ -225,6 +231,7 @@ export function Sidebar({ items, value, onValueChange, className }: SidebarProps
           );
         })}
       </div>
+      {footer && <div className="shrink-0">{footer}</div>}
     </nav>
   );
 }

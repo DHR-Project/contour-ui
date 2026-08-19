@@ -4,6 +4,13 @@ import { NavBar } from "./nav-bar";
 
 function setScrollY(value: number) {
   Object.defineProperty(window, "scrollY", { value, writable: true, configurable: true });
+  // Real browsers keep document.scrollingElement.scrollTop in sync with
+  // window.scrollY automatically; jsdom does neither real layout nor that
+  // sync, and useScrollProgress (via framer-motion's scroll()) reads
+  // scrollTop off the container -- document.scrollingElement when there's
+  // no scrollable ancestor -- not window.scrollY.
+  const scrollingElement = document.scrollingElement ?? document.documentElement;
+  Object.defineProperty(scrollingElement, "scrollTop", { value, writable: true, configurable: true });
   fireEvent.scroll(window);
 }
 
